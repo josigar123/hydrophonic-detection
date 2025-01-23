@@ -1,0 +1,4 @@
+.imageContainer {
+  display: flex;
+  gap: 2em;
+}
