@@ -1,5 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 
+import { color } from 'motion/react';
+
 const { heroui } = require('@heroui/react');
 
 export default {
