@@ -12,6 +12,7 @@ import {
   TableCell,
 } from '@heroui/table';
 import { Tooltip, Button } from '@heroui/react';
+import { Input } from '@heroui/input';
 
 const MainPage = () => {
   return (
@@ -77,7 +78,9 @@ const MainPage = () => {
       </div>
 
       {/* Bottom half */}
-      <div className="flex-1 flex justify-end items-center px-4">
+      <div className="flex-1 flex justify-start items-center px-4">
+        <Input size="sm" label="Window size" type="window size" />
+
         <div className="relative w-1/2 p-4 bottom-96 mt-8">
           <Table aria-label="10 nearest AIS signals">
             <TableHeader>
