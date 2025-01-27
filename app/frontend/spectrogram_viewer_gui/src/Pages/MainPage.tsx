@@ -1,7 +1,7 @@
-import spectrogramImage from '../assets/spectrograms/Spectrogram-19thC.png';
 import mapImage from '../assets/maps/AIS_map.png';
 import refreshIconImage from '../assets/icons/RefreshIcon.png';
 import DEMONSpectrogramImage from '../assets/DEMON_spectrograms/DEMON-spectrogram-and-GPS-tracking-of-the-R-V-Phoenix-a-b-and-the-SeaStreak-c-d.png';
+import createdSpectrogramImage from '../assets/spectrograms/createdSpectrogram.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import {
   Table,
@@ -12,11 +12,20 @@ import {
   TableCell,
 } from '@heroui/table';
 import { Tooltip, Button } from '@heroui/react';
-import { Input } from '@heroui/input';
+import ParameterField from '../Components/ParameterField';
 
 const MainPage = () => {
+  const spectrogramFieldNames = [
+    'FFT Length',
+    'Frame Size',
+    'Bandwidth',
+    'Resolution',
+  ];
+
+  const audioFieldNames = ['Gain', 'Volume', 'Frequency'];
   return (
     <div className="flex flex-col h-screen">
+      <h2 className="absolute top-0 left-0 ml-2 text-gray-600">Themis</h2>
       {/* Top half */}
       <div className="flex-1">
         <div className="flex h-full mx-4 mt-8 space-x-8">
@@ -31,9 +40,9 @@ const MainPage = () => {
               <Tab key="spectrogram" title="Spectrogram">
                 <div className="w-full h-full">
                   <img
-                    src={spectrogramImage}
+                    src={createdSpectrogramImage}
                     alt="An image of a standard spectrogram"
-                    className="w-full h-96 object-fill shadow-lg rounded-3xl mt-2"
+                    className="object-contain shadow-lg rounded-3xl mt-2"
                   />
                 </div>
               </Tab>
@@ -42,7 +51,7 @@ const MainPage = () => {
                   <img
                     src={DEMONSpectrogramImage}
                     alt="An image of a DEMON spectrogram"
-                    className="w-full h-96 object-fill shadow-lg rounded-3xl mt-2"
+                    className="object-contain shadow-lg rounded-3xl mt-2"
                   />
                 </div>
               </Tab>
@@ -70,7 +79,7 @@ const MainPage = () => {
               <img
                 src={mapImage}
                 alt="Map with AIS data"
-                className="w-full h-96 object-fill shadow-lg rounded-3xl mt-14"
+                className="object-contain shadow-lg rounded-3xl mt-14"
               />
             </div>
           </div>
@@ -78,10 +87,21 @@ const MainPage = () => {
       </div>
 
       {/* Bottom half */}
-      <div className="flex-1 flex justify-start items-center px-4">
-        <Input size="sm" label="Window size" type="window size" />
+      <div className="flex-1 flex justify-start items-start px-4 w-auto space-x-2">
+        <div className="flex-1">
+          <ParameterField
+            fieldType="Spectrogram"
+            numberOfFields={spectrogramFieldNames.length}
+            fieldNamesInOrder={spectrogramFieldNames}
+          ></ParameterField>
+          <ParameterField
+            fieldType="Audio"
+            numberOfFields={audioFieldNames.length}
+            fieldNamesInOrder={audioFieldNames}
+          ></ParameterField>
+        </div>
 
-        <div className="relative w-1/2 p-4 bottom-96 mt-8">
+        <div className="flex-1 relative">
           <Table aria-label="10 nearest AIS signals">
             <TableHeader>
               <TableColumn>MMSI</TableColumn>
@@ -107,6 +127,42 @@ const MainPage = () => {
                 <TableCell>0</TableCell>
                 <TableCell>59.429482</TableCell>
                 <TableCell>10.653664</TableCell>
+              </TableRow>
+              <TableRow key="4">
+                <TableCell>231613000</TableCell>
+                <TableCell>0</TableCell>
+                <TableCell>59.459068</TableCell>
+                <TableCell>10.509167</TableCell>
+              </TableRow>
+              <TableRow key="4">
+                <TableCell>231613000</TableCell>
+                <TableCell>0</TableCell>
+                <TableCell>59.459068</TableCell>
+                <TableCell>10.509167</TableCell>
+              </TableRow>
+              <TableRow key="4">
+                <TableCell>231613000</TableCell>
+                <TableCell>0</TableCell>
+                <TableCell>59.459068</TableCell>
+                <TableCell>10.509167</TableCell>
+              </TableRow>
+              <TableRow key="4">
+                <TableCell>231613000</TableCell>
+                <TableCell>0</TableCell>
+                <TableCell>59.459068</TableCell>
+                <TableCell>10.509167</TableCell>
+              </TableRow>
+              <TableRow key="4">
+                <TableCell>231613000</TableCell>
+                <TableCell>0</TableCell>
+                <TableCell>59.459068</TableCell>
+                <TableCell>10.509167</TableCell>
+              </TableRow>
+              <TableRow key="4">
+                <TableCell>231613000</TableCell>
+                <TableCell>0</TableCell>
+                <TableCell>59.459068</TableCell>
+                <TableCell>10.509167</TableCell>
               </TableRow>
               <TableRow key="4">
                 <TableCell>231613000</TableCell>
