@@ -169,3 +169,69 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Build Folders
+bin/
+obj/
+out/
+
+# User-specific Files
+*.user
+*.vspscc
+*.vssscc
+
+# IDE Files
+.vscode/
+.idea/
+.vs/
+
+# Logs
+*.log
+logs/
+
+# Temporary Files
+*.tmp
+*.temp
+~$*
+
+# Dependency Caches
+**/node_modules/
+packages/
+*.nuget/
+
+# OS-Specific Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Config Files (Secrets, User Settings, etc.)
+appsettings*.json
+*.config
+*.env
+local.settings.json
+
+# Publish Outputs
+publish/
+wwwroot/
+
+# Azure Functions
+local.settings.json
+AzureFunctionsTools/
+
+# Generated Files
+Generated_Code/
+*.g.*
+*.gen.cs
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+# Azure Storage Emulator Data (if used locally)
+AzureStorageEmulatorDb*.log
+AzureStorageEmulatorDb*.xml
+WAStorageEmulatorDb*.*
+
+# CosmosDB Emulator Data
+.cosmosdb/
+.cosmosdata/
+
