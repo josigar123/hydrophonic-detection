@@ -235,3 +235,10 @@ WAStorageEmulatorDb*.*
 .cosmosdb/
 .cosmosdata/
 
+# Files to ignore
+*.wav
+*.WAV
+*.JPG
+*.jpg
+*.PNG
+*.png
