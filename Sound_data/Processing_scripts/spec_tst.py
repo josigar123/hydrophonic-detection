@@ -22,7 +22,7 @@ def plot_spectrogram(x, t, fs, n_segment, f_max, output_path):
         Max. on frequency axis
     """
     # Configure spectrogram
-    s_min = -40       # Minimum on the intensity plot. Lower values are 'black'
+    s_min = -30       # Minimum on the intensity plot. Lower values are 'black'
 		
     # Calculate spectrogram
     f, t, sx = signal.spectrogram(x, fs, nperseg=n_segment, detrend=False)
@@ -39,7 +39,10 @@ def plot_spectrogram(x, t, fs, n_segment, f_max, output_path):
     plt.ylim(0, f_max)
     		
     plt.colorbar(label="Magnitude [dB]")  # Colorbar for intensity scale
-    plt.savefig(output_path, format="png", dpi=300)
+    
+    
+    plt.savefig(output_path, format="jpeg", dpi=300)
+
     return 0
 
 def plot_spectrum(x, fs, fmax, output_path):
@@ -70,7 +73,6 @@ def plot_spectrum(x, fs, fmax, output_path):
     plt.xlim(-fmax, fmax)
     plt.grid(True)
 
-    plt.savefig(output_path, format="png", dpi=300)
     """
     plt.subplot(1, 2, 2)          # Subplot for phase
     plt.stem(f, np.angle(ft_x))	  # Phase of spectral components as stem-plot
@@ -79,25 +81,8 @@ def plot_spectrum(x, fs, fmax, output_path):
     plt.grid(True)
     plt.xlim(-fmax, fmax)
     """
-
+    plt.savefig(output_path, format="jpeg", dpi=300)
     return 0
-
-def plot_signal(x, t,output_path):
-    """Plot signal x as function of time t.
-
-    Parameters
-    ----------
-    x: array of float
-        Signal in time-domain
-    t: array of float
-        Time vector
-    """
-    plt.figure(figsize=([16, 4]))	 # Define figure for plots
-    plt.plot(t, x)
-    plt.xlabel("Time [s]")
-    plt.ylabel("Amplitude")
-    plt.grid(True)
-    plt.savefig(output_path, format="png", dpi=300)
 
 def butter_highpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
@@ -111,9 +96,26 @@ def butter_highpass_filter(data, cutoff, fs, order=5):
     return y
 
 
-def Normalization_BroadBand(x,Norm_window,sample_rate):
-    Num_samples = Norm_window * sample_rate
-    for n in range(Num_samples):
-        _sum = x[n]**2
-    E = _sum/Num_samples
-    return E
+sample_rate, samples = wavfile.read('/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Wav_files/112002.wav')
+frequencies, times, spectrogram = signal.spectrogram(samples, sample_rate)
+
+output_path_spectrogram = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrograms/112002.jpeg"
+output_path_spectrum = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrum_plots/112002.jpeg"
+
+fmax = 1e3
+
+#Change!
+#Finnes det en formel som gir god oppløsning på alle spektrogram?
+nsegment = 5400
+n_samples = int(np.ceil(len(samples)/nsegment))
+
+x1 = butter_highpass_filter(samples, 150, sample_rate)
+
+
+ok = plot_spectrogram(x1, times, sample_rate, n_samples, fmax, output_path_spectrogram)
+#pk = plot_spectrum(x1, sample_rate, fmax, output_path_spectrum)
+
+print(f"sample_rate: {sample_rate}")
+print(f"n_samples: {len(samples)}")
+print(f"Num of times: {len(times)}")
+
