@@ -10,8 +10,6 @@ import os
 
 fmax = 1e3
 
-
-
 def process_wav_files_in_directory(target_directory):
     # Iterate through all items in the specified directory
     for item in os.listdir(target_directory):
@@ -55,19 +53,3 @@ if __name__ == "__main__":
         process_wav_files_in_directory(target_directory)
     else:
         print(f"The specified directory does not exist: {target_directory}")
-
-
-"""
-sample_rate, samples = wavfile.read('/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Wav_files/41.wav')
-frequencies, times, spectrogram = signal.spectrogram(samples, sample_rate)
-
-fmax = 1e3
-n_samples = 3000
-
-x1 = butter_highpass_filter(samples, 100, sample_rate)
-
-ok = plot_spectrogram(x1, times, sample_rate, n_samples, fmax)
-pk = plot_spectrum(x1, sample_rate, fmax)
-t1 = np.linspace(0,(len(samples)/sample_rate),len(samples))
-sig = plot_signal(samples,t1)
-"""

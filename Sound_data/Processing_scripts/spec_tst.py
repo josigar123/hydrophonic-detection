@@ -96,11 +96,11 @@ def butter_highpass_filter(data, cutoff, fs, order=5):
     return y
 
 
-sample_rate, samples = wavfile.read('/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Wav_files/112002.wav')
+sample_rate, samples = wavfile.read('/hydrophonic-detection/Sound_data/Wav_files/112002.wav')
 frequencies, times, spectrogram = signal.spectrogram(samples, sample_rate)
 
-output_path_spectrogram = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrograms/112002.jpeg"
-output_path_spectrum = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrum_plots/112002.jpeg"
+output_path_spectrogram = "/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrograms/112002.jpeg"
+output_path_spectrum = "/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrum_plots/112002.jpeg"
 
 fmax = 1e3
 
