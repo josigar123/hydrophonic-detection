@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io import wavfile
-from scipy.fft import fft, fftshift, fftfreq	# FFT and helper functions
+from scipy.fft import fft, fftshift, fftfreq    # FFT and helper functions
 import numpy as np
-
 
 def plot_spectrogram(x, t, fs, n_segment, f_max, output_path):
     """Plot spectrogram of signal x.
@@ -17,7 +16,7 @@ def plot_spectrogram(x, t, fs, n_segment, f_max, output_path):
     fs: float
         Sample rate [Samples/s]
     n_segmend: int
-        No. of samples in segment for spctrogram calculation
+        No. of samples in segment for spectrogram calculation
     f_max: float
         Max. on frequency axis
     """
