@@ -45,24 +45,16 @@ public class ShipRepository : IShipRepository
         }
         catch (Exception ex)
         {
-            //Console.WriteLine(ex);
-            //throw;
-            return null; //Update this
+            return null; //TODO Error handling
         }
     }
 
     public async Task<Ships> AddShipAsync(Ships ship)
     {
-        //Console.WriteLine($"Adding Ship: Id={ships.Id}, RecordingId={ships.RecordingId}, Mmsi={ships.Mmsi}");
         ship.UpdatedAt = DateTime.Now;
         var response = await _container.CreateItemAsync<Ships>(ship, new PartitionKey(ship.Mmsi));
         return response.Resource;
     }
-    
-    //public async Task<Stream> GetBlobForShipAsync(string fileName)
-    //{
-    //    return await _blobStorageService.DownloadFileAsync(fileName);
-    //}
 
     public async Task<Ships> UpdateShipAsync(string mmsi, Ships updatedShip)
     {

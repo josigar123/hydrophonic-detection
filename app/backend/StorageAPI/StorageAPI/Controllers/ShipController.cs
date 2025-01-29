@@ -6,29 +6,19 @@ namespace StorageAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class ShipController : ControllerBase
+public class ShipController(IShipRepository shipRepository) : ControllerBase
 {
-    private readonly IShipRepository _shipRepository;
-
-    public ShipController(IShipRepository shipRepository)
-    {
-        _shipRepository = shipRepository;
-    }
-
-
     [HttpGet]
-    public async Task<IActionResult> GetAllShips()
+    public async Task<IActionResult> Get()
     {
-        var ships = await _shipRepository.GetShipAsync();
+        var ships = await shipRepository.GetShipAsync();
         return Ok(ships);
     }
 
     [HttpGet("{mmsi}")]
-    public async Task<IActionResult> GetShip(string mmsi)
+    public async Task<IActionResult> Get(string mmsi)
     {
-        var ship = await _shipRepository.GetShipAsync(mmsi);
-        //if(ship == null)
-        //    return NotFound();
+        var ship = await shipRepository.GetShipAsync(mmsi);
         
         return Ok(ship);
     }
@@ -36,35 +26,28 @@ public class ShipController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddShip(Ships ship)
     {
-        // Generate a unique ID for the ship if not provided
         ship.Mmsi = Guid.NewGuid().ToString();
+        var addedShip = await shipRepository.AddShipAsync(ship);
 
-        // Upload the file to Blob Storage
-        //var blobUri = await _blobStorageService.UploadFileAsync(file.FileName, file.OpenReadStream());
-        //ship.BlobUri = blobUri;
-
-        // Add ship metadata to the database
-        var addedShip = await _shipRepository.AddShipAsync(ship);
-
-        return CreatedAtAction(nameof(GetShip), new { mmsi = addedShip.Mmsi }, addedShip);
+        return CreatedAtAction(nameof(Get), new { mmsi = addedShip.Mmsi }, addedShip);
     }
 
     
 
     [HttpPut("{mmsi}")]
-    public async Task<IActionResult> UpdateShip(string mmsi, Ships ship)
+    public async Task<IActionResult> Put(string mmsi, Ships ship)
     {
         if (mmsi != ship.Mmsi)
             return BadRequest();
         
-        var updatedShip= await _shipRepository.UpdateShipAsync(mmsi, ship);
+        var updatedShip= await shipRepository.UpdateShipAsync(mmsi, ship);
         return Ok(updatedShip);
     }
 
     [HttpDelete("{mmsi}")]
-    public async Task<IActionResult> DeleteShip(string mmsi)
+    public async Task<IActionResult> Delete(string mmsi)
     {
-        var success = await _shipRepository.DeleteShipAsync(mmsi);
+        var success = await shipRepository.DeleteShipAsync(mmsi);
 
         if (success)
             return NoContent();

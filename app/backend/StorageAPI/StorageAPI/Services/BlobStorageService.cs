@@ -4,15 +4,14 @@ namespace StorageAPI.Services;
 
 public class BlobStorageService
 {
-    private readonly string _connectionString;
     private readonly string _containerName;
     private readonly BlobServiceClient _blobServiceClient;
 
     public BlobStorageService(IConfiguration configuration)
     {
-        _connectionString = configuration["BlobConfig:connectionString"];
-        _containerName = configuration["BlobConfig:containerName"];
-        _blobServiceClient = new BlobServiceClient(_connectionString);
+        var connectionString = configuration["BlobConfig:connectionString"] ?? throw new InvalidOperationException();
+        _containerName = configuration["BlobConfig:containerName"] ?? throw new InvalidOperationException();
+        _blobServiceClient = new BlobServiceClient(connectionString);
     }
 
     public async Task<string> UploadFileAsync(string fileName, Stream fileStream)

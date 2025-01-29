@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow;
+using StorageAPI.DTOs;
 using StorageAPI.Models;
 using StorageAPI.Services;
 
@@ -6,59 +8,118 @@ namespace StorageAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class AisController : ControllerBase
+public class AisController(IAisRepository aisRepository) : ControllerBase
 {
-    private readonly IAisRepository _aisRepository;
-
-    public AisController(IAisRepository aisRepository)
-    {
-        _aisRepository = aisRepository;
-    }
-
-
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var result = await _aisRepository.GetAisDataAsync();
-        return Ok(result);
+        var aisDataList = await aisRepository.GetAisDataAsync();
+        var aisDataDtoList = aisDataList.Select(aisData => new AisDataDto
+        {
+            LogId = aisData.LogId,
+            Mmsi = aisData.Mmsi,
+            Timestamp = aisData.Timestamp,
+            Latitude = aisData.Latitude,
+            Longitude = aisData.Longitude,
+            Speed = aisData.Speed,
+            Heading = aisData.Heading,  
+            RawMessage = aisData.RawMessage
+        });
+        return Ok(aisDataDtoList);
     }
 
-    [HttpGet("{logid}")]
-    public async Task<IActionResult> GetShip(string logId)
+    [HttpGet("{logId}")]
+    public async Task<IActionResult> Get(string logId)
     {
-        var aisData = await _aisRepository.GetAisDataAsync(logId);
-        //if(ship == null)
-        //    return NotFound();
+        var aisData = await aisRepository.GetAisDataAsync(logId);
         
-        return Ok(aisData);
+        var aisDataDto = new AisDataDto
+        {
+            LogId = aisData.LogId,
+            Mmsi = aisData.Mmsi,
+            Timestamp = aisData.Timestamp,
+            Latitude = aisData.Latitude,
+            Longitude = aisData.Longitude,
+            Speed = aisData.Speed,
+            Heading = aisData.Heading,
+            RawMessage = aisData.RawMessage
+        };
+        
+        return Ok(aisDataDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddAisData(AisData aisData)
+    public async Task<IActionResult> Post(AisDataDto aisDataDto)
     {
-        // Generate a unique ID for logId if not provided
-        aisData.LogId = Guid.NewGuid().ToString();
-        var newAisData = await _aisRepository.AddAisDataAsync(aisData);
+        var aisData = new AisData
+        {
+            LogId = Guid.NewGuid().ToString(),
+            Mmsi = aisDataDto.Mmsi,
+            Timestamp = aisDataDto.Timestamp,
+            Latitude = aisDataDto.Latitude,
+            Longitude = aisDataDto.Longitude,
+            Speed = aisDataDto.Speed,
+            Heading = aisDataDto.Heading,
+            RawMessage = aisDataDto.RawMessage
+        };
 
-        return CreatedAtAction(nameof(GetShip), new { logId = newAisData.LogId }, aisData);
+        var newAisData = await aisRepository.AddAisDataAsync(aisData);
+
+        var createdDto = new AisDataDto
+        {
+            LogId = newAisData.LogId,
+            Mmsi = newAisData.Mmsi,
+            Timestamp = newAisData.Timestamp,
+            Latitude = newAisData.Latitude,
+            Longitude = newAisData.Longitude,
+            Speed = newAisData.Speed,
+            Heading = newAisData.Heading,
+            RawMessage = newAisData.RawMessage
+        };
+
+        return CreatedAtAction(nameof(Get), new { logId = newAisData.LogId }, createdDto);
     }
-
     
 
-    [HttpPut("{logid}")]
-    public async Task<IActionResult> UpdateAisData(string logId, AisData aisData)
+    [HttpPut("{logId}")] //LogID should not be open to alterations here. 
+    public async Task<IActionResult> Put(string logId, AisDataDto aisDataDto)
     {
-        if (logId != aisData.LogId)
-            return BadRequest();
+        if (logId != aisDataDto.LogId)
+            return BadRequest("Log ID in the URL does not match the Log ID in the request body.");
+
+        var aisData = new AisData
+        {
+            LogId = aisDataDto.LogId,
+            Mmsi = aisDataDto.Mmsi,
+            Timestamp = aisDataDto.Timestamp,
+            Latitude = aisDataDto.Latitude,
+            Longitude = aisDataDto.Longitude,
+            Speed = aisDataDto.Speed,
+            Heading = aisDataDto.Heading,
+            RawMessage = aisDataDto.RawMessage
+        };
         
-        var updatedShip= await _aisRepository.UpdateAisDataAsync(logId, aisData);
-        return Ok(updatedShip);
+        var updatedAisData = await aisRepository.UpdateAisDataAsync(logId, aisData);
+        
+       var updatedAisDataDto = new AisDataDto
+        {
+            LogId = updatedAisData.LogId,
+            Mmsi = updatedAisData.Mmsi,
+            Timestamp = updatedAisData.Timestamp,
+            Latitude = updatedAisData.Latitude,
+            Longitude = updatedAisData.Longitude,
+            Speed = updatedAisData.Speed,
+            Heading = updatedAisData.Heading,
+            RawMessage = updatedAisData.RawMessage
+        };
+        
+        return Ok(updatedAisDataDto);
     }
 
-    [HttpDelete("{logid}")]
+    [HttpDelete("{logId}")]
     public async Task<IActionResult> Delete(string logId)
     {
-        var success = await _aisRepository.DeleteAisDataAsync(logId);
+        var success = await aisRepository.DeleteAisDataAsync(logId);
 
         if (success)
             return NoContent();
