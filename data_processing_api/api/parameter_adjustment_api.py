@@ -12,7 +12,7 @@ async def update_params(data: SpectrogramParameterModel):
     fmax = 1e3 
 
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../'))
-    output_dir = os.path.join(project_root, "hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/src/assets/spectrograms/")
+    output_dir = os.path.join(project_root, "source_code/hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/src/assets/spectrograms/")
     os.makedirs(output_dir, exist_ok=True)
 
     spectrogram_plotter = SpectrogramPlotter(data)
