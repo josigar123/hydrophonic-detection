@@ -19,7 +19,7 @@ class SpectrogramPlotter:
         self.frequency_cutoff = spectrogramParameters.frequency_cutoff
         self.uri = spectrogramParameters.uri
     
-    def plot_and_save_spectrogram(self, x: list[float], t: list[float], fs: int, window, n_samples: int, f_max: int, output_path: str) -> int:
+    def plot_and_save_spectrogram(self, x: list[float], t: list[float], fs: int,  output_path: str, window=("tukey", 0.25), n_samples: int = 5200, f_max: float = 1e3) -> int:
         s_min = -40 # Minimum on the intensity plot. Lower values are 'black'
             
         f, t, sx = signal.spectrogram(x, fs, window=window, nperseg=n_samples, detrend=False)
@@ -43,7 +43,7 @@ class SpectrogramPlotter:
                 try:
                     sample_rate, samples = wavfile.read(path_to_wav)
 
-                    times = np.arange(len(samples)) / sample_rate # TODO: MIGHT NOT WORK AS EXPECTED
+                    times = np.arange(len(samples)) / sample_rate
 
                     FREQUENCY_CUTOFF = 100
                     x1 = butter_highpass_filter(samples, FREQUENCY_CUTOFF, sample_rate)

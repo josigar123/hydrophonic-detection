@@ -16,13 +16,12 @@ import ParameterField from '../Components/ParameterField';
 
 const MainPage = () => {
   const spectrogramFieldNames = [
-    'FFT Length',
-    'Frame Size',
-    'Bandwidth',
-    'Resolution',
+    'Window Type',
+    'n_samples',
+    'Frequency Cutoff',
   ];
 
-  const audioFieldNames = ['Gain', 'Volume', 'Frequency'];
+  const audioFieldNames = ['Gain'];
   return (
     <div className="flex flex-col h-screen">
       <h2 className="absolute top-0 left-0 ml-2 text-gray-600">Themis</h2>
