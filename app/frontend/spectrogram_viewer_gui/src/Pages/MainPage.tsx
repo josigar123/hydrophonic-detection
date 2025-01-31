@@ -1,7 +1,7 @@
 import mapImage from '../assets/maps/AIS_map.png';
 import refreshIconImage from '../assets/icons/RefreshIcon.png';
 import DEMONSpectrogramImage from '../assets/DEMON_spectrograms/DEMON-spectrogram-and-GPS-tracking-of-the-R-V-Phoenix-a-b-and-the-SeaStreak-c-d.png';
-import createdSpectrogramImage from '../assets/spectrograms/createdSpectrogram.png';
+import createdSpectrogramImage from '../assets/spectrograms/41.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import {
   Table,
@@ -16,9 +16,9 @@ import ParameterField from '../Components/ParameterField';
 
 const MainPage = () => {
   const spectrogramFieldNames = [
-    'Window Type',
+    'window_type',
     'n_samples',
-    'Frequency Cutoff',
+    'frequency_cutoff',
   ];
 
   const audioFieldNames = ['Gain'];
@@ -92,11 +92,13 @@ const MainPage = () => {
             fieldType="Spectrogram"
             numberOfFields={spectrogramFieldNames.length}
             fieldNamesInOrder={spectrogramFieldNames}
+            uri="/home/joseph/Skole/Bacherlor-Hydrofondeteksjon/source_code/hydrophonic-detection/hydrophonic-detection/Sound_data/41.wav"
           ></ParameterField>
           <ParameterField
             fieldType="Audio"
             numberOfFields={audioFieldNames.length}
             fieldNamesInOrder={audioFieldNames}
+            uri="asjklhashjklasdhjk"
           ></ParameterField>
         </div>
 
