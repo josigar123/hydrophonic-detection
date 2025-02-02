@@ -2,6 +2,7 @@ import mapImage from '../assets/maps/AIS_map.png';
 import refreshIconImage from '../assets/icons/RefreshIcon.png';
 import DEMONSpectrogramImage from '../assets/DEMON_spectrograms/DEMON-spectrogram-and-GPS-tracking-of-the-R-V-Phoenix-a-b-and-the-SeaStreak-c-d.png';
 import createdSpectrogramImage from '../assets/spectrograms/41.png';
+import amplitudePlot from '../assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import {
   Table,
@@ -43,6 +44,12 @@ const MainPage = () => {
                     alt="An image of a standard spectrogram"
                     className="object-contain shadow-lg rounded-3xl mt-2"
                   />
+
+                  <img
+                    src={amplitudePlot}
+                    alt="An image of an amplitude plot against time"
+                    className="object-contain shadow-lg rounded-3xl mt-2"
+                  ></img>
                 </div>
               </Tab>
               <Tab key="DEMON" title="DEMON">
