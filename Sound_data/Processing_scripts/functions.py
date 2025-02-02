@@ -111,9 +111,28 @@ def butter_highpass_filter(data, cutoff, fs, order=5):
     return y
 
 
-def Normalization_BroadBand(x,Norm_window,sample_rate):
-    Num_samples = Norm_window * sample_rate
+def Normalization_BroadBand(x,window_length, window_distance, sample_rate):
+    #Tar utgangspunkt i at x[0] er det nyeste sample
+    """Plot spectrogram of signal x.
+
+    Parameters
+    ----------
+    x: array of floats
+        Signal in time-domain
+    window_length: int
+        Amount of seconds used for each window
+    window_distance: int
+        Amount of seconds between each window
+    sample_rate: int
+        Sample rate of signal x
+    """
+    Num_samples = window_length * sample_rate
+    print(f"Num_samples: {Num_samples}")
     for n in range(Num_samples):
-        _sum = x[n]**2
-    E = _sum/Num_samples
-    return E
+        Energy_sum = x[n]**2
+        Nocie_sum = x[n + (window_length+window_distance)*sample_rate -2]**2
+    E = Energy_sum/Num_samples
+    N = Nocie_sum/Num_samples
+
+    Ratio = E/N
+    return Ratio

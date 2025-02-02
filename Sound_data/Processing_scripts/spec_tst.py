@@ -96,11 +96,11 @@ def butter_highpass_filter(data, cutoff, fs, order=5):
     return y
 
 
-sample_rate, samples = wavfile.read('/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Wav_files/112002.wav')
+sample_rate, samples = wavfile.read('/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Wav_files/Cargo/014907.wav')
 frequencies, times, spectrogram = signal.spectrogram(samples, sample_rate)
 
-output_path_spectrogram = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrograms/112002.jpeg"
-output_path_spectrum = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrum_plots/112002.jpeg"
+output_path_spectrogram = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrograms/014907.jpeg"
+output_path_spectrum = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Processing_scripts/Plots/Spectrum_plots/014907.jpeg"
 
 fmax = 1e3
 
@@ -113,7 +113,7 @@ x1 = butter_highpass_filter(samples, 150, sample_rate)
 
 
 ok = plot_spectrogram(x1, times, sample_rate, n_samples, fmax, output_path_spectrogram)
-#pk = plot_spectrum(x1, sample_rate, fmax, output_path_spectrum)
+pk = plot_spectrum(x1, sample_rate, fmax, output_path_spectrum)
 
 print(f"sample_rate: {sample_rate}")
 print(f"n_samples: {len(samples)}")
