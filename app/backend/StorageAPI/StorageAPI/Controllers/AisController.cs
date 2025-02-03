@@ -53,7 +53,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
     {
         var aisData = new AisData
         {
-            LogId = Guid.NewGuid().ToString(),
+            LogId = aisDataDto.LogId,
             Mmsi = aisDataDto.Mmsi,
             Timestamp = aisDataDto.Timestamp,
             Latitude = aisDataDto.Latitude,
@@ -65,7 +65,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
 
         var newAisData = await aisRepository.AddAisDataAsync(aisData);
 
-        var createdDto = new AisDataDto
+        var newAisDataDto = new AisDataDto
         {
             LogId = newAisData.LogId,
             Mmsi = newAisData.Mmsi,
@@ -77,29 +77,29 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
             RawMessage = newAisData.RawMessage
         };
 
-        return CreatedAtAction(nameof(Get), new { logId = newAisData.LogId }, createdDto);
+        return CreatedAtAction(nameof(Get), new { logId = newAisDataDto.LogId }, newAisDataDto);
     }
     
 
-    [HttpPut("{logId}")] //LogID should not be open to alterations here. 
-    public async Task<IActionResult> Put(string logId, AisDataDto aisDataDto)
+    [HttpPut("{logId}")]
+    public async Task<IActionResult> Put(string logId, UpdateAisDataDto updateAisDataDto)
     {
-        if (logId != aisDataDto.LogId)
+        var aisData = await aisRepository.GetAisDataAsync(logId);
+        if (logId != aisData.LogId)
             return BadRequest("Log ID in the URL does not match the Log ID in the request body.");
 
-        var aisData = new AisData
+        var newAisData = new AisData
         {
-            LogId = aisDataDto.LogId,
-            Mmsi = aisDataDto.Mmsi,
-            Timestamp = aisDataDto.Timestamp,
-            Latitude = aisDataDto.Latitude,
-            Longitude = aisDataDto.Longitude,
-            Speed = aisDataDto.Speed,
-            Heading = aisDataDto.Heading,
-            RawMessage = aisDataDto.RawMessage
+            LogId = aisData.LogId,
+            Mmsi = aisData.Mmsi,
+            Timestamp = updateAisDataDto.Timestamp,
+            Latitude = updateAisDataDto.Latitude,
+            Longitude = updateAisDataDto.Longitude,
+            Speed = updateAisDataDto.Speed,
+            Heading = updateAisDataDto.Heading,
+            RawMessage = updateAisDataDto.RawMessage
         };
-        
-        var updatedAisData = await aisRepository.UpdateAisDataAsync(logId, aisData);
+        var updatedAisData = await aisRepository.UpdateAisDataAsync(logId, newAisData);
         
        var updatedAisDataDto = new AisDataDto
         {

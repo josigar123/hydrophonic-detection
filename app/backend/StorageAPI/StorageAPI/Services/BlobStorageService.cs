@@ -14,17 +14,19 @@ public class BlobStorageService
         _blobServiceClient = new BlobServiceClient(connectionString);
     }
 
-    public async Task<string> UploadFileAsync(string fileName, Stream fileStream)
+    public async Task<(string AudioUri, string BlobUri)> UploadFileAsync
+    (string audioFile, string spectrogram, 
+        Stream audioStream, Stream spectrogramStream)
     {
-        Console.WriteLine($"Attempting to upload to container: {_containerName}");
         var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(fileName);
-        await blobClient.UploadAsync(fileStream, overwrite: true);
-        Console.WriteLine($"Container verified or created: {_containerName}");
-
-
-
-        return blobClient.Uri.ToString(); // Return URI of uploaded file
+        
+        var audioBlobClient = containerClient.GetBlobClient("audio/" + audioFile);
+        var spectrogramBlobClient = containerClient.GetBlobClient("spectrogram/" + spectrogram);
+        
+        await audioBlobClient.UploadAsync(audioStream, overwrite: true);
+        await spectrogramBlobClient.UploadAsync(spectrogramStream, overwrite: true);
+        
+        return (audioBlobClient.Uri.ToString(), spectrogramBlobClient.Uri.ToString()); // Return URI of uploaded file
     }
 
     public async Task<Stream> DownloadFileAsync(string fileName)
