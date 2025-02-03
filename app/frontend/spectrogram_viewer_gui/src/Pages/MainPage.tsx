@@ -1,9 +1,10 @@
-import mapImage from '../assets/maps/AIS_map.png';
 import refreshIconImage from '../assets/icons/RefreshIcon.png';
-import DEMONSpectrogramImage from '../assets/DEMON_spectrograms/DEMON-spectrogram-and-GPS-tracking-of-the-R-V-Phoenix-a-b-and-the-SeaStreak-c-d.png';
+import placeholderImage from '../assets/placeholders/977232.png';
 import createdSpectrogramImage from '../assets/spectrograms/41.png';
 import amplitudePlot from '../assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
+import { useContext } from 'react';
+import { SpectrogramContext } from '../Contexts/SpectrogramContext';
 import {
   Table,
   TableHeader,
@@ -14,8 +15,15 @@ import {
 } from '@heroui/table';
 import { Tooltip, Button } from '@heroui/react';
 import ParameterField from '../Components/ParameterField';
+import { useState } from 'react';
 
 const MainPage = () => {
+  const spectrogramContext = useContext(SpectrogramContext);
+  const [spectrogram, setSpectrogram] = useState(createdSpectrogramImage);
+  const [DEMON, setDEMON] = useState(placeholderImage);
+  const [waveform, setWaveform] = useState(amplitudePlot);
+  const [map, setMap] = useState(placeholderImage);
+
   const spectrogramFieldNames = [
     'window_type',
     'n_samples',
@@ -40,28 +48,27 @@ const MainPage = () => {
               <Tab key="spectrogram" title="Spectrogram">
                 <div className="w-full h-full">
                   <img
-                    src={createdSpectrogramImage}
+                    src={spectrogramContext?.spectrogramURI}
                     alt="An image of a standard spectrogram"
                     className="object-contain shadow-lg rounded-3xl mt-2"
                   />
-
-                  <img
-                    src={amplitudePlot}
-                    alt="An image of an amplitude plot against time"
-                    className="object-contain shadow-lg rounded-3xl mt-2"
-                  ></img>
                 </div>
               </Tab>
               <Tab key="DEMON" title="DEMON">
                 <div className="w-full h-full">
                   <img
-                    src={DEMONSpectrogramImage}
+                    src={DEMON}
                     alt="An image of a DEMON spectrogram"
                     className="object-contain shadow-lg rounded-3xl mt-2"
                   />
                 </div>
               </Tab>
             </Tabs>
+            <img
+              src={waveform}
+              alt="An image of an amplitude plot against time"
+              className="object-contain shadow-lg rounded-3xl mt-2"
+            ></img>
             <div className="absolute top-0 right-0 mt-3 mr-4">
               <Tooltip
                 placement="right"
@@ -83,7 +90,7 @@ const MainPage = () => {
           <div className="flex-1 relative">
             <div className="w-full h-full">
               <img
-                src={mapImage}
+                src={map}
                 alt="Map with AIS data"
                 className="object-contain shadow-lg rounded-3xl mt-14"
               />
@@ -93,7 +100,7 @@ const MainPage = () => {
       </div>
 
       {/* Bottom half */}
-      <div className="flex-1 flex justify-start items-start px-4 w-auto space-x-2">
+      <div className="flex-1 flex justify-start items-start px-4 w-auto space-x-2 py-4">
         <div className="flex-1">
           <ParameterField
             fieldType="Spectrogram"

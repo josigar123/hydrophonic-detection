@@ -2,6 +2,8 @@ import { Input } from '@heroui/input';
 import { Button } from '@heroui/button';
 import { postParameters } from '../api/ParameterOptions';
 import { useState } from 'react';
+import { SpectrogramContext } from '../Contexts/SpectrogramContext';
+import { useContext } from 'react';
 
 interface FormData {
   window_type: string | [string, number];
@@ -23,6 +25,8 @@ const ParameterField = ({
   fieldNamesInOrder,
   uri,
 }: ParameterFieldProps) => {
+  const spectrogramContext = useContext(SpectrogramContext);
+
   const [formData, setFormData] = useState<FormData>({
     window_type: 'hann',
     n_samples: 5200,
@@ -63,6 +67,7 @@ const ParameterField = ({
     try {
       const response = await postParameters('api/update-params', formData);
       console.log('Response:', response);
+      spectrogramContext?.setSpectrogramURI(response.image_url);
     } catch (error) {
       console.error('Error submitting parameters:', error);
     }
