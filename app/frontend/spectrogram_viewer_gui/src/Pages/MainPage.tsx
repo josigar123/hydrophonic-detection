@@ -1,7 +1,7 @@
-import refreshIconImage from '../assets/icons/RefreshIcon.png';
-import placeholderImage from '../assets/placeholders/977232.png';
-import createdSpectrogramImage from '../assets/spectrograms/41.png';
-import amplitudePlot from '../assets/amplitude_plots/amplitudePlot.png';
+import refreshIconImage from '/assets/icons/RefreshIcon.png';
+import placeholderImage from '/assets/placeholders/977232.png';
+import createdSpectrogramImage from '/assets/spectrograms/41.png';
+import amplitudePlot from '/assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import { useContext } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
@@ -48,7 +48,7 @@ const MainPage = () => {
               <Tab key="spectrogram" title="Spectrogram">
                 <div className="w-full h-full">
                   <img
-                    src={spectrogramContext?.spectrogramURI}
+                    src={spectrogramContext?.spectrogramURI.toString()}
                     alt="An image of a standard spectrogram"
                     className="object-contain shadow-lg rounded-3xl mt-2"
                   />
@@ -106,7 +106,7 @@ const MainPage = () => {
             fieldType="Spectrogram"
             numberOfFields={spectrogramFieldNames.length}
             fieldNamesInOrder={spectrogramFieldNames}
-            uri="/home/joseph/Skole/Bacherlor-Hydrofondeteksjon/source_code/hydrophonic-detection/hydrophonic-detection/Sound_data/41.wav"
+            uri="/home/joseph/Skole/Bacherlor-Hydrofondeteksjon/source_code/hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/public/assets/audio/41.wav"
           ></ParameterField>
           <ParameterField
             fieldType="Audio"

@@ -40,15 +40,16 @@ class SpectrogramPlotter:
     
     def process_wav_file(self, path_to_wav: str):
         if path_to_wav.endswith('.wav'):
-                try:
-                    sample_rate, samples = wavfile.read(path_to_wav)
+                
+            sample_rate, samples = wavfile.read(path_to_wav)
 
-                    times = np.arange(len(samples)) / sample_rate
+            times = np.arange(len(samples)) / sample_rate
 
-                    FREQUENCY_CUTOFF = 100
-                    x1 = butter_highpass_filter(samples, FREQUENCY_CUTOFF, sample_rate)
-                    
-                except Exception as e:
-                    print(f"Error processing file {path_to_wav}: {e}")
+            FREQUENCY_CUTOFF = 100
+            x1 = butter_highpass_filter(samples, FREQUENCY_CUTOFF, sample_rate)
+            return x1, times, sample_rate
+        else:
+            FileNotFoundError()
+                
         
-        return x1, times, sample_rate
+        

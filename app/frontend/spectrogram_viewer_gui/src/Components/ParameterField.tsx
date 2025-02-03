@@ -66,8 +66,13 @@ const ParameterField = ({
   const handleSubmit = async () => {
     try {
       const response = await postParameters('api/update-params', formData);
-      console.log('Response:', response);
-      spectrogramContext?.setSpectrogramURI(response.image_url);
+
+      const absolutePrefix =
+        '/home/joseph/Skole/Bacherlor-Hydrofondeteksjon/source_code/hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/public';
+
+      const relativePath = response.image_url.replace(absolutePrefix, '');
+
+      spectrogramContext?.setSpectrogramURI(relativePath);
     } catch (error) {
       console.error('Error submitting parameters:', error);
     }

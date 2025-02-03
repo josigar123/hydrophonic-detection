@@ -9,7 +9,7 @@ router = APIRouter()
 async def update_params(data: SpectrogramParameterModel):
     
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../'))
-    output_dir = os.path.join(project_root, "source_code/hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/src/assets/spectrograms/")
+    output_dir = os.path.join(project_root, "source_code/hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/public/assets/spectrograms/")
     os.makedirs(output_dir, exist_ok=True)
 
     spectrogram_plotter = SpectrogramPlotter(data)
