@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
+using StorageAPI.DTOs;
 using StorageAPI.Models;
 using StorageAPI.Services;
 
-namespace StorageAPI.Controllers; //TODO refactor shared logic
+namespace StorageAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -13,43 +14,99 @@ public class RecordingController(IRecordingRepository recordingRepository, BlobS
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var result = await recordingRepository.GetRecordingAsync();
-        return Ok(result);
+        var recordingDataList = await recordingRepository.GetRecordingAsync();
+        var recordingDataListDto = recordingDataList.Select(recording => new RecordingsDto
+        {
+            RecordingId = recording.RecordingId,
+            HydrophoneId = recording.HydrophoneId,
+            StartTime = recording.StartTime,
+            EndTime = recording.EndTime,
+            AudioUri = recording.AudioUri,
+            SpectrogramUri = recording.SpectrogramUri,
+            ReferencedAisLog = recording.ReferencedAisLog
+            
+        });
+        return Ok(recordingDataListDto);
     }
 
     [HttpGet("{recordingId}")]
     public async Task<IActionResult> Get(string recordingId)
     {
-        var result = await recordingRepository.GetRecordingAsync(recordingId);
-        return Ok(result);
+        var recording = await recordingRepository.GetRecordingAsync(recordingId);
+        var recordingDto = new RecordingsDto
+        {
+            RecordingId = recording.RecordingId,
+            HydrophoneId = recording.HydrophoneId,
+            StartTime = recording.StartTime,
+            EndTime = recording.EndTime,
+            AudioUri = recording.AudioUri,
+            SpectrogramUri = recording.SpectrogramUri,
+            ReferencedAisLog = recording.ReferencedAisLog
+        };
+        return Ok(recordingDto);
     }
 
     [HttpPost]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> Post(IFormFile file, [FromForm] Recordings recording)
+    public async Task<IActionResult> Post(IFormFile audioFile, IFormFile spectrogram, [FromForm] CreateRecordingDto createRecordingDto)
     {
-        if (file == null || file.Length == 0)
+        if (spectrogram.Length == 0)
         {
-            return BadRequest("File is missing.");
+            return BadRequest("Spectrogram is missing.");
         }
-        recording.RecordingId ??= Guid.NewGuid().ToString();
-
-        // Upload the file to Blob Storage -> Needs support for Spectrogram
-        var blobUri = await blobStorageService.UploadFileAsync(file.FileName, file.OpenReadStream());
-        recording.AudioUri = blobUri; 
+        if (audioFile.Length == 0)
+        {
+            return BadRequest("Audio file is missing.");   
+        }
         
-        var result = await recordingRepository.AddRecordingAsync(recording);
+        var (audioUri, spectrogramUri) = await blobStorageService.UploadFileAsync(audioFile.FileName, spectrogram.FileName, audioFile.OpenReadStream(), spectrogram.OpenReadStream());
+        var recording = new Recordings
+        {
+            RecordingId = createRecordingDto.RecordingId,
+            HydrophoneId = createRecordingDto.HydrophoneId,
+            StartTime = createRecordingDto.StartTime,
+            EndTime = createRecordingDto.EndTime,
+            AudioUri = audioUri,
+            SpectrogramUri = spectrogramUri,
+            ReferencedAisLog = createRecordingDto.ReferencedAisLog
+        };
 
-        return CreatedAtAction(nameof(Get), new { recordingId = result.RecordingId }, result);
+        var newRecording = await recordingRepository.AddRecordingAsync(recording);
+        
+        var newRecordingDto = new RecordingsDto
+        {
+            RecordingId = newRecording.RecordingId,
+            HydrophoneId = newRecording.HydrophoneId,
+            StartTime = newRecording.StartTime,
+            EndTime = newRecording.EndTime,
+            AudioUri = newRecording.AudioUri,
+            SpectrogramUri = newRecording.SpectrogramUri,
+            ReferencedAisLog = newRecording.ReferencedAisLog
+        };
+        return CreatedAtAction(nameof(Get), new { recordingId = newRecordingDto.RecordingId }, newRecordingDto);
     }
 
     
 
     [HttpPut("{recordingId}")]
-    public async Task<IActionResult> Put(string recordingId, [FromBody] Recordings recording)
+    public async Task<IActionResult> Put(string recordingId, UpdateRecordingDto updateRecordingDto)
     {
-        var result = await recordingRepository.UpdateRecordingAsync(recordingId, recording);
-        return Ok(result);
+        var recording = await recordingRepository.GetRecordingAsync(recordingId);
+        recording.HydrophoneId = updateRecordingDto.HydrophoneId;
+        recording.ReferencedAisLog = updateRecordingDto.ReferencedAisLog;
+        
+        var updatedRecording = await recordingRepository.UpdateRecordingAsync(recordingId, recording);
+        var recordingDto = new RecordingsDto
+        {
+            RecordingId = updatedRecording.RecordingId,
+            HydrophoneId = updatedRecording.HydrophoneId,
+            StartTime = updatedRecording.StartTime,
+            EndTime = updatedRecording.EndTime,
+            AudioUri = updatedRecording.AudioUri,
+            SpectrogramUri = updatedRecording.SpectrogramUri,
+            ReferencedAisLog = updatedRecording.ReferencedAisLog
+        };
+        return Ok(recordingDto);
     }
 
     [HttpDelete("{recordingId}")]

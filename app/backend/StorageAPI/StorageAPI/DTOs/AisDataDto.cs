@@ -20,7 +20,7 @@ public class AisDataDto
     public string Longitude { get; set; } = string.Empty;
     
     [JsonProperty(PropertyName = "speed")]
-    public DateTime Speed { get; set; } = DateTime.Now;
+    public string Speed { get; set; } = string.Empty;
     
     [JsonProperty(PropertyName = "heading")]
     public string Heading { get; set; } = string.Empty;

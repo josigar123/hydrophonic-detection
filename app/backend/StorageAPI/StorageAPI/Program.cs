@@ -19,7 +19,8 @@ builder.Services.AddScoped<IShipRepository, ShipRepository>(serviceProvider => /
         configuration.GetConnectionString("CosmosDb"),
         configuration["CosmosConfig:ShipMetaData:authKey"],
         configuration["CosmosConfig:ShipMetaData:databaseName"],
-        configuration["CosmosConfig:ShipMetaData:containerName"]
+        configuration["CosmosConfig:ShipMetaData:containerName"],
+        serviceProvider.GetRequiredService<ILogger<ShipRepository>>()
     );
 });
 
@@ -31,7 +32,8 @@ builder.Services.AddScoped<IRecordingRepository, RecordingRepository>(servicePro
         configuration["CosmosConfig:RecordingData:authKey"],
         configuration["CosmosConfig:RecordingData:databaseName"],
         configuration["CosmosConfig:RecordingData:containerName"],
-        serviceProvider.GetRequiredService<BlobStorageService>()
+        serviceProvider.GetRequiredService<BlobStorageService>(),
+        serviceProvider.GetRequiredService<ILogger<RecordingRepository>>()
     );
 });
 
@@ -42,7 +44,8 @@ builder.Services.AddScoped<IAisRepository, AisRepository>(serviceProvider => //A
         configuration.GetConnectionString("CosmosDb"),
         configuration["CosmosConfig:AISData:authKey"],
         configuration["CosmosConfig:AISData:databaseName"],
-        configuration["CosmosConfig:AISData:containerName"]
+        configuration["CosmosConfig:AISData:containerName"],
+        serviceProvider.GetRequiredService<ILogger<AisRepository>>()
     );
 });
 var app = builder.Build();

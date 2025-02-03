@@ -1,17 +1,9 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
-namespace StorageAPI.Models;
+namespace StorageAPI.DTOs;
 
-public class AisData
+public class UpdateAisDataDto
 {
-    [JsonProperty(PropertyName = "id")] // CosmosDB requires this field
-    public string Id => LogId;
-    [JsonProperty(PropertyName = "logid")]
-    public string LogId { get; set; } = string.Empty;
-    
-    [JsonProperty(PropertyName = "mmsi")]
-    public string Mmsi { get; set; } = string.Empty;
-    
     [JsonProperty(PropertyName = "timestamp")]
     public DateTime Timestamp { get; set; } = DateTime.Now;
 
@@ -29,5 +21,4 @@ public class AisData
 
     [JsonProperty(PropertyName = "rawMessage")]
     public string RawMessage { get; set; } = string.Empty;
-
 }
