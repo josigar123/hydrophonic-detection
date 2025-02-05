@@ -37,7 +37,7 @@ pars = {
 }
 
 # Load audio file
-file_path = "Sound_data/001029.wav"  # Replace with actual file path
+file_path = "Sound_data//wav_files/004027.wav"  # Replace with actual file path
 data, Fs = librosa.load(file_path, sr=None)
 
 t = np.arange(len(data)) / Fs  # Time vector
@@ -118,7 +118,7 @@ plt.ylabel("DEMON norm")
 plt.grid()
 
 plt.subplot(3, 2, 5)
-plt.imshow(10 * np.log10(NBnorm), aspect="auto", origin="lower", extent=[times.min(), times.max(), frequencies.min(), 1e3],vmin=-20,vmax=20)
+plt.imshow(10 * np.log10(NBnorm), aspect="auto", origin="lower", extent=[times.min(), times.max(), frequencies.min(), 1e3],vmin=-40,vmax=20)
 plt.colorbar()
 plt.xlabel("Time [s]")
 plt.ylabel("Frequency [Hz]")

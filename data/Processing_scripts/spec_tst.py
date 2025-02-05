@@ -109,7 +109,7 @@ fmax = 1e3
 nsegment = 5400
 n_samples = int(np.ceil(len(samples)/nsegment))
 
-x1 = butter_highpass_filter(samples, 150, sample_rate)
+x1 = butter_highpass_filter(samples, 50, sample_rate)
 
 
 ok = plot_spectrogram(x1, times, sample_rate, n_samples, fmax, output_path_spectrogram)
