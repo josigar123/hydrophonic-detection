@@ -1,11 +1,9 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
-namespace StorageAPI.Models;
+namespace StorageAPI.DTOs;
 
-public class Ships
+public class CreateShipDto
 {
-    [JsonProperty(PropertyName = "id")] // CosmosDB requires this field
-    public string Id => Mmsi; // Map 'id' to 'MMSI'
     [JsonProperty(PropertyName = "mmsi")]
     public string Mmsi { get; set; } = string.Empty;
     
@@ -23,5 +21,4 @@ public class Ships
     
     [JsonProperty(PropertyName = "updatedAt")]
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
-    
 }

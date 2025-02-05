@@ -46,7 +46,7 @@ public class ShipController(IShipRepository shipRepository) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddShip(CreateShipsDto shipDto)
+    public async Task<IActionResult> AddShip(CreateShipDto shipDto)
     {
         var ship = new Ships
         {
@@ -74,7 +74,7 @@ public class ShipController(IShipRepository shipRepository) : ControllerBase
 
     
     [HttpPut("{mmsi}")]
-    public async Task<IActionResult> Put(string mmsi, UpdateShipsDto updateShipDto)
+    public async Task<IActionResult> Put(string mmsi, UpdateShipDto updateShipDto)
     {
         var ship = await shipRepository.GetShipAsync(mmsi);
         if (mmsi != ship.Mmsi)

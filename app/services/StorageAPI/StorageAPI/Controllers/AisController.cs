@@ -49,20 +49,20 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post(AisDataDto aisDataDto)
+    public async Task<IActionResult> Post(CreateAisDataDto createAisDataDto)
     {
         var aisData = new AisData
         {
-            LogId = aisDataDto.LogId,
-            Mmsi = aisDataDto.Mmsi,
-            Timestamp = aisDataDto.Timestamp,
-            Latitude = aisDataDto.Latitude,
-            Longitude = aisDataDto.Longitude,
-            Speed = aisDataDto.Speed,
-            Heading = aisDataDto.Heading,
-            RawMessage = aisDataDto.RawMessage
+            LogId = Guid.NewGuid().ToString("D"),
+            Mmsi = createAisDataDto.Mmsi,
+            Timestamp = createAisDataDto.Timestamp,
+            Latitude = createAisDataDto.Latitude,
+            Longitude = createAisDataDto.Longitude,
+            Speed = createAisDataDto.Speed,
+            Heading = createAisDataDto.Heading,
+            RawMessage = createAisDataDto.RawMessage
         };
-
+        
         var newAisData = await aisRepository.AddAisDataAsync(aisData);
 
         var newAisDataDto = new AisDataDto

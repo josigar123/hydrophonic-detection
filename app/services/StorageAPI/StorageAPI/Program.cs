@@ -2,9 +2,6 @@ using StorageAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-//TODO Implement AIS, Recording, Refactor
-
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -48,6 +45,7 @@ builder.Services.AddScoped<IAisRepository, AisRepository>(serviceProvider => //A
         serviceProvider.GetRequiredService<ILogger<AisRepository>>()
     );
 });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

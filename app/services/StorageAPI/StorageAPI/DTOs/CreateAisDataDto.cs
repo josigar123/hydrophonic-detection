@@ -1,9 +1,12 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace StorageAPI.DTOs;
 
-public class UpdateAisDataDto
+public class CreateAisDataDto
 {
+    [JsonProperty(PropertyName = "mmsi")]
+    public string Mmsi { get; set; } = string.Empty;
+    
     [JsonProperty(PropertyName = "timestamp")]
     public DateTime Timestamp { get; set; } = DateTime.Now;
 
