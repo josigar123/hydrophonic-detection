@@ -1,4 +1,5 @@
 using StorageAPI.Services;
+using Spectrogramgenerator;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +8,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<BlobStorageService>(); 
+builder.Services.AddSingleton<BlobStorageService>();
+
+builder.Services.AddGrpcClient<SpectrogramGenerator.SpectrogramGeneratorClient>(o =>
+{
+    o.Address = new Uri("http://localhost:50051");
+}
+);
 
 builder.Services.AddScoped<IShipRepository, ShipRepository>(serviceProvider => //Ship table
 {
