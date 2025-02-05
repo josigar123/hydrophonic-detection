@@ -5,4 +5,5 @@ class SpectrogramParameterModel(BaseModel):
     window_type: Union[str, Tuple[str, float]]
     n_samples: int
     frequency_cutoff: int # Unused so far
+    spectrogram_min: int
     uri: str # URI for wav-file to reprocess

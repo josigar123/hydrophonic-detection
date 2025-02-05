@@ -19,8 +19,7 @@ class SpectrogramPlotter:
         self.frequency_cutoff = spectrogramParameters.frequency_cutoff
         self.uri = spectrogramParameters.uri
     
-    def plot_and_save_spectrogram(self, x: list[float], t: list[float], fs: int,  output_path: str, window=("tukey", 0.25), n_samples: int = 5200, f_max: float = 1e3) -> int:
-        s_min = -40 # Minimum on the intensity plot. Lower values are 'black'
+    def plot_and_save_spectrogram(self, x: list[float], t: list[float], fs: int,  output_path: str, window=("tukey", 0.25), n_samples: int = 5200, f_max: float = 1e3, s_min=-40) -> int:
             
         f, t, sx = signal.spectrogram(x, fs, window=window, nperseg=n_samples, detrend=False)
         sx_db = 10*np.log10(sx/sx.max())   # Convert to dB

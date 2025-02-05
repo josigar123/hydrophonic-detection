@@ -1,5 +1,5 @@
-import refreshIconImage from '/assets/icons/RefreshIcon.png';
-import placeholderImage from '/assets/placeholders/977232.png';
+import refreshIconImage from '/assets/icons/refreshIcon.png';
+import placeholderImage from '/assets/spectrograms/41.png';
 import createdSpectrogramImage from '/assets/spectrograms/41.png';
 import amplitudePlot from '/assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
