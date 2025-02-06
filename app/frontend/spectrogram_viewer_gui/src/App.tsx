@@ -2,7 +2,7 @@ import './App.css';
 import MainPage from './Pages/MainPage';
 import { useState } from 'react';
 import { SpectrogramContext } from './Contexts/SpectrogramContext';
-import placeholderImage from '/assets/spectrograms/41.png';
+//import placeholderImage from '/assets/spectrograms/41.png';
 
 function App() {
   const [spectrogramURI, setSpectrogramURI] = useState(placeholderImage);

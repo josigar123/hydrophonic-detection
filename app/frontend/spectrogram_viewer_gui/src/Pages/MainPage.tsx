@@ -1,7 +1,7 @@
-import refreshIconImage from '/assets/icons/refreshIcon.png';
-import placeholderImage from '/assets/spectrograms/41.png';
-import createdSpectrogramImage from '/assets/spectrograms/41.png';
-import amplitudePlot from '/assets/amplitude_plots/amplitudePlot.png';
+//import refreshIconImage from '/assets/icons/refreshIcon.png';
+//import placeholderImage from '/assets/spectrograms/41.png';
+//import createdSpectrogramImage from '/assets/spectrograms/41.png';
+//import amplitudePlot from '/assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import { useContext } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
@@ -16,6 +16,7 @@ import {
 import { Tooltip, Button } from '@heroui/react';
 import ParameterField from '../Components/ParameterField';
 import { useState } from 'react';
+import MapComponent from '../Components/MapComponent'
 
 const MainPage = () => {
   const spectrogramContext = useContext(SpectrogramContext);
@@ -89,11 +90,7 @@ const MainPage = () => {
 
           <div className="flex-1 relative">
             <div className="w-full h-full">
-              <img
-                src={map}
-                alt="Map with AIS data"
-                className="object-contain shadow-lg rounded-3xl mt-14"
-              />
+              <MapComponent />
             </div>
           </div>
         </div>
