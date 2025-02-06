@@ -6,4 +6,4 @@ class SpectrogramParameterModel(BaseModel):
     n_samples: int
     frequency_cutoff: int # Unused so far
     spectrogram_min: int
-    uri: str # URI for wav-file to reprocess
+    wav_data: bytes

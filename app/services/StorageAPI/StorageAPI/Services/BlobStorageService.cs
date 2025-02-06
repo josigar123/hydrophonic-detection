@@ -19,10 +19,10 @@ public class BlobStorageService
     {
         var blobFileName = Guid.NewGuid().ToString("N");
         var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        
+
         var fileBlobClient = containerClient.GetBlobClient(type + "/" + blobFileName);
         await fileBlobClient.UploadAsync(blobStream, overwrite: true);
-        return (fileBlobClient.Uri.ToString()); // Return URI of uploaded file
+        return fileBlobClient.Uri.ToString(); // Return URI of uploaded file
     }
 
     public async Task<Stream> DownloadFileAsync(string fileName)

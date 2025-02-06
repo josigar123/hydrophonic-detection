@@ -11,10 +11,10 @@ message SpectrogramGeneratorRequest {
     int32 n_samples = 2;
     float frequency_cutoff = 3;
     int32 spectrogram_min = 4;
-    string uri_to_wav = 5;
+    bytes wav_data = 5;
 }
 
 message SpectrogramGeneratorResponse {
     string message = 1;
-    string uri_to_png = 2;
+    bytes spectrogram_image_file = 2;
 }

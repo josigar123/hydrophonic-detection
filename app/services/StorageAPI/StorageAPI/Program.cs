@@ -14,7 +14,12 @@ builder.Services.AddGrpcClient<SpectrogramGenerator.SpectrogramGeneratorClient>(
 {
     o.Address = new Uri("http://localhost:50051");
 }
-);
+)
+.ConfigureChannel(channelOpions =>
+{
+    channelOpions.MaxSendMessageSize = 50 * 1024 * 1024;
+    channelOpions.MaxReceiveMessageSize = 50 * 1024 * 1024;
+});
 
 builder.Services.AddScoped<IShipRepository, ShipRepository>(serviceProvider => //Ship table
 {
