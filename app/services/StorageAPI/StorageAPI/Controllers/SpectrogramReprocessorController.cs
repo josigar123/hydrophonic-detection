@@ -5,21 +5,31 @@ using StorageAPI.Models;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class ReprocessorController(SpectrogramGenerator.SpectrogramGeneratorClient spectrogramGeneratorClient, BlobStorageService blobClient) : ControllerBase
+public class SpectrogramReprocessorController(SpectrogramGenerator.SpectrogramGeneratorClient spectrogramGeneratorClient, BlobStorageService blobClient) : ControllerBase
 {
 
-    [HttpPost]
-    public async Task<IActionResult> RegenerateSpectrogram(SpectrogramRegenerator spectrogramRegenerator)
+    private static readonly HashSet<string> ValidWindowTypes = new HashSet<string>
     {
+        "hamming", "hann", "blackman", "boxcar", "bartlett", "parzen"
+    };
+
+    [HttpPost]
+    public async Task<IActionResult> RegenerateSpectrogram([FromBody] SpectrogramRegenerator spectrogramRegenerator)
+    {
+        spectrogramRegenerator.WindowType = spectrogramRegenerator.WindowType.ToLower();
+        if (!ValidWindowTypes.Contains(spectrogramRegenerator.WindowType))
+        {
+            Console.WriteLine($"Received WindowType: {spectrogramRegenerator.WindowType}");
+            return BadRequest("Invalid window type.");
+        }
+
         var file_prefix = "audio/";
         var fileStream = await blobClient.DownloadFileAsync(file_prefix + spectrogramRegenerator.Uri);
-        Console.WriteLine("Fetched filestream from blob");
         byte[] fileBytes;
         using var memoryStream = new MemoryStream();
         await fileStream.CopyToAsync(memoryStream);
         fileBytes = memoryStream.ToArray();
-        Console.WriteLine("Copied memoryStream to byte array");
-        // Perform the gRPC call
+
         var request = new SpectrogramGeneratorRequest
         {
             WindowType = spectrogramRegenerator.WindowType,
@@ -29,7 +39,6 @@ public class ReprocessorController(SpectrogramGenerator.SpectrogramGeneratorClie
             SpectrogramMin = spectrogramRegenerator.SpectrogramMin,
             WavData = Google.Protobuf.ByteString.CopyFrom(fileBytes)
         };
-        // After call, return the spectrograms ByteStream PNG for frontend use
 
         Console.WriteLine("Sending gRPC request");
         var response = await spectrogramGeneratorClient.GenerateSpectrogramAsync(request);
@@ -38,5 +47,4 @@ public class ReprocessorController(SpectrogramGenerator.SpectrogramGeneratorClie
         var spectrogramStream = new MemoryStream(response.SpectrogramImageFile.ToByteArray());
         return new FileStreamResult(spectrogramStream, "image/png");
     }
-
 }

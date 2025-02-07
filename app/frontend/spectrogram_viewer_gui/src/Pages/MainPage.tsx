@@ -1,6 +1,5 @@
-import refreshIconImage from '/assets/icons/refreshIcon.png';
-import placeholderImage from '/assets/spectrograms/41.png';
-import createdSpectrogramImage from '/assets/spectrograms/41.png';
+import refreshIconImage from '/assets/icons/RefreshIcon.png';
+import placeholderImage from '/assets/placeholders/977232.png';
 import amplitudePlot from '/assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import { useContext } from 'react';
@@ -19,15 +18,16 @@ import { useState } from 'react';
 
 const MainPage = () => {
   const spectrogramContext = useContext(SpectrogramContext);
-  const [spectrogram, setSpectrogram] = useState(createdSpectrogramImage);
   const [DEMON, setDEMON] = useState(placeholderImage);
   const [waveform, setWaveform] = useState(amplitudePlot);
   const [map, setMap] = useState(placeholderImage);
 
   const spectrogramFieldNames = [
-    'window_type',
-    'n_samples',
-    'frequency_cutoff',
+    'windowType',
+    'nSamples',
+    'frequencyCutoff',
+    'spectrogramMin',
+    'frequencyMax',
   ];
 
   const audioFieldNames = ['Gain'];
@@ -48,7 +48,7 @@ const MainPage = () => {
               <Tab key="spectrogram" title="Spectrogram">
                 <div className="w-full h-full">
                   <img
-                    src={spectrogramContext?.spectrogramURI.toString()}
+                    src={spectrogramContext?.spectrogramUrl}
                     alt="An image of a standard spectrogram"
                     className="object-contain shadow-lg rounded-3xl mt-2"
                   />
@@ -106,7 +106,7 @@ const MainPage = () => {
             fieldType="Spectrogram"
             numberOfFields={spectrogramFieldNames.length}
             fieldNamesInOrder={spectrogramFieldNames}
-            uri="/home/joseph/Skole/Bacherlor-Hydrofondeteksjon/source_code/hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/public/assets/audio/41.wav"
+            uri="db8278de83114c159fec7528aea5d646" // TODO, use the wavUri, and setWavUri so that this is dynamic and not hardcoded
           ></ParameterField>
           <ParameterField
             fieldType="Audio"
