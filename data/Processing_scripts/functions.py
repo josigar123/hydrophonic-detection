@@ -41,6 +41,8 @@ def plot_spectrogram(x, t, fs, n_segment, f_max, output_path):
     plt.savefig(output_path, format="png", dpi=300)
     return 0
 
+
+
 def plot_spectrum(x, fs, fmax, output_path):
     """Plot Fourier coefficients of signal x.
 
