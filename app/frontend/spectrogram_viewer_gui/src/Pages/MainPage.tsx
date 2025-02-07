@@ -1,6 +1,5 @@
 import refreshIconImage from '/assets/icons/RefreshIcon.png';
 import placeholderImage from '/assets/placeholders/977232.png';
-import amplitudePlot from '/assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import { useContext } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
@@ -14,13 +13,9 @@ import {
 } from '@heroui/table';
 import { Tooltip, Button } from '@heroui/react';
 import ParameterField from '../Components/ParameterField';
-import { useState } from 'react';
 
 const MainPage = () => {
   const spectrogramContext = useContext(SpectrogramContext);
-  const [DEMON, setDEMON] = useState(placeholderImage);
-  const [waveform, setWaveform] = useState(amplitudePlot);
-  const [map, setMap] = useState(placeholderImage);
 
   const spectrogramFieldNames = [
     'windowType',
@@ -57,7 +52,7 @@ const MainPage = () => {
               <Tab key="DEMON" title="DEMON">
                 <div className="w-full h-full">
                   <img
-                    src={DEMON}
+                    src={placeholderImage}
                     alt="An image of a DEMON spectrogram"
                     className="object-contain shadow-lg rounded-3xl mt-2"
                   />
@@ -65,7 +60,7 @@ const MainPage = () => {
               </Tab>
             </Tabs>
             <img
-              src={waveform}
+              src={placeholderImage}
               alt="An image of an amplitude plot against time"
               className="object-contain shadow-lg rounded-3xl mt-2"
             ></img>
@@ -90,7 +85,7 @@ const MainPage = () => {
           <div className="flex-1 relative">
             <div className="w-full h-full">
               <img
-                src={map}
+                src={placeholderImage}
                 alt="Map with AIS data"
                 className="object-contain shadow-lg rounded-3xl mt-14"
               />

@@ -4,15 +4,7 @@ import { postParametersSpectrogram } from '../api/parameterApi';
 import { useState } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
 import { useContext } from 'react';
-
-interface SpectrogramData {
-  windowType: string;
-  nSamples: number;
-  frequencyCutoff: number;
-  frequencyMax: number;
-  spectrogramMin: number;
-  uri: string;
-}
+import { SpectrogramParameterRequestBody } from '../Interfaces/SpectrogramModels';
 
 interface ParameterFieldProps {
   fieldType: string;
@@ -29,14 +21,15 @@ const ParameterField = ({
 }: ParameterFieldProps) => {
   const spectrogramContext = useContext(SpectrogramContext);
 
-  const [spectrogramData, setSpectrogramData] = useState<SpectrogramData>({
-    windowType: 'hann',
-    nSamples: 5200,
-    frequencyCutoff: 100,
-    frequencyMax: 1000,
-    spectrogramMin: -40,
-    uri: uri,
-  });
+  const [spectrogramData, setSpectrogramData] =
+    useState<SpectrogramParameterRequestBody>({
+      windowType: 'hann',
+      nSamples: 5200,
+      frequencyCutoff: 100,
+      frequencyMax: 1000,
+      spectrogramMin: -40,
+      uri: uri,
+    });
 
   const handleSpectrogramInputChange = (
     field: string,
@@ -63,8 +56,9 @@ const ParameterField = ({
           className="w-32"
           value={
             // TODO: When DEMON analysis is available, add a ternary operator on fieldType to decide what fields to use e.g demonData, audioData etc
-            spectrogramData[fieldname as keyof SpectrogramData]?.toString() ||
-            ''
+            spectrogramData[
+              fieldname as keyof SpectrogramParameterRequestBody
+            ]?.toString() || ''
           }
           onChange={
             (e) => handleSpectrogramInputChange(fieldname, e.target.value) // TODO: When DEMON analysis is available, add a ternary operator on fieldType to decide what input change handler should be called
@@ -84,7 +78,7 @@ const ParameterField = ({
         );
 
         // Acts as a temporary url for the image, created from the blob data
-        const spectrogramUrl = URL.createObjectURL(response.image_blob);
+        const spectrogramUrl = URL.createObjectURL(response.imageBlob);
 
         spectrogramContext?.setSpectrogramUrl(spectrogramUrl);
       } else if (fieldType === 'DEMON') {
