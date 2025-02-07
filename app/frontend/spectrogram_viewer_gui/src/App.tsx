@@ -5,10 +5,13 @@ import { SpectrogramContext } from './Contexts/SpectrogramContext';
 import placeholderImage from '/assets/spectrograms/41.png';
 
 function App() {
-  const [spectrogramURI, setSpectrogramURI] = useState(placeholderImage);
+  const [spectrogramUrl, setSpectrogramUrl] = useState(placeholderImage);
+  const [wavUri, setWavUri] = useState('');
 
   return (
-    <SpectrogramContext.Provider value={{ spectrogramURI, setSpectrogramURI }}>
+    <SpectrogramContext.Provider
+      value={{ spectrogramUrl, setSpectrogramUrl, wavUri, setWavUri }}
+    >
       <div>
         <MainPage />
       </div>
