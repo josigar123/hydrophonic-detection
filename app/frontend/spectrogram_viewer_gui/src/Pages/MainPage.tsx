@@ -13,6 +13,7 @@ import {
 } from '@heroui/table';
 import { Tooltip, Button } from '@heroui/react';
 import ParameterField from '../Components/ParameterField';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 const MainPage = () => {
   const spectrogramContext = useContext(SpectrogramContext);
@@ -42,11 +43,19 @@ const MainPage = () => {
             >
               <Tab key="spectrogram" title="Spectrogram">
                 <div className="w-full h-full">
-                  <img
-                    src={spectrogramContext?.spectrogramUrl}
-                    alt="An image of a standard spectrogram"
-                    className="object-contain shadow-lg rounded-3xl mt-2"
-                  />
+                  <TransformWrapper
+                    initialScale={1}
+                    minScale={0.5}
+                    maxScale={5}
+                  >
+                    <TransformComponent>
+                      <img
+                        src={spectrogramContext?.spectrogramUrl}
+                        alt="An image of a standard spectrogram"
+                        className="object-contain shadow-lg rounded-3xl mt-2"
+                      />
+                    </TransformComponent>
+                  </TransformWrapper>
                 </div>
               </Tab>
               <Tab key="DEMON" title="DEMON">
