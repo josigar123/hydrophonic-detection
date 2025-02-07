@@ -3,8 +3,10 @@ from scipy import signal
 from scipy.io import wavfile
 from scipy.fft import fft, fftshift, fftfreq    # FFT and helper functions
 import numpy as np
+from scipy.signal import hilbert, resample_poly
+import librosa
 
-def plot_spectrogram(x, t, fs, n_segment, f_max, output_path):
+def plot_spectrogram(x, t, fs, n_segment, f_max, s_min, output_path):
     """Plot spectrogram of signal x.
 
     Parameters
@@ -21,7 +23,7 @@ def plot_spectrogram(x, t, fs, n_segment, f_max, output_path):
         Max. on frequency axis
     """
     # Configure spectrogram
-    s_min = -40       # Minimum on the intensity plot. Lower values are 'black'
+    #s_min = -40       # Minimum on the intensity plot. Lower values are 'black'
 		
     # Calculate spectrogram
     f, t, sx = signal.spectrogram(x, fs, nperseg=n_segment, detrend=False)
@@ -137,3 +139,100 @@ def Normalization_BroadBand(x,window_length, window_distance, sample_rate):
 
     Ratio = E/N
     return Ratio
+
+def Hilbert_DS(input_file, Fs:int ,medfilt_window: int):
+    """
+    INPUT:
+        input_file: audio file to transform
+        
+        Fs: int
+            Frequency to sample the audio file
+        medfilt_window: Odd integer
+            NEEDS DESCRIPTION
+            also used for downsampling in last stage
+
+    OUTPUT:
+        DS_Sx: array of float
+            Downsampled hilbert transformed data
+        DS_Fs: int
+            Sample frequency of DS_Fs
+        DS_t: array of float
+            Time axis corresponding to DS_Sx
+    """
+    #Getting data from wav file
+    data_org, sr = librosa.load(input_file)
+
+    #downsampling original audio data
+    data_offcet = resample_poly(data_org,1,int(sr/Fs))
+
+    #Removing Dc-offcet from data
+    dc_offcet = np.mean(data_offcet)
+    data = data_offcet - dc_offcet
+
+
+    #Hilbert transform ov data
+    analytic_signal = np.absolute(hilbert(data))
+    #Squaring each element
+    h_2 = np.square(analytic_signal)
+
+    #Moving avg filter
+    med_filt_size = 11
+    h_filt = signal.medfilt(h_2,med_filt_size)
+
+    #Downsampling
+    DS_Sx = resample_poly(h_filt,1,med_filt_size)
+    DS_Fs = Fs/med_filt_size
+    DS_t = np.linspace(0,(len(DS_Sx)/DS_Fs),len(DS_Sx))
+
+    return DS_Sx, DS_Fs, DS_t
+
+def DEMON_Analasys(Sx, Fs:int, nperseg:int,medfilt_window:int):
+    """
+    INPUT:
+        Sx: Array of float
+            Time series of measurement values to make spectrogram of
+        Fs: int
+            Sample frequency of Sx
+        nperseg: int
+            Num. of samples in each segment
+    """
+    #Henter ut spectrogram for DEMON (demon_sx)
+    demon_f, demon_t, demon_sx = signal.spectrogram(Sx, Fs, nperseg=nperseg, detrend=False)
+
+    #med filt over hver kolonne
+    demon_sx_med = np.zeros((len(demon_sx),len(demon_sx[0])))
+    for k in range(len(demon_sx)):
+        demon_sx_med[k] = signal.medfilt(demon_sx[k],kernel_size=medfilt_window)
+
+    demon_sx_norm = demon_sx/demon_sx_med
+    demon_sx_db = 10*np.log(demon_sx_med)
+    return 0
+
+def Hilbert_BB(DS_Sx, DS_Fs, window_size, noice_t_start, trigger):
+    """
+        DS_Sx: Array of float
+            Time series of measurement values to make spectrogram of
+        DS_Fs: int
+            Sample frequency of Sx
+        window_size: int
+            window in seconds
+        noice_t_start: int
+            start point for mean noice calculation in seconds
+    """
+    noice_t_stop = (noice_t_start+window_size)*DS_Fs 
+    noice = np.mean(DS_Sx[noice_t_start:noice_t_stop])
+    
+    """
+    For signal kalkulasjon, 2 muligheter:
+        1. medfilt over hele DS_Sx, divider så på noice, minus trigger, sjekk for førte verdi over null
+            aka. lage ett array med SNR
+        
+        2. Bruke en løkke til å "Dra" med filt over og kalkulere SNR en og en til terskel er nådd
+    """
+
+    #1
+    signal = (signal.medfilt(DS_Sx,window_size*DS_Fs)/noice - trigger)
+    indices = np.where(signal > 0)[0]
+    Trigger_time = indices[0]/DS_Fs
+
+    return Trigger_time
