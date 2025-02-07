@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using StorageAPI.DTOs;
 using StorageAPI.Models;
 using StorageAPI.Services;
@@ -22,7 +21,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
             Latitude = aisData.Latitude,
             Longitude = aisData.Longitude,
             Speed = aisData.Speed,
-            Heading = aisData.Heading,  
+            Heading = aisData.Heading,
             RawMessage = aisData.RawMessage
         });
         return Ok(aisDataDtoList);
@@ -32,7 +31,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
     public async Task<IActionResult> Get(string logId)
     {
         var aisData = await aisRepository.GetAisDataAsync(logId);
-        
+
         var aisDataDto = new AisDataDto
         {
             LogId = aisData.LogId,
@@ -44,7 +43,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
             Heading = aisData.Heading,
             RawMessage = aisData.RawMessage
         };
-        
+
         return Ok(aisDataDto);
     }
 
@@ -62,7 +61,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
             Heading = createAisDataDto.Heading,
             RawMessage = createAisDataDto.RawMessage
         };
-        
+
         var newAisData = await aisRepository.AddAisDataAsync(aisData);
 
         var newAisDataDto = new AisDataDto
@@ -79,7 +78,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
 
         return CreatedAtAction(nameof(Get), new { logId = newAisDataDto.LogId }, newAisDataDto);
     }
-    
+
 
     [HttpPut("{logId}")]
     public async Task<IActionResult> Put(string logId, UpdateAisDataDto updateAisDataDto)
@@ -100,8 +99,8 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
             RawMessage = updateAisDataDto.RawMessage
         };
         var updatedAisData = await aisRepository.UpdateAisDataAsync(logId, newAisData);
-        
-       var updatedAisDataDto = new AisDataDto
+
+        var updatedAisDataDto = new AisDataDto
         {
             LogId = updatedAisData.LogId,
             Mmsi = updatedAisData.Mmsi,
@@ -112,7 +111,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
             Heading = updatedAisData.Heading,
             RawMessage = updatedAisData.RawMessage
         };
-        
+
         return Ok(updatedAisDataDto);
     }
 
@@ -123,7 +122,7 @@ public class AisController(IAisRepository aisRepository) : ControllerBase
 
         if (success)
             return NoContent();
-        
+
         return NotFound();
     }
 }

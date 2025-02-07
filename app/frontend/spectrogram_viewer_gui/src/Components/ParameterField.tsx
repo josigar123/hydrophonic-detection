@@ -1,16 +1,10 @@
 import { Input } from '@heroui/input';
 import { Button } from '@heroui/button';
-import { postParameters } from '../api/ParameterOptions';
+import { postParametersSpectrogram } from '../api/parameterApi';
 import { useState } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
 import { useContext } from 'react';
-
-interface FormData {
-  window_type: string | [string, number];
-  n_samples: number;
-  frequency_cutoff: number;
-  uri: string;
-}
+import { SpectrogramParameterRequestBody } from '../Interfaces/SpectrogramModels';
 
 interface ParameterFieldProps {
   fieldType: string;
@@ -27,18 +21,21 @@ const ParameterField = ({
 }: ParameterFieldProps) => {
   const spectrogramContext = useContext(SpectrogramContext);
 
-  const [formData, setFormData] = useState<FormData>({
-    window_type: 'hann',
-    n_samples: 5200,
-    frequency_cutoff: 100,
-    uri: uri,
-  });
+  const [spectrogramData, setSpectrogramData] =
+    useState<SpectrogramParameterRequestBody>({
+      windowType: 'hann',
+      nSamples: 5200,
+      frequencyCutoff: 100,
+      frequencyMax: 1000,
+      spectrogramMin: -40,
+      uri: uri,
+    });
 
-  const handleInputChange = (
+  const handleSpectrogramInputChange = (
     field: string,
-    value: string | number | [string, number]
+    value: string | number
   ) => {
-    setFormData((prev) => ({
+    setSpectrogramData((prev) => ({
       ...prev,
       [field]: typeof value === 'number' ? value.toString() : value,
     }));
@@ -57,22 +54,41 @@ const ParameterField = ({
           size="lg"
           label={fieldname}
           className="w-32"
-          value={formData[fieldname as keyof FormData]?.toString() || ''}
-          onChange={(e) => handleInputChange(fieldname, e.target.value)}
+          value={
+            // TODO: When DEMON analysis is available, add a ternary operator on fieldType to decide what fields to use e.g demonData, audioData etc
+            spectrogramData[
+              fieldname as keyof SpectrogramParameterRequestBody
+            ]?.toString() || ''
+          }
+          onChange={
+            (e) => handleSpectrogramInputChange(fieldname, e.target.value) // TODO: When DEMON analysis is available, add a ternary operator on fieldType to decide what input change handler should be called
+          }
         />
       ));
   };
 
   const handleSubmit = async () => {
     try {
-      const response = await postParameters('api/update-params', formData);
+      if (fieldType === 'Spectrogram') {
+        spectrogramData.nSamples = Number(spectrogramData.nSamples); // TODO: n_samples gets sent as a string for whatever reason, look into this, or keep this stupid conversion
 
-      const absolutePrefix =
-        '/home/joseph/Skole/Bacherlor-Hydrofondeteksjon/source_code/hydrophonic-detection/hydrophonic-detection/app/frontend/spectrogram_viewer_gui/public';
+        const response = await postParametersSpectrogram(
+          'SpectrogramReprocessor',
+          spectrogramData
+        );
 
-      const relativePath = response.image_url.replace(absolutePrefix, '');
+        // Acts as a temporary url for the image, created from the blob data
+        const spectrogramUrl = URL.createObjectURL(response.imageBlob);
 
-      spectrogramContext?.setSpectrogramURI(relativePath);
+        spectrogramContext?.setSpectrogramUrl(spectrogramUrl);
+      } else if (fieldType === 'DEMON') {
+        console.log('Call DEMON endpoint');
+      } else if (fieldType === 'Audio') {
+        console.log('Call Audio endpoint');
+      } else {
+        console.error('Unknown fieldType');
+        throw TypeError; // Should prob be ValueError
+      }
     } catch (error) {
       console.error('Error submitting parameters:', error);
     }

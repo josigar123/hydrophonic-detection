@@ -1,4 +1,5 @@
 using StorageAPI.Services;
+using Spectrogramgenerator;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +8,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<BlobStorageService>(); 
+builder.Services.AddSingleton<BlobStorageService>();
+
+builder.Services.AddGrpcClient<SpectrogramGenerator.SpectrogramGeneratorClient>(o =>
+{
+    o.Address = new Uri("http://localhost:50051");
+}
+)
+.ConfigureChannel(channelOpions =>
+{
+    channelOpions.MaxSendMessageSize = 50 * 1024 * 1024;
+    channelOpions.MaxReceiveMessageSize = 50 * 1024 * 1024;
+});
 
 builder.Services.AddScoped<IShipRepository, ShipRepository>(serviceProvider => //Ship table
 {
@@ -46,6 +58,15 @@ builder.Services.AddScoped<IAisRepository, AisRepository>(serviceProvider => //A
     );
 });
 
+// CORS to allow requests from web page
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost", builder =>
+    {
+        builder.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -53,6 +74,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowLocalhost");
 
 app.UseHttpsRedirection();
 
