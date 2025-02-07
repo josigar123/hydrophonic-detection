@@ -5,7 +5,7 @@ using StorageAPI.Models;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class ReprocessorController(SpectrogramGenerator.SpectrogramGeneratorClient spectrogramGeneratorClient, BlobStorageService blobClient, IRecordingRepository recordingRepository) : ControllerBase
+public class ReprocessorController(SpectrogramGenerator.SpectrogramGeneratorClient spectrogramGeneratorClient, BlobStorageService blobClient) : ControllerBase
 {
 
     [HttpPost]
@@ -25,6 +25,7 @@ public class ReprocessorController(SpectrogramGenerator.SpectrogramGeneratorClie
             WindowType = spectrogramRegenerator.WindowType,
             NSamples = spectrogramRegenerator.NSamples,
             FrequencyCutoff = spectrogramRegenerator.FrequencyCutoff,
+            FrequencyMax = spectrogramRegenerator.FrequencyMax,
             SpectrogramMin = spectrogramRegenerator.SpectrogramMin,
             WavData = Google.Protobuf.ByteString.CopyFrom(fileBytes)
         };

@@ -15,13 +15,14 @@ class SpectrogramGeneratorService(spectrogram_generator_service_pb2_grpc.Spectro
             n_samples=request.n_samples,
             frequency_cutoff=request.frequency_cutoff,
             spectrogram_min=request.spectrogram_min,
+            frequency_max=request.frequency_max,
             wav_data=request.wav_data
         )
         
         spectrogram_plotter = SpectrogramPlotter(spectrogram_params)
         x, t, sample_rate = spectrogram_plotter.process_wav_file(spectrogram_params.wav_data)
         
-        png_bytes = spectrogram_plotter.plot_and_save_spectrogram(x, t, sample_rate, spectrogram_params.window_type, spectrogram_params.n_samples, spectrogram_params.spectrogram_min)
+        png_bytes = spectrogram_plotter.plot_and_save_spectrogram(x, t, sample_rate, spectrogram_params.window_type, spectrogram_params.n_samples, spectrogram_params.frequency_max, spectrogram_params.spectrogram_min)
         
         return spectrogram_generator_service_pb2.SpectrogramGeneratorResponse (
             message="Spectrogram generated successfully",

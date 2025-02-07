@@ -17,6 +17,10 @@ public class SpectrogramRegenerator
 
     [JsonProperty(PropertyName = "spectrogram_min")]
     public int SpectrogramMin { get; set; } = 0;
+
+    [JsonProperty(PropertyName = "frequency_max")]
+    public int FrequencyMax { get; set; } = 0;
+
     [JsonProperty(PropertyName = "uri")]
     public string Uri { get; set; } = string.Empty;
 }

@@ -11,7 +11,8 @@ message SpectrogramGeneratorRequest {
     int32 n_samples = 2;
     float frequency_cutoff = 3;
     int32 spectrogram_min = 4;
-    bytes wav_data = 5;
+    int32 frequency_max = 5;
+    bytes wav_data = 6;
 }
 
 message SpectrogramGeneratorResponse {
