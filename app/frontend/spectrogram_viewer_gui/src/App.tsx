@@ -12,7 +12,7 @@ function App() {
     <SpectrogramContext.Provider
       value={{ spectrogramUrl, setSpectrogramUrl, wavUri, setWavUri }}
     >
-      <div>
+      <div className="min-h-screen bg-[#374151] overflow-hidden flex flex-col">
         <MainPage />
       </div>
     </SpectrogramContext.Provider>

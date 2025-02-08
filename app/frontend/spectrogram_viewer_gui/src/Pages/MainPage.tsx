@@ -57,10 +57,10 @@ const MainPage = () => {
 
   const audioFields: FieldConfig[] = [{ name: 'gain', isDropdown: false }];
   return (
-    <div className="flex flex-col h-screen">
+    <div className="min-h-screen flex flex-col">
       <h2 className="absolute top-0 left-0 ml-2 text-gray-600">Themis</h2>
       {/* Top half */}
-      <div className="flex-1">
+      <div className="flex-1 flex space-x-4 p-4">
         <div className="flex h-full mx-4 mt-8 space-x-8">
           <div className="flex-1 flex flex-col relative">
             <Tabs
