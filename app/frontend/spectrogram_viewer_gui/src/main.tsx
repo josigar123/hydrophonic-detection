@@ -1,10 +1,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import 'leaflet/dist/leaflet.css';
+import { HeroUIProvider } from '@heroui/react';
+import './index.css';
+import App from './App.tsx';
 import MapComponent from './Components/MapComponent';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MapComponent />
+    <HeroUIProvider>
+      <App />
+    </HeroUIProvider>
   </StrictMode>
 );
