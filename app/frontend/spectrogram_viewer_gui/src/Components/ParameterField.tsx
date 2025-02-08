@@ -1,38 +1,43 @@
 import { Input } from '@heroui/input';
 import { Button } from '@heroui/button';
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from '@heroui/dropdown';
 import { postParametersSpectrogram } from '../api/parameterApi';
 import { useState } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
 import { useContext } from 'react';
 import { SpectrogramParameterRequestBody } from '../Interfaces/SpectrogramModels';
 
+export interface FieldConfig {
+  name: keyof SpectrogramParameterRequestBody;
+  isDropdown: boolean;
+  options?: string[];
+}
 interface ParameterFieldProps {
   fieldType: string;
-  numberOfFields: number;
-  fieldNamesInOrder: Array<string>;
+  fields: FieldConfig[];
   uri: string;
 }
 
-const ParameterField = ({
-  fieldType,
-  numberOfFields,
-  fieldNamesInOrder,
-  uri,
-}: ParameterFieldProps) => {
+const ParameterField = ({ fieldType, fields, uri }: ParameterFieldProps) => {
   const spectrogramContext = useContext(SpectrogramContext);
 
   const [spectrogramData, setSpectrogramData] =
     useState<SpectrogramParameterRequestBody>({
-      windowType: 'hann',
-      nSamples: 5200,
-      frequencyCutoff: 100,
-      frequencyMax: 1000,
-      spectrogramMin: -40,
+      windowType: '',
+      nSamples: 0,
+      frequencyCutoff: 0,
+      frequencyMax: 0,
+      spectrogramMin: 0,
       uri: uri,
     });
 
   const handleSpectrogramInputChange = (
-    field: string,
+    field: keyof SpectrogramParameterRequestBody,
     value: string | number
   ) => {
     setSpectrogramData((prev) => ({
@@ -41,30 +46,48 @@ const ParameterField = ({
     }));
   };
 
-  const RenderInputField = (
-    numberOfFields: number,
-    fieldNamesInOrder: Array<string>
-  ) => {
-    return fieldNamesInOrder
-      .slice(0, numberOfFields)
-      .map((fieldname, index) => (
-        <Input
-          key={index}
-          labelPlacement="inside"
-          size="lg"
-          label={fieldname}
-          className="w-32"
-          value={
-            // TODO: When DEMON analysis is available, add a ternary operator on fieldType to decide what fields to use e.g demonData, audioData etc
-            spectrogramData[
-              fieldname as keyof SpectrogramParameterRequestBody
-            ]?.toString() || ''
-          }
-          onChange={
-            (e) => handleSpectrogramInputChange(fieldname, e.target.value) // TODO: When DEMON analysis is available, add a ternary operator on fieldType to decide what input change handler should be called
-          }
-        />
-      ));
+  const RenderInputField = (fields: FieldConfig[]) => {
+    return fields.map((field, index) => (
+      <div key={index}>
+        {field.isDropdown ? (
+          <div className="flex">
+            <Dropdown>
+              <DropdownTrigger variant="faded">
+                <Button className="flex-1 relative left-0 w-32 h-16 hover:bg-gray-200">
+                  {spectrogramData.windowType || 'Select window type'}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                selectionMode="single"
+                aria-label={field.name}
+                onAction={(key) =>
+                  handleSpectrogramInputChange(field.name, key.toString())
+                }
+              >
+                <>
+                  {field.options?.map((option) => (
+                    <DropdownItem key={option}>{option}</DropdownItem>
+                  ))}
+                </>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        ) : (
+          <Input
+            key={index}
+            labelPlacement="inside"
+            size="lg"
+            label={field.name}
+            className="w-32"
+            value={spectrogramData[field.name]?.toString() || ''}
+            onChange={(e) =>
+              handleSpectrogramInputChange(field.name, e.target.value)
+            }
+          />
+        )}
+      </div>
+    ));
   };
 
   const handleSubmit = async () => {
@@ -95,13 +118,17 @@ const ParameterField = ({
   };
 
   return (
-    <div className="flex justify-start items-center w-auto h-36 border-4 border-gray-800 rounded-3xl bg-[#D9D9D9] p-2 space-x-2 relative">
+    <div className="flex flex-wrap items-center w-auto h-36  rounded-3xl bg-[#D9D9D9] p-2 space-x-2 relative">
       <h3 className="absolute top-0 left-0 p-2 ml-4">{fieldType}</h3>
-      {RenderInputField(numberOfFields, fieldNamesInOrder)}
+
+      <div className="flex-1 min-w-0 flex justify-start space-x-2">
+        {RenderInputField(fields)}
+      </div>
+
       <Button
         color="primary"
         size="lg"
-        className="absolute right-4"
+        className="flex-shrink-0"
         onPressStart={handleSubmit}
       >
         Apply

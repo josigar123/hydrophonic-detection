@@ -39,7 +39,7 @@ class SpectrogramPlotter:
         plt.colorbar(label="Magnitude [dB]")
         
         img_byte_array = io.BytesIO()
-        plt.savefig(img_byte_array, format='png', dpi=300)
+        plt.savefig(img_byte_array, format='png', dpi=300, bbox_inches='tight', transparent = True)
         img_byte_array.seek(0)
         plt.close()
         return img_byte_array.getvalue()

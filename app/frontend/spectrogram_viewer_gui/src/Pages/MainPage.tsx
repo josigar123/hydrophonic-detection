@@ -1,5 +1,6 @@
-import refreshIconImage from '/assets/icons/RefreshIcon.png';
+import recenterIcon from '/assets/icons/recenter.svg';
 import placeholderImage from '/assets/placeholders/977232.png';
+import amplitudePlot from '/assets/amplitude_plots/amplitudePlot.png';
 import { Tabs, Tab } from '@heroui/tabs';
 import { useContext } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
@@ -12,21 +13,49 @@ import {
   TableCell,
 } from '@heroui/table';
 import { Tooltip, Button } from '@heroui/react';
+import { FieldConfig } from '../Components/ParameterField';
 import ParameterField from '../Components/ParameterField';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 const MainPage = () => {
   const spectrogramContext = useContext(SpectrogramContext);
 
-  const spectrogramFieldNames = [
-    'windowType',
-    'nSamples',
-    'frequencyCutoff',
-    'spectrogramMin',
-    'frequencyMax',
+  const validWindowTypes = [
+    'hann',
+    'hamming',
+    'blackman',
+    'boxcar',
+    'bartlett',
+    'flattop',
+    'parzen',
+    'bohman',
+    'blackmanharris',
+    'nuttall',
+    'barthann',
+    'cosine',
+    'exponential',
+    'tukey',
+    'taylor',
+    'lanczos',
+  ];
+  const spectrogramFields: FieldConfig[] = [
+    { name: 'windowType', isDropdown: true, options: validWindowTypes },
+    { name: 'nSamples', isDropdown: false },
+    { name: 'frequencyCutoff', isDropdown: false },
+    { name: 'frequencyMax', isDropdown: false },
+    { name: 'spectrogramMin', isDropdown: false },
   ];
 
-  const audioFieldNames = ['Gain'];
+  // Not relevant params, just placeholders
+  const demonFields: FieldConfig[] = [
+    { name: 'windowType', isDropdown: true, options: validWindowTypes },
+    { name: 'nSamples', isDropdown: false },
+    { name: 'frequencyCutoff', isDropdown: false },
+    { name: 'frequencyMax', isDropdown: false },
+    { name: 'spectrogramMin', isDropdown: false },
+  ];
+
+  const audioFields: FieldConfig[] = [{ name: 'gain', isDropdown: false }];
   return (
     <div className="flex flex-col h-screen">
       <h2 className="absolute top-0 left-0 ml-2 text-gray-600">Themis</h2>
@@ -42,7 +71,7 @@ const MainPage = () => {
               className="ml-4"
             >
               <Tab key="spectrogram" title="Spectrogram">
-                <div className="w-full h-full">
+                <div className="w-full h-full bg-slate-400 rounded-lg space-y-2 p-4">
                   <TransformWrapper
                     initialScale={1}
                     minScale={0.5}
@@ -56,33 +85,41 @@ const MainPage = () => {
                       />
                     </TransformComponent>
                   </TransformWrapper>
+
+                  <ParameterField
+                    fieldType="Spectrogram"
+                    fields={spectrogramFields}
+                    uri="db8278de83114c159fec7528aea5d646" // TODO, use the wavUri, and setWavUri so that this is dynamic and not hardcoded
+                  ></ParameterField>
                 </div>
               </Tab>
               <Tab key="DEMON" title="DEMON">
-                <div className="w-full h-full">
+                <div className="w-full h-full bg-slate-400 rounded-lg space-y-2 p-4">
                   <img
                     src={placeholderImage}
                     alt="An image of a DEMON spectrogram"
                     className="object-contain shadow-lg rounded-3xl mt-2"
                   />
+
+                  <ParameterField
+                    fieldType="DEMON"
+                    fields={demonFields}
+                    uri="asdfasdfasraw3ra3r"
+                  ></ParameterField>
                 </div>
               </Tab>
             </Tabs>
-            <img
-              src={placeholderImage}
-              alt="An image of an amplitude plot against time"
-              className="object-contain shadow-lg rounded-3xl mt-2"
-            ></img>
+
             <div className="absolute top-0 right-0 mt-3 mr-4">
               <Tooltip
                 placement="right"
                 closeDelay={1}
                 delay={1}
-                content="Refreshes current graph, if a new one is available"
+                content="Reset zoom"
               >
                 <Button size="sm" radius="full">
                   <img
-                    src={refreshIconImage}
+                    src={recenterIcon}
                     alt="Image of a refresh icon"
                     className="w-6 h-6"
                   />
@@ -105,17 +142,15 @@ const MainPage = () => {
 
       {/* Bottom half */}
       <div className="flex-1 flex justify-start items-start px-4 w-auto space-x-2 py-4">
-        <div className="flex-1">
-          <ParameterField
-            fieldType="Spectrogram"
-            numberOfFields={spectrogramFieldNames.length}
-            fieldNamesInOrder={spectrogramFieldNames}
-            uri="db8278de83114c159fec7528aea5d646" // TODO, use the wavUri, and setWavUri so that this is dynamic and not hardcoded
-          ></ParameterField>
+        <div className="flex-1 bg-slate-400 p-4 space-y-2 rounded-lg">
+          <img
+            src={amplitudePlot}
+            alt="An image of an amplitude plot against time"
+            className="object-contain shadow-lg rounded-3xl mt-2"
+          ></img>
           <ParameterField
             fieldType="Audio"
-            numberOfFields={audioFieldNames.length}
-            fieldNamesInOrder={audioFieldNames}
+            fields={audioFields}
             uri="asjklhashjklasdhjk"
           ></ParameterField>
         </div>

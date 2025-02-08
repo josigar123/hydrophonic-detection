@@ -10,7 +10,22 @@ public class SpectrogramReprocessorController(SpectrogramGenerator.SpectrogramGe
 
     private static readonly HashSet<string> ValidWindowTypes = new HashSet<string>
     {
-        "hamming", "hann", "blackman", "boxcar", "bartlett", "parzen"
+        "hann",
+        "hamming",
+        "blackman",
+        "boxcar",
+        "bartlett",
+        "flattop",
+        "parzen",
+        "bohman",
+        "blackmanharris",
+        "nuttall",
+        "barthann",
+        "cosine",
+        "exponential",
+        "tukey",
+        "taylor",
+        "lanczos",
     };
 
     [HttpPost]
