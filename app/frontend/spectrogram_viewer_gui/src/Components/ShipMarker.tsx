@@ -2,7 +2,7 @@ import React from 'react'
 import { Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
-import shipSvg from '../assets/icons/ship.svg';
+import shipSvg from '/assets/icons/ship.svg';
 
 const shipIcon = new L.Icon({
   iconUrl: shipSvg,
