@@ -55,7 +55,9 @@ const MainPage = () => {
     { name: 'spectrogramMin', isDropdown: false },
   ];
 
+  // Placeholders
   const audioFields: FieldConfig[] = [{ name: 'gain', isDropdown: false }];
+
   return (
     <div className="min-h-screen flex flex-col">
       <h2 className="absolute top-0 left-0 ml-2 text-gray-600">Themis</h2>
@@ -72,11 +74,7 @@ const MainPage = () => {
             >
               <Tab key="spectrogram" title="Spectrogram">
                 <div className="w-full h-full bg-slate-400 rounded-lg space-y-2 p-4">
-                  <TransformWrapper
-                    initialScale={1}
-                    minScale={0.5}
-                    maxScale={5}
-                  >
+                  <TransformWrapper initialScale={1} minScale={1} maxScale={5}>
                     <TransformComponent>
                       <img
                         src={spectrogramContext?.spectrogramUrl}
