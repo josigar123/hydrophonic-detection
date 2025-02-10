@@ -40,6 +40,7 @@ public class SpectrogramReprocessorController(SpectrogramGenerator.SpectrogramGe
 
         var file_prefix = "audio/";
         var fileStream = await blobClient.DownloadFileAsync(file_prefix + spectrogramRegenerator.Uri);
+
         byte[] fileBytes;
         using var memoryStream = new MemoryStream();
         await fileStream.CopyToAsync(memoryStream);
@@ -60,6 +61,6 @@ public class SpectrogramReprocessorController(SpectrogramGenerator.SpectrogramGe
         Console.WriteLine("Recieved response from gRPC request");
 
         var spectrogramStream = new MemoryStream(response.SpectrogramImageFile.ToByteArray());
-        return new FileStreamResult(spectrogramStream, "image/png");
+        return new FileStreamResult(spectrogramStream, "image/webp");
     }
 }

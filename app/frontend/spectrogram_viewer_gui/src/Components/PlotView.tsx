@@ -60,7 +60,7 @@ const PlotView = () => {
           <Button size="sm" radius="full">
             <img
               src={recenterIcon}
-              alt="Image of a refresh icon"
+              alt="Image of a recenter icon"
               className="w-6 h-6"
             />
           </Button>

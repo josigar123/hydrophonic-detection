@@ -1,5 +1,8 @@
 using StorageAPI.Services;
 using Spectrogramgenerator;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+
+const int MAX_REQUEST_BODY_SIZE = 30 * 1024 * 1024; // 50mb
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +20,8 @@ builder.Services.AddGrpcClient<SpectrogramGenerator.SpectrogramGeneratorClient>(
 )
 .ConfigureChannel(channelOpions =>
 {
-    channelOpions.MaxSendMessageSize = 50 * 1024 * 1024;
-    channelOpions.MaxReceiveMessageSize = 50 * 1024 * 1024;
+    channelOpions.MaxSendMessageSize = MAX_REQUEST_BODY_SIZE;
+    channelOpions.MaxReceiveMessageSize = MAX_REQUEST_BODY_SIZE;
 });
 
 builder.Services.AddScoped<IShipRepository, ShipRepository>(serviceProvider => //Ship table
