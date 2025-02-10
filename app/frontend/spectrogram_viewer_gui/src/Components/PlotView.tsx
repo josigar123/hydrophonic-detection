@@ -33,19 +33,21 @@ const PlotView = () => {
 
   const spectrogramFields: FieldConfig[] = [
     { name: 'windowType', isDropdown: true, options: validWindowTypes },
-    { name: 'nSamples', isDropdown: false },
-    { name: 'frequencyCutoff', isDropdown: false },
-    { name: 'frequencyMax', isDropdown: false },
-    { name: 'spectrogramMin', isDropdown: false },
+    { name: 'nSegment', isDropdown: false },
+    { name: 'highpassCutoff', isDropdown: false },
+    { name: 'lowpassCutoff', isDropdown: false },
+    { name: 'colorScaleMin', isDropdown: false },
+    { name: 'maxDisplayedFrequency', isDropdown: false },
   ];
 
   // Not relevant params, just placeholders
   const demonFields: FieldConfig[] = [
     { name: 'windowType', isDropdown: true, options: validWindowTypes },
-    { name: 'nSamples', isDropdown: false },
-    { name: 'frequencyCutoff', isDropdown: false },
-    { name: 'frequencyMax', isDropdown: false },
-    { name: 'spectrogramMin', isDropdown: false },
+    { name: 'nSegment', isDropdown: false },
+    { name: 'highpassCutoff', isDropdown: false },
+    { name: 'lowpassCutoff', isDropdown: false },
+    { name: 'colorScaleMin', isDropdown: false },
+    { name: 'maxDisplayedFrequency', isDropdown: false },
   ];
 
   return (

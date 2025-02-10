@@ -29,10 +29,11 @@ const ParameterField = ({ fieldType, fields, uri }: ParameterFieldProps) => {
   const [spectrogramData, setSpectrogramData] =
     useState<SpectrogramParameterRequestBody>({
       windowType: '',
-      nSamples: 0,
-      frequencyCutoff: 0,
-      frequencyMax: 0,
-      spectrogramMin: 0,
+      nSegment: 0,
+      highpassCutoff: 0,
+      lowpassCutoff: 0,
+      colorScaleMin: 0,
+      maxDisplayedFrequency: 0,
       uri: uri,
     });
 
@@ -93,7 +94,7 @@ const ParameterField = ({ fieldType, fields, uri }: ParameterFieldProps) => {
   const handleSubmit = async () => {
     try {
       if (fieldType === 'Spectrogram') {
-        spectrogramData.nSamples = Number(spectrogramData.nSamples); // TODO: n_samples gets sent as a string for whatever reason, look into this, or keep this stupid conversion
+        spectrogramData.nSegment = Number(spectrogramData.nSegment); // TODO: n_samples gets sent as a string for whatever reason, look into this, or keep this stupid conversion
 
         const response = await postParametersSpectrogram(
           'SpectrogramReprocessor',

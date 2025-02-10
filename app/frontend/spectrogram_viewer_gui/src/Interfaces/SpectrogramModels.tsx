@@ -1,9 +1,10 @@
 export interface SpectrogramParameterRequestBody {
   windowType: string;
-  nSamples: number;
-  frequencyCutoff: number;
-  frequencyMax: number;
-  spectrogramMin: number;
+  nSegment: number;
+  highpassCutoff: number;
+  lowpassCutoff: number;
+  colorScaleMin: number;
+  maxDisplayedFrequency: number;
   uri: string;
 }
 

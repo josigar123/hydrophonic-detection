@@ -1,0 +1,6 @@
+{
+  "GrpcConfig": {
+    "MaxSendMessageSize": 52428800,
+    "MaxReceiveMessageSize": 52428800
+  }
+}

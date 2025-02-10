@@ -12,17 +12,18 @@ class SpectrogramGeneratorService(spectrogram_generator_service_pb2_grpc.Spectro
         
         spectrogram_params = SpectrogramParameterModel(
             window_type=request.window_type,
-            n_samples=request.n_samples,
-            frequency_cutoff=request.frequency_cutoff,
-            spectrogram_min=request.spectrogram_min,
-            frequency_max=request.frequency_max,
+            n_segment=request.n_segment,
+            highpass_cutoff=request.highpass_cutoff,
+            lowpass_cutoff=request.lowpass_cutoff,
+            color_scale_min=request.color_scale_min,
+            max_displayed_frequency=request.max_displayed_frequency,
             wav_data=request.wav_data
         )
         
         spectrogram_plotter = SpectrogramPlotter(spectrogram_params)
-        x, t, sample_rate = spectrogram_plotter.process_wav_file(spectrogram_params.wav_data)
+        x, t, sample_rate = spectrogram_plotter.process_wav_file(spectrogram_params.wav_data, spectrogram_params.highpass_cutoff)
         
-        png_bytes = spectrogram_plotter.plot_and_save_spectrogram(x, t, sample_rate, spectrogram_params.window_type, spectrogram_params.n_samples, spectrogram_params.frequency_max, spectrogram_params.spectrogram_min)
+        png_bytes = spectrogram_plotter.plot_and_save_spectrogram(x, t, sample_rate, spectrogram_params.window_type, spectrogram_params.n_segment, spectrogram_params.max_displayed_frequency, spectrogram_params.color_scale_min)
         
         return spectrogram_generator_service_pb2.SpectrogramGeneratorResponse (
             message="Spectrogram generated successfully",

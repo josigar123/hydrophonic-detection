@@ -11,20 +11,26 @@ import io
 
 class SpectrogramPlotter:
     
-    window_type: any
-    n_samples: int
-    frequency_cutoff: int
+    window_type: str
+    n_segment: int
+    highpass_cutoff: int
+    lowpass_cutoff: int # Unused, no lowpass function supplied yet
+    color_scale_min: int
+    max_displayed_frequency: int
     wav_data: bytes
-    
+
     def __init__(self, spectrogramParameters: SpectrogramParameterModel):
-        self.filter_type = spectrogramParameters.window_type
-        self.n_samples = spectrogramParameters.n_samples
-        self.frequency_cutoff = spectrogramParameters.frequency_cutoff
+        self.window_type = spectrogramParameters.window_type
+        self.n_segment= spectrogramParameters.n_segment
+        self.highpass_cutoff = spectrogramParameters.highpass_cutoff
+        self.lowpass_cutoff = spectrogramParameters.lowpass_cutoff
+        self.color_scale_min = spectrogramParameters.color_scale_min
+        self.max_displayed_frequency = spectrogramParameters.max_displayed_frequency
         self.wav_data = spectrogramParameters.wav_data
     
-    def plot_and_save_spectrogram(self, x: list[float], t: list[float], fs: int, window=("tukey", 0.25), n_samples: int = 5200, f_max: float = 1e3, s_min=-40) -> bytes:
+    def plot_and_save_spectrogram(self, x: list[float], t: list[float], fs: int, window, n_segment: int, f_max: int, s_min) -> bytes:
             
-        f, t, sx = signal.spectrogram(x, fs, window=window, nperseg=n_samples, detrend=False)
+        f, t, sx = signal.spectrogram(x, fs, window=window, nperseg=n_segment, detrend=False)
         sx_db = 10*np.log10(sx/sx.max())   # Convert to dB
                 
         plt.figure(figsize=(16, 6))	
@@ -44,7 +50,7 @@ class SpectrogramPlotter:
         plt.close()
         return img_byte_array.getvalue()
     
-    def process_wav_file(self, wav_data: bytes):
+    def process_wav_file(self, wav_data: bytes, highpass_cutoff: int):
 
         wav_file = io.BytesIO(wav_data)
 
@@ -52,8 +58,7 @@ class SpectrogramPlotter:
 
         times = np.arange(len(samples)) / sample_rate
 
-        FREQUENCY_CUTOFF = 100
-        x1 = butter_highpass_filter(samples, FREQUENCY_CUTOFF, sample_rate)
+        x1 = butter_highpass_filter(samples, highpass_cutoff, sample_rate)
         return x1, times, sample_rate
                 
         

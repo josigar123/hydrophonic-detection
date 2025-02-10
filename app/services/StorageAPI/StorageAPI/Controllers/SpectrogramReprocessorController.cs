@@ -49,10 +49,11 @@ public class SpectrogramReprocessorController(SpectrogramGenerator.SpectrogramGe
         var request = new SpectrogramGeneratorRequest
         {
             WindowType = spectrogramRegenerator.WindowType,
-            NSamples = spectrogramRegenerator.NSamples,
-            FrequencyCutoff = spectrogramRegenerator.FrequencyCutoff,
-            FrequencyMax = spectrogramRegenerator.FrequencyMax,
-            SpectrogramMin = spectrogramRegenerator.SpectrogramMin,
+            NSegment = spectrogramRegenerator.NSegment,
+            HighpassCutoff = spectrogramRegenerator.HighpassCutoff,
+            LowpassCutoff = spectrogramRegenerator.LowpassCutoff,
+            ColorScaleMin = spectrogramRegenerator.ColorScaleMin,
+            MaxDisplayedFrequency = spectrogramRegenerator.MaxDisplayedFrequency,
             WavData = Google.Protobuf.ByteString.CopyFrom(fileBytes)
         };
 
