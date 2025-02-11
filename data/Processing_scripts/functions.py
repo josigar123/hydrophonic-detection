@@ -6,7 +6,7 @@ import numpy as np
 from scipy.signal import hilbert, resample_poly
 import librosa
 
-def plot_spectrogram(x, t, fs, n_segment, f_max, s_min, output_path):
+def plot_spectrogram(x, fs, n_segment, f_max, s_min, output_path):
     """Plot spectrogram of signal x.
 
     Parameters
@@ -22,9 +22,7 @@ def plot_spectrogram(x, t, fs, n_segment, f_max, s_min, output_path):
     f_max: float
         Max. on frequency axis
     """
-    # Configure spectrogram
-    #s_min = -40       # Minimum on the intensity plot. Lower values are 'black'
-		
+
     # Calculate spectrogram
     f, t, sx = signal.spectrogram(x, fs, nperseg=n_segment, detrend=False)
     sx_db = 10*np.log10(sx/sx.max())   # Convert to dB
@@ -41,6 +39,48 @@ def plot_spectrogram(x, t, fs, n_segment, f_max, s_min, output_path):
     		
     plt.colorbar(label="Magnitude [dB]")  # Colorbar for intensity scale
     plt.savefig(output_path, format="png", dpi=300)
+    return 0
+
+def plot_spectrogram_from_file(input_file,Fs,n_segment, f_max, s_min):
+    """Plot spectrogram of signal x.
+
+    Parameters
+    ----------
+    x: array of floats
+        Signal in time-domain
+    t: Numpy array of floats
+        Time vector for x
+    fs: float
+        Sample rate [Samples/s]
+    n_segmend: int
+        No. of samples in segment for spectrogram calculation
+    f_max: float
+        Max. on frequency axis
+    """
+    data_org, sr = librosa.load(input_file)
+
+    #downsampling original audio data
+    data_offcet = resample_poly(data_org,1,int(sr/Fs))
+
+    #Removing dc offset
+    Sx = data_offcet - np.mean(data_offcet)
+
+    # Calculate spectrogram
+    f, t, sx = signal.spectrogram(Sx, Fs, nperseg=n_segment, detrend=False)
+    sx_db = 10*np.log10(sx/sx.max())   # Convert to dB
+    		
+    # Plot spectrogram
+    plt.figure(figsize=(16, 6))  # Define figure for results	
+    plt.subplot(1, 1, 1)
+    
+    plt.pcolormesh(t, f, sx_db, vmin=s_min, cmap='inferno')  # Draw spectrogram image
+    		
+    plt.xlabel("Time [s]")         # Axis labels and scales
+    plt.ylabel("Frequency [Hz]")
+    plt.ylim(0, f_max)
+    		
+    plt.colorbar(label="Magnitude [dB]")  # Colorbar for intensity scale
+    plt.show()
     return 0
 
 
@@ -140,7 +180,7 @@ def Normalization_BroadBand(x,window_length, window_distance, sample_rate):
     Ratio = E/N
     return Ratio
 
-def Hilbert_DS(input_file, Fs:int ,medfilt_window: int):
+def Hilbert_DS(input_file, Fs:int ,medfilt_window: int, filter_type: int):
     """
     INPUT:
         input_file: audio file to transform
@@ -175,18 +215,43 @@ def Hilbert_DS(input_file, Fs:int ,medfilt_window: int):
     #Squaring each element
     h_2 = np.square(analytic_signal)
 
-    #Moving avg filter
-    med_filt_size = 11
-    h_filt = signal.medfilt(h_2,med_filt_size)
+    #If, only for testing purposes. One of the should be the only one
+    if filter_type == 1:
+        #median filter
+        h_filt = signal.medfilt(h_2,medfilt_window)
 
-    #Downsampling
-    DS_Sx = resample_poly(h_filt,1,med_filt_size)
-    DS_Fs = Fs/med_filt_size
-    DS_t = np.linspace(0,(len(DS_Sx)/DS_Fs),len(DS_Sx))
+        #Downsampling
+        DS_Sx = resample_poly(h_filt,1,medfilt_window)
+        DS_Fs = Fs/medfilt_window
+        DS_t = np.linspace(0,(len(DS_Sx)/DS_Fs),len(DS_Sx))
+    elif filter_type == 2:
+        #filtered and downsampled alternative
+        idx_start = 0
+        idx_stop = medfilt_window
+        num_windows = len(h_2) // medfilt_window
+        #Time lost at end of file due to filter_size
+        num_samp  = num_windows*medfilt_window
+        lost_samp = len(h_2) - num_samp
+        lost_time = lost_samp/Fs
+        print(f"Due to filter_size mismatch, {lost_time}[s] is lost at end of file")
+        h_filt = np.zeros(num_windows-1)
+        try:
+            for i in range(num_windows):
+                h_filt[i] = np.mean(h_2[idx_start:idx_stop])
+                idx_start = idx_stop
+                idx_stop += medfilt_window
+        except:
+            print("Last used idx:",idx_start,",",idx_stop)
+            print(f"last possible idx to use: {len(h_2)-1}")
+            print(h_filt)
+        DS_Sx = h_filt
+        DS_Fs = Fs/medfilt_window
+        DS_t = np.linspace(0,(len(DS_Sx)/DS_Fs),len(DS_Sx))
+    else: print("filter_type must be 1 or 2")
 
     return DS_Sx, DS_Fs, DS_t
 
-def DEMON_Analasys(Sx, Fs:int, nperseg:int,medfilt_window:int):
+def DEMON_Analasys(Sx, Fs:int, nperseg:int,medfilt_window:int,s_min:int,s_max:int):
     """
     INPUT:
         Sx: Array of float
@@ -198,17 +263,25 @@ def DEMON_Analasys(Sx, Fs:int, nperseg:int,medfilt_window:int):
     """
     #Henter ut spectrogram for DEMON (demon_sx)
     demon_f, demon_t, demon_sx = signal.spectrogram(Sx, Fs, nperseg=nperseg, detrend=False)
-
+    
     #med filt over hver kolonne
     demon_sx_med = np.zeros((len(demon_sx),len(demon_sx[0])))
     for k in range(len(demon_sx)):
-        demon_sx_med[k] = signal.medfilt(demon_sx[k],kernel_size=medfilt_window)
+        demon_sx_med[k,:] = signal.medfilt(demon_sx[k,:],kernel_size=medfilt_window)
 
     demon_sx_norm = demon_sx/demon_sx_med
-    demon_sx_db = 10*np.log(demon_sx_med)
+    demon_sx_db = 10*np.log(demon_sx_norm)
+    
+    plt.subplot(1,1,1)
+    plt.pcolormesh(demon_t, demon_f, demon_sx_db,vmin=s_min,vmax=s_max, shading='gouraud')
+    plt.ylabel("Frequency (Hz)")
+    plt.xlabel("Time (s)")
+    plt.title("DEMON Spectrogram (Modulation Frequency)")
+    plt.colorbar(label="Power (dB)")
+    plt.show()
     return 0
 
-def Hilbert_BB(DS_Sx, DS_Fs, window_size, noice_t_start, trigger):
+def Hilbert_BB(DS_Sx, DS_Fs:int, window_size:int, noice_t_start:int, trigger:int, plot:bool):
     """
         DS_Sx: Array of float
             Time series of measurement values to make spectrogram of
@@ -219,7 +292,7 @@ def Hilbert_BB(DS_Sx, DS_Fs, window_size, noice_t_start, trigger):
         noice_t_start: int
             start point for mean noice calculation in seconds
     """
-    noice_t_stop = (noice_t_start+window_size)*DS_Fs 
+    noice_t_stop = int((noice_t_start+window_size)*DS_Fs)
     noice = np.mean(DS_Sx[noice_t_start:noice_t_stop])
     
     """
@@ -231,8 +304,28 @@ def Hilbert_BB(DS_Sx, DS_Fs, window_size, noice_t_start, trigger):
     """
 
     #1
-    signal = (signal.medfilt(DS_Sx,window_size*DS_Fs)/noice - trigger)
-    indices = np.where(signal > 0)[0]
-    Trigger_time = indices[0]/DS_Fs
+    #If even +1, if odd ok
+    kernel_size = int(window_size*DS_Fs)+int(int(window_size*DS_Fs) % 2 == 0)
 
+    signal_vals = 10*np.log10(signal.medfilt(DS_Sx,kernel_size)/noice) - trigger
+    try:
+        indices = np.where(signal_vals > 0)[0]
+        Trigger_time = indices[0]/DS_Fs
+    except:
+        Trigger_time = 0
+        print("Warning: Trigger is too high")
+        print("No trigger time registerd")
+
+    if plot ==True:
+        BBnorm_t = np.linspace(0,(len(signal_vals)/DS_Fs),len(signal_vals))
+
+        plt.figure(figsize=(12,6))
+
+        plt.plot(BBnorm_t,signal_vals + trigger)
+        plt.axhline(y=trigger, color='red', linestyle='--', label="Trigger")
+        plt.title("BBnorm")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Amplitude [dB]")
+        plt.show()
+    
     return Trigger_time
