@@ -85,12 +85,12 @@ const ClickLocationPopup = () => {
 
 const MapComponent: React.FC = () => {
   return (
-    <div style={{ padding: '60px' }}>
+    <div className="flex-1 bg-slate-400 rounded-lg space-y-2 p-4">
       <MapContainer
         center={[59.431633, 10.478039]}
         zoom={13}
         scrollWheelZoom={true}
-        style={{ height: '600px', width: '900px' }}
+        className="w-full h-full"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

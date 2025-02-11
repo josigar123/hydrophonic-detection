@@ -1,7 +1,7 @@
 import PlotView from '../Components/PlotView';
 import AisDataTable from '../Components/AisDataTable';
 import AmplitudeView from '../Components/AmplitudeView';
-import MapComponent from '../Components/MapComponent'
+import MapComponent from '../Components/MapComponent';
 
 const MainPage = () => {
   return (
@@ -11,9 +11,7 @@ const MainPage = () => {
       <div className="flex-1 flex p-4 h-full space-x-4">
         <div className="flex h-full mx-4 mt-8 space-x-8">
           <PlotView />
-          <div className="flex-1 w-full h-full bg-slate-400 rounded-lg space-y-2 p-4">
-              <MapComponent />
-          </div>
+          <MapComponent />
         </div>
       </div>
 
