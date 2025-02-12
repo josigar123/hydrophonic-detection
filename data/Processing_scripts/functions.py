@@ -180,7 +180,7 @@ def Normalization_BroadBand(x,window_length, window_distance, sample_rate):
     Ratio = E/N
     return Ratio
 
-def Hilbert_DS(input_file, Fs:int ,medfilt_window: int, filter_type: int):
+def Hilbert_DS(input_file, Fs:int ,medfilt_window: int):
     """
     INPUT:
         input_file: audio file to transform
@@ -215,39 +215,14 @@ def Hilbert_DS(input_file, Fs:int ,medfilt_window: int, filter_type: int):
     #Squaring each element
     h_2 = np.square(analytic_signal)
 
-    #If, only for testing purposes. One of the should be the only one
-    if filter_type == 1:
-        #median filter
-        h_filt = signal.medfilt(h_2,medfilt_window)
+    #median filter
+    h_filt = signal.medfilt(h_2,medfilt_window)
 
-        #Downsampling
-        DS_Sx = resample_poly(h_filt,1,medfilt_window)
-        DS_Fs = Fs/medfilt_window
-        DS_t = np.linspace(0,(len(DS_Sx)/DS_Fs),len(DS_Sx))
-    elif filter_type == 2:
-        #filtered and downsampled alternative
-        idx_start = 0
-        idx_stop = medfilt_window
-        num_windows = len(h_2) // medfilt_window
-        #Time lost at end of file due to filter_size
-        num_samp  = num_windows*medfilt_window
-        lost_samp = len(h_2) - num_samp
-        lost_time = lost_samp/Fs
-        print(f"Due to filter_size mismatch, {lost_time}[s] is lost at end of file")
-        h_filt = np.zeros(num_windows-1)
-        try:
-            for i in range(num_windows):
-                h_filt[i] = np.mean(h_2[idx_start:idx_stop])
-                idx_start = idx_stop
-                idx_stop += medfilt_window
-        except:
-            print("Last used idx:",idx_start,",",idx_stop)
-            print(f"last possible idx to use: {len(h_2)-1}")
-            print(h_filt)
-        DS_Sx = h_filt
-        DS_Fs = Fs/medfilt_window
-        DS_t = np.linspace(0,(len(DS_Sx)/DS_Fs),len(DS_Sx))
-    else: print("filter_type must be 1 or 2")
+    #Downsampling
+    DS_Sx = resample_poly(h_filt,1,medfilt_window)
+    DS_Fs = Fs/medfilt_window
+    DS_t = np.linspace(0,(len(DS_Sx)/DS_Fs),len(DS_Sx))
+
 
     return DS_Sx, DS_Fs, DS_t
 
