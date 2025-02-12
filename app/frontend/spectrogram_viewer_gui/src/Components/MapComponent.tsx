@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMapEvents,
-} from 'react-leaflet';
+import React from 'react';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import ShipMarker from './ShipMarker';
 
@@ -62,30 +56,10 @@ const ships = [
     longitude: 10.515032,
   },
 ];
-const ClickLocationPopup = () => {
-  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
-    null
-  );
-
-  useMapEvents({
-    click(e) {
-      setPosition(e.latlng);
-    },
-  });
-
-  return position === null ? null : (
-    <Marker position={position}>
-      <Popup>
-        Latitude: {position.lat.toFixed(6)} <br />
-        Longitude:{position.lng.toFixed(6)}
-      </Popup>
-    </Marker>
-  );
-};
 
 const MapComponent: React.FC = () => {
   return (
-    <div className="flex-1 bg-slate-400 rounded-lg space-y-2 p-4">
+    <>
       <MapContainer
         center={[59.431633, 10.478039]}
         zoom={13}
@@ -99,9 +73,8 @@ const MapComponent: React.FC = () => {
         {ships.map((ship) => (
           <ShipMarker key={ship.mmsi} ship={ship} />
         ))}
-        <ClickLocationPopup />
       </MapContainer>
-    </div>
+    </>
   );
 };
 

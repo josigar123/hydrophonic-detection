@@ -49,38 +49,36 @@ const ParameterField = ({ fieldType, fields, uri }: ParameterFieldProps) => {
 
   const RenderInputField = (fields: FieldConfig[]) => {
     return fields.map((field, index) => (
-      <div key={index}>
+      <div key={index} className="flex-1 min-w-0">
         {field.isDropdown ? (
-          <div className="flex">
-            <Dropdown>
-              <DropdownTrigger variant="faded">
-                <Button className="flex-1 relative left-0 w-32 h-16 hover:bg-gray-200">
-                  {spectrogramData.windowType || 'Select window type'}
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                selectionMode="single"
-                aria-label={field.name}
-                onAction={(key) =>
-                  handleSpectrogramInputChange(field.name, key.toString())
-                }
-              >
-                <>
-                  {field.options?.map((option) => (
-                    <DropdownItem key={option}>{option}</DropdownItem>
-                  ))}
-                </>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
+          <Dropdown>
+            <DropdownTrigger variant="faded">
+              <Button className="w-full h-10 hover:bg-gray-200 truncate">
+                {spectrogramData.windowType || 'Select window type'}
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              selectionMode="single"
+              aria-label={field.name}
+              onAction={(key) =>
+                handleSpectrogramInputChange(field.name, key.toString())
+              }
+            >
+              <>
+                {field.options?.map((option) => (
+                  <DropdownItem key={option}>{option}</DropdownItem>
+                ))}
+              </>
+            </DropdownMenu>
+          </Dropdown>
         ) : (
           <Input
             key={index}
             labelPlacement="inside"
             size="lg"
             label={field.name}
-            className="w-32"
+            className="w-full"
             value={spectrogramData[field.name]?.toString() || ''}
             onChange={(e) =>
               handleSpectrogramInputChange(field.name, e.target.value)
@@ -119,21 +117,22 @@ const ParameterField = ({ fieldType, fields, uri }: ParameterFieldProps) => {
   };
 
   return (
-    <div className="flex flex-wrap items-center w-auto h-36  rounded-3xl bg-[#D9D9D9] p-2 space-x-2 relative">
-      <h3 className="absolute top-0 left-0 p-2 ml-4">{fieldType}</h3>
+    <div className="w-full  rounded-xl bg-[#D9D9D9] p-4">
+      <h3 className="text-lg font-medium mb-4">{fieldType}</h3>
 
-      <div className="flex-1 min-w-0 flex justify-start space-x-2">
-        {RenderInputField(fields)}
+      <div className="flex items-center space-x-2">
+        <div className="flex-1 flex space-x-2 min-w-0">
+          {RenderInputField(fields)}
+        </div>
+        <Button
+          color="primary"
+          size="lg"
+          className="h-10 whitespace-nowrap"
+          onPressStart={handleSubmit}
+        >
+          Apply
+        </Button>
       </div>
-
-      <Button
-        color="primary"
-        size="lg"
-        className="flex-shrink-0"
-        onPressStart={handleSubmit}
-      >
-        Apply
-      </Button>
     </div>
   );
 };

@@ -5,21 +5,29 @@ import MapComponent from '../Components/MapComponent';
 
 const MainPage = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <h2 className="absolute top-0 left-0 ml-2 text-gray-600">Themis</h2>
+    <div className="h-full flex flex-col overflow-hidden">
+      <h2 className="flex-none p-2 text-gray-600">Themis</h2>
       {/* Top half */}
-      <div className="flex-1 flex p-4 h-full space-x-4">
-        <div className="flex h-full mx-4 mt-8 space-x-8">
-          <PlotView />
-          <MapComponent />
+      <div className="flex-1 min-h-0">
+        <div className="h-full grid grid-cols-2 gap-8 p-4">
+          <div className="h-full overflow-hidden">
+            <PlotView />
+          </div>
+          <div className="h-full overflow-hidden">
+            <MapComponent />
+          </div>
         </div>
       </div>
 
       {/* Bottom half */}
-      <div className="flex-1 flex justify-start items-start px-4 w-auto space-x-2 py-4">
-        <AmplitudeView />
-        <div className="flex-1 relative">
-          <AisDataTable />
+      <div className="flex-1 min-h-0">
+        <div className="h-full grid grid-cols-2 gap-8 p-4">
+          <div className="h-full overflow-hidden">
+            <AmplitudeView />
+          </div>
+          <div className="h-full overflow-hidden">
+            <AisDataTable />
+          </div>
         </div>
       </div>
     </div>

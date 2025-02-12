@@ -21,13 +21,13 @@ class SpectrogramGeneratorService(spectrogram_generator_service_pb2_grpc.Spectro
         )
         
         spectrogram_plotter = SpectrogramPlotter(spectrogram_params)
-        x, t, sample_rate = spectrogram_plotter.process_wav_file(spectrogram_params.wav_data, spectrogram_params.highpass_cutoff)
+        x, _, sample_rate = spectrogram_plotter.process_wav_file(spectrogram_params.wav_data, spectrogram_params.highpass_cutoff)
         
-        png_bytes = spectrogram_plotter.plot_and_save_spectrogram(x, t, sample_rate, spectrogram_params.window_type, spectrogram_params.n_segment, spectrogram_params.max_displayed_frequency, spectrogram_params.color_scale_min)
+        image_byte_array = spectrogram_plotter.plot_and_save_spectrogram(x, sample_rate, spectrogram_params.window_type, spectrogram_params.n_segment, spectrogram_params.max_displayed_frequency, spectrogram_params.color_scale_min)
         
         return spectrogram_generator_service_pb2.SpectrogramGeneratorResponse (
             message="Spectrogram generated successfully",
-            spectrogram_image_file = png_bytes
+            spectrogram_image_file = image_byte_array
         )
 
 def serve():

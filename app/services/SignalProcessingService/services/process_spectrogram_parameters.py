@@ -28,26 +28,25 @@ class SpectrogramPlotter:
         self.max_displayed_frequency = spectrogramParameters.max_displayed_frequency
         self.wav_data = spectrogramParameters.wav_data
     
-    def plot_and_save_spectrogram(self, x: list[float], t: list[float], fs: int, window, n_segment: int, f_max: int, s_min) -> bytes:
+    def plot_and_save_spectrogram(self, x: list[float], fs: int, window, n_segment: int, f_max: int, s_min) -> bytes:
             
         f, t, sx = signal.spectrogram(x, fs, window=window, nperseg=n_segment, detrend=False)
         sx_db = 10*np.log10(sx/sx.max())   # Convert to dB
-                
-        plt.figure(figsize=(16, 6))	
-        plt.subplot(1, 1, 1)
+             
+        fig, ax = plt.subplots(figsize=(16, 6))
         
-        plt.pcolormesh(t, f, sx_db, vmin=s_min, cmap='inferno')  # Draw spectrogram image
+        cax = ax.pcolormesh(t, f, sx_db, vmin=s_min, cmap='inferno', shading='auto')
                 
-        plt.xlabel("Time [s]")
-        plt.ylabel("Frequency [Hz]")
-        plt.ylim(0, f_max)
+        ax.set_xlabel("Time [s]")
+        ax.set_ylabel("Frequency [Hz]")
+        ax.set_ylim(0, f_max)
                 
-        plt.colorbar(label="Magnitude [dB]")
+        fig.colorbar(cax, label="Magnitude [dB]")
         
         img_byte_array = io.BytesIO()
-        plt.savefig(img_byte_array, format='png', dpi=300, bbox_inches='tight', transparent = True)
+        plt.savefig(img_byte_array, format='webp', dpi=300, bbox_inches='tight', transparent = True)
         img_byte_array.seek(0)
-        plt.close()
+        plt.close(fig)
         return img_byte_array.getvalue()
     
     def process_wav_file(self, wav_data: bytes, highpass_cutoff: int):
@@ -58,7 +57,8 @@ class SpectrogramPlotter:
 
         times = np.arange(len(samples)) / sample_rate
 
-        x1 = butter_highpass_filter(samples, highpass_cutoff, sample_rate)
+        #x1 = butter_highpass_filter(samples, highpass_cutoff, sample_rate), fjern høypassfilter støtte
+        x1 = samples - np.mean(samples)
         return x1, times, sample_rate
                 
         

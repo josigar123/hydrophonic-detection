@@ -10,7 +10,7 @@ const AmplitudeView = () => {
       <img
         src={amplitudePlot}
         alt="An image of an amplitude plot against time"
-        className="object-contain shadow-lg rounded-3xl mt-2"
+        className="object-contain shadow-lg rounded-xl mt-2"
       ></img>
       <ParameterField
         fieldType="Audio"
