@@ -159,24 +159,6 @@ const AudioRecorder = () => {
         height="300"
         className="bg-[#232323] rounded-lg mb-4"
       ></canvas>
-
-      <div className="flex gap-4">
-        <Button
-          onPressStart={startRecording}
-          disabled={recordingStatus === 'recording'}
-          className="bg-green-500 hover:bg-green-600 text-white"
-        >
-          Start Recording
-        </Button>
-
-        <Button
-          onPressStart={stopRecording}
-          disabled={recordingStatus === 'inactive'}
-          className="bg-red-500 hover:bg-red-600 text-white"
-        >
-          Stop Recording
-        </Button>
-      </div>
     </div>
   );
 };

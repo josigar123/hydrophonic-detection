@@ -5,7 +5,7 @@ import AudioRecorder from '../Components/AudioRecorder';
 
 const MainPage = () => {
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="min-h-screen flex flex-col overflow-hidden">
       <h2 className="flex-none p-2 text-gray-600">Themis</h2>
       {/* Top half */}
       <div className="flex-1 min-h-0">

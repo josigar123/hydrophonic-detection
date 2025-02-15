@@ -4,7 +4,6 @@ import { useContext } from 'react';
 import { SpectrogramContext } from '../Contexts/SpectrogramContext';
 import { FieldConfig } from '../Components/ParameterField';
 import ParameterField from '../Components/ParameterField';
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Tooltip } from '@heroui/tooltip';
 import { Button } from '@heroui/button';
 import recenterIcon from '/assets/icons/recenter.svg';
@@ -40,7 +39,6 @@ const PlotView = () => {
     { name: 'maxDisplayedFrequency', isDropdown: false },
   ];
 
-  // Not relevant params, just placeholders
   const demonFields: FieldConfig[] = [
     { name: 'windowType', isDropdown: true, options: validWindowTypes },
     { name: 'nSegment', isDropdown: false },
@@ -52,7 +50,7 @@ const PlotView = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="relatove top-2 right-2 z-10">
+      <div className="absolute top-2 right-2">
         <Tooltip
           placement="right"
           closeDelay={1}
@@ -60,11 +58,7 @@ const PlotView = () => {
           content="Reset zoom"
         >
           <Button size="sm" radius="lg">
-            <img
-              src={recenterIcon}
-              alt="Image of a recenter icon"
-              className="w-6 h-6"
-            />
+            <img src={recenterIcon} alt="Recenter icon" className="w-6 h-6" />
           </Button>
         </Tooltip>
       </div>
@@ -73,14 +67,14 @@ const PlotView = () => {
         aria-label="Graph choice"
         size="md"
         radius="full"
-        className="h-full flex flex-col"
+        className="h-full"
       >
         <Tab key="spectrogram" title="Spectrogram">
           <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
             <div className="flex-1 min-h-0 overflow-auto flex justify-center items-center mb-4">
               <img
-                src={spectrogramContext?.spectrogramUrl}
-                alt="An image of a standard spectrogram"
+                src={spectrogramContext?.spectrogramUrl || placeholderImage}
+                alt="Spectrogram"
                 className="max-w-full max-h-full object-contain shadow-lg rounded-xl"
               />
             </div>
@@ -88,18 +82,18 @@ const PlotView = () => {
               <ParameterField
                 fieldType="Spectrogram"
                 fields={spectrogramFields}
-                uri="db8278de83114c159fec7528aea5d646" // TODO, use the wavUri, and setWavUri so that this is dynamic and not hardcoded
-              ></ParameterField>
+                uri="db8278de83114c159fec7528aea5d646"
+              />
             </div>
           </div>
         </Tab>
         <Tab key="DEMON" title="DEMON">
           <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
-            <div className="flex-1 min-h-0 overflow-hidden mb-4">
+            <div className="flex-1 min-h-0 overflow-auto flex justify-center items-center mb-4">
               <img
                 src={placeholderImage}
-                alt="An image of a DEMON spectrogram"
-                className="w-full h-full object-contain shadow-lg rounded-xl"
+                alt="DEMON Spectrogram"
+                className="max-w-full max-h-full object-contain shadow-lg rounded-xl"
               />
             </div>
             <div className="flex-none">
@@ -107,7 +101,7 @@ const PlotView = () => {
                 fieldType="DEMON"
                 fields={demonFields}
                 uri="asdfasdfasraw3ra3r"
-              ></ParameterField>
+              />
             </div>
           </div>
         </Tab>
