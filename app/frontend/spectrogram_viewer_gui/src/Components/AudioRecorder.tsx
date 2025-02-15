@@ -42,13 +42,26 @@ const AudioRecorder = () => {
     source.connect(analyserNodeRef.current);
 
     if (!smoothieChartRef.current) {
-      smoothieChartRef.current = new SmoothieChart();
+      smoothieChartRef.current = new SmoothieChart({
+        grid: {
+          strokeStyle: 'rgb(125, 0, 0)',
+          fillStyle: 'rgb(60, 0, 0)',
+          lineWidth: 1,
+          millisPerLine: 250,
+          verticalSections: 6,
+        },
+        labels: { fillStyle: 'rgb(60, 0, 0)' },
+      });
       smoothieChartRef.current.streamTo(canvasRef.current);
     }
 
     if (!timeSeriesRef.current) {
       timeSeriesRef.current = new TimeSeries();
-      smoothieChartRef.current.addTimeSeries(timeSeriesRef.current);
+      smoothieChartRef.current.addTimeSeries(timeSeriesRef.current, {
+        strokeStyle: 'rgb(0, 255, 0)',
+        fillStyle: 'rgba(0, 255, 0, 0.4)',
+        lineWidth: 3,
+      });
     }
 
     const bufferLength = analyserNodeRef.current.frequencyBinCount;
