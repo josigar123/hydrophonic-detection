@@ -1,7 +1,7 @@
 import PlotView from '../Components/PlotView';
 import AisDataTable from '../Components/AisDataTable';
-import AmplitudeView from '../Components/AmplitudeView';
 import MapComponent from '../Components/MapComponent';
+import AudioRecorder from '../Components/AudioRecorder';
 
 const MainPage = () => {
   return (
@@ -23,7 +23,8 @@ const MainPage = () => {
       <div className="flex-1 min-h-0">
         <div className="h-full grid grid-cols-2 gap-8 p-4">
           <div className="h-full overflow-hidden">
-            <AmplitudeView />
+            {/*<AmplitudeView />*/}
+            <AudioRecorder />
           </div>
           <div className="h-full overflow-hidden">
             <AisDataTable />
