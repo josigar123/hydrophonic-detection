@@ -35,7 +35,7 @@ class SpectrogramServiceStub(object):
             channel: A grpc.Channel.
         """
         self.StreamSpectrogram = channel.stream_unary(
-                '/SpectrogramService/StreamSpectrogram',
+                '/spectrogramservice.SpectrogramService/StreamSpectrogram',
                 request_serializer=spectrogram__pb2.SpectrogramRequest.SerializeToString,
                 response_deserializer=spectrogram__pb2.SpectrogramData.FromString,
                 _registered_method=True)
@@ -60,9 +60,9 @@ def add_SpectrogramServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'SpectrogramService', rpc_method_handlers)
+            'spectrogramservice.SpectrogramService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('SpectrogramService', rpc_method_handlers)
+    server.add_registered_method_handlers('spectrogramservice.SpectrogramService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -83,7 +83,7 @@ class SpectrogramService(object):
         return grpc.experimental.stream_unary(
             request_iterator,
             target,
-            '/SpectrogramService/StreamSpectrogram',
+            '/spectrogramservice.SpectrogramService/StreamSpectrogram',
             spectrogram__pb2.SpectrogramRequest.SerializeToString,
             spectrogram__pb2.SpectrogramData.FromString,
             options,

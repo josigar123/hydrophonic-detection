@@ -1,5 +1,7 @@
 syntax= "proto3";
 
+package spectrogramservice;
+
 service SpectrogramService {
     rpc StreamSpectrogram (stream SpectrogramRequest) returns (SpectrogramData);
 }

@@ -27,6 +27,7 @@ def serve():
     spectrogram_pb2_grpc.add_SpectrogramServiceServicer_to_server(SpectrogramService(), server)
     server.add_insecure_port('[::]50050')
     server.start()
+    print("Successfully bound to port 50050")
     server.wait_for_termination()
 
 if __name__ == "__main__":

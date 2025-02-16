@@ -19,7 +19,9 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Storage.Net.Microsoft.Azure.Storage.Blobs" Version="9.3.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
-        <Protobuf Include="../../SignalProcessingService/spectrogram_generator_service.proto" GrpcServices="Client"/>
+        <Protobuf Include="../../SignalProcessingService/protos/spectrogram.proto" GrpcServices="Client"/>
+        <Protobuf Include="../../SignalProcessingService/protos/spectrogram_generator_service.proto" GrpcServices="Client"/>
+
     </ItemGroup>
 
 </Project>
