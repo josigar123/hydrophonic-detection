@@ -6,7 +6,7 @@ service SpectrogramService {
 
 message SpectrogramRequest {
     bytes audio_data = 1;
-    SpectrogramParams params = 2;
+    optional SpectrogramParams params = 2;
 }
 
 message SpectrogramParams {

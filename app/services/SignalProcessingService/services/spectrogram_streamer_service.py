@@ -1,7 +1,7 @@
 from scipy import signal
 from scipy.io import wavfile
 import numpy as np
-from models.spectrogram_parameter_model import SpectrogramParameterModel
+import grpc_generated_files.grpc_stub_for_spectrogram_streaming.spectrogram_pb2 as spectrogram_pb2
 import io
 
 class SpectrogramStreamer:
@@ -12,17 +12,26 @@ class SpectrogramStreamer:
     lowpass_cutoff: int # Unused, no lowpass function supplied yet
     color_scale_min: int
     max_displayed_frequency: int
-    wav_data: bytes
-
-    def __init__(self, spectrogramParameters: SpectrogramParameterModel):
-        self.window_type = spectrogramParameters.window_type
-        self.n_segment= spectrogramParameters.n_segment
-        self.highpass_cutoff = spectrogramParameters.highpass_cutoff
-        self.lowpass_cutoff = spectrogramParameters.lowpass_cutoff
-        self.color_scale_min = spectrogramParameters.color_scale_min
-        self.max_displayed_frequency = spectrogramParameters.max_displayed_frequency
-        self.wav_data = spectrogramParameters.wav_data
     
+    # Constructor with default values
+    def __init__(self):
+        self.window_type = "hann"
+        self.n_segment= 256
+        self.highpass_cutoff = 100
+        self.lowpass_cutoff = 100
+        self.color_scale_min = -40
+        self.max_displayed_frequency = 1000
+    
+    def update_params(self, params: spectrogram_pb2.SpectrogramParams):
+        self.window_type = params.window_type
+        self.n_segment= params.n_segment
+        self.highpass_cutoff = params.highpass_cutoff
+        self.lowpass_cutoff = params.lowpass_cutoff
+        self.color_scale_min = params.color_scale_min
+        self.max_displayed_frequency = params.max_displayed_frequency
+        self.wav_data = params.wav_data
+        print("Updated params:", self.__dict__)
+
     def process_wav_chunk(self, wav_data: bytes):
 
         wav_file = io.BytesIO(wav_data)

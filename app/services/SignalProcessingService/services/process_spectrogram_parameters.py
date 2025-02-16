@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io import wavfile
 import numpy as np
-from models.spectrogram_parameter_model import SpectrogramParameterModel
-import os
+import grpc_generated_files.grpc_stub_for_spectrogram_regeneration.spectrogram_generator_service_pb2 as spectrogram_generator_service_pb2
 from app.services.SignalProcessingService.utilities.utils import butter_highpass_filter
 import io
 
@@ -19,14 +18,14 @@ class SpectrogramPlotter:
     max_displayed_frequency: int
     wav_data: bytes
 
-    def __init__(self, spectrogramParameters: SpectrogramParameterModel):
-        self.window_type = spectrogramParameters.window_type
-        self.n_segment= spectrogramParameters.n_segment
-        self.highpass_cutoff = spectrogramParameters.highpass_cutoff
-        self.lowpass_cutoff = spectrogramParameters.lowpass_cutoff
-        self.color_scale_min = spectrogramParameters.color_scale_min
-        self.max_displayed_frequency = spectrogramParameters.max_displayed_frequency
-        self.wav_data = spectrogramParameters.wav_data
+    def __init__(self, params: spectrogram_generator_service_pb2.SpectrogramGeneratorRequest):
+        self.window_type = params.window_type
+        self.n_segment= params.n_segment
+        self.highpass_cutoff = params.highpass_cutoff
+        self.lowpass_cutoff = params.lowpass_cutoff
+        self.color_scale_min = params.color_scale_min
+        self.max_displayed_frequency = params.max_displayed_frequency
+        self.wav_data = params.wav_data
     
     def plot_and_save_spectrogram(self, x: list[float], fs: int, window, n_segment: int, f_max: int, s_min) -> bytes:
             
@@ -57,7 +56,6 @@ class SpectrogramPlotter:
 
         times = np.arange(len(samples)) / sample_rate
 
-        #x1 = butter_highpass_filter(samples, highpass_cutoff, sample_rate), fjern høypassfilter støtte
         x1 = samples - np.mean(samples)
         return x1, times, sample_rate
         

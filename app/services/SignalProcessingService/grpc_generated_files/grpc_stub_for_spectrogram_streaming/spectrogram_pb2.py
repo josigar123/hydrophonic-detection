@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11spectrogram.proto\"L\n\x12SpectrogramRequest\x12\x12\n\naudio_data\x18\x01 \x01(\x0c\x12\"\n\x06params\x18\x02 \x01(\x0b\x32\x12.SpectrogramParams\"\x8e\x01\n\x11SpectrogramParams\x12\x13\n\x0bwindow_type\x18\x01 \x01(\t\x12\x11\n\tn_segment\x18\x02 \x01(\x05\x12\x17\n\x0fhighpass_cutoff\x18\x03 \x01(\x05\x12\x17\n\x0f\x63olor_scale_min\x18\x04 \x01(\x02\x12\x1f\n\x17max_displayed_frequency\x18\x05 \x01(\x05\"K\n\x0fSpectrogramData\x12\x13\n\x0b\x66requencies\x18\x01 \x03(\x02\x12\r\n\x05times\x18\x02 \x03(\x02\x12\x14\n\x0cpower_levels\x18\x03 \x03(\x02\x32R\n\x12SpectrogramService\x12<\n\x11StreamSpectrogram\x12\x13.SpectrogramRequest\x1a\x10.SpectrogramData(\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11spectrogram.proto\"\\\n\x12SpectrogramRequest\x12\x12\n\naudio_data\x18\x01 \x01(\x0c\x12\'\n\x06params\x18\x02 \x01(\x0b\x32\x12.SpectrogramParamsH\x00\x88\x01\x01\x42\t\n\x07_params\"\x8e\x01\n\x11SpectrogramParams\x12\x13\n\x0bwindow_type\x18\x01 \x01(\t\x12\x11\n\tn_segment\x18\x02 \x01(\x05\x12\x17\n\x0fhighpass_cutoff\x18\x03 \x01(\x05\x12\x17\n\x0f\x63olor_scale_min\x18\x04 \x01(\x02\x12\x1f\n\x17max_displayed_frequency\x18\x05 \x01(\x05\"K\n\x0fSpectrogramData\x12\x13\n\x0b\x66requencies\x18\x01 \x03(\x02\x12\r\n\x05times\x18\x02 \x03(\x02\x12\x14\n\x0cpower_levels\x18\x03 \x03(\x02\x32R\n\x12SpectrogramService\x12<\n\x11StreamSpectrogram\x12\x13.SpectrogramRequest\x1a\x10.SpectrogramData(\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,11 +32,11 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'spectrogram_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_SPECTROGRAMREQUEST']._serialized_start=21
-  _globals['_SPECTROGRAMREQUEST']._serialized_end=97
-  _globals['_SPECTROGRAMPARAMS']._serialized_start=100
-  _globals['_SPECTROGRAMPARAMS']._serialized_end=242
-  _globals['_SPECTROGRAMDATA']._serialized_start=244
-  _globals['_SPECTROGRAMDATA']._serialized_end=319
-  _globals['_SPECTROGRAMSERVICE']._serialized_start=321
-  _globals['_SPECTROGRAMSERVICE']._serialized_end=403
+  _globals['_SPECTROGRAMREQUEST']._serialized_end=113
+  _globals['_SPECTROGRAMPARAMS']._serialized_start=116
+  _globals['_SPECTROGRAMPARAMS']._serialized_end=258
+  _globals['_SPECTROGRAMDATA']._serialized_start=260
+  _globals['_SPECTROGRAMDATA']._serialized_end=335
+  _globals['_SPECTROGRAMSERVICE']._serialized_start=337
+  _globals['_SPECTROGRAMSERVICE']._serialized_end=419
 # @@protoc_insertion_point(module_scope)
