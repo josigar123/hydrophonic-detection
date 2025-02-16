@@ -6,7 +6,7 @@ from scipy.io import wavfile
 import numpy as np
 from models.spectrogram_parameter_model import SpectrogramParameterModel
 import os
-from utils import butter_highpass_filter
+from app.services.SignalProcessingService.utilities.utils import butter_highpass_filter
 import io
 
 class SpectrogramPlotter:
@@ -60,6 +60,5 @@ class SpectrogramPlotter:
         #x1 = butter_highpass_filter(samples, highpass_cutoff, sample_rate), fjern høypassfilter støtte
         x1 = samples - np.mean(samples)
         return x1, times, sample_rate
-                
         
         

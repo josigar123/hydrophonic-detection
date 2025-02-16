@@ -1,8 +1,7 @@
 import grpc
 from concurrent import futures
-import os
-import spectrogram_generator_service_pb2
-import spectrogram_generator_service_pb2_grpc
+import app.services.SignalProcessingService.grpc_generated_files.spectrogram_generator_service_pb2 as spectrogram_generator_service_pb2
+import app.services.SignalProcessingService.grpc_generated_files.spectrogram_generator_service_pb2_grpc as spectrogram_generator_service_pb2_grpc
 from models.spectrogram_parameter_model import SpectrogramParameterModel
 from services.process_spectrogram_parameters import SpectrogramPlotter
 
