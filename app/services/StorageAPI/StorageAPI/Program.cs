@@ -24,6 +24,17 @@ builder.Services.AddGrpcClient<SpectrogramGenerator.SpectrogramGeneratorClient>(
     channelOpions.MaxReceiveMessageSize = MAX_REQUEST_BODY_SIZE;
 });
 
+builder.Services.AddGrpcClient<SpectrogramService.SpectrogramServiceClient>(o =>
+{
+    o.Address = new Uri("http://localhost:50050");
+}
+)
+.ConfigureChannel(channelOpions =>
+{
+    channelOpions.MaxSendMessageSize = MAX_REQUEST_BODY_SIZE;
+    channelOpions.MaxReceiveMessageSize = MAX_REQUEST_BODY_SIZE;
+});
+
 builder.Services.AddScoped<IShipRepository, ShipRepository>(serviceProvider => //Ship table
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
