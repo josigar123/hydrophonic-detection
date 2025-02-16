@@ -291,7 +291,6 @@ def BroadBand_from_file(input_file, Fds:int ,medfilt_window: int, trigger:int, p
     # Downsample the filtered signal
     DS_Sx = resample_poly(envelope, 1, medfilt_window)  # Resample by the median filter window size
     DS_Fs = Fds / medfilt_window  # New sampling rate after downsampling
-    #DS_t = np.linspace(0, (len(DS_Sx) / DS_Fs), len(DS_Sx))  # Time vector for the downsampled signal
 
     # Define kernel size for the median filter based on window size
     kernel_size = int(window_size * DS_Fs) | 1  # Ensure odd size
@@ -320,6 +319,7 @@ def BroadBand_from_file(input_file, Fds:int ,medfilt_window: int, trigger:int, p
 
     # Step 5: Determine the middle index of the longest group
     middle_index = kernel_size + longest_group[len(longest_group) // 2]
+
     # Calculate the noise start and stop indices based on the middle of the group
     nosie_start = int(middle_index - (window_size * DS_Fs // 2))
     nosie_stop = int(middle_index + (window_size * DS_Fs // 2))
@@ -346,13 +346,10 @@ def BroadBand_from_file(input_file, Fds:int ,medfilt_window: int, trigger:int, p
         plt.figure(figsize=(12, 6))  # Set up the figure for plotting
         plt.plot(BBnorm_t, signal_vals + trigger)  # Plot the normalized signal
         plt.axhline(y=trigger, color='red', linestyle='--', label="Trigger")  # Plot the trigger threshold
-        #plt.axvline(x=nosie_start / DS_Fs, color='red', linestyle='--')  # Mark the start of the noise window
-        #plt.axvline(x=nosie_stop / DS_Fs, color='red', linestyle='--')  # Mark the end of the noise window
         plt.title("BBnorm")  # Title of the plot
         plt.xlabel("Time [s]")  # X-axis label
         plt.ylabel("Amplitude [dB]")  # Y-axis label
         plt.show()  # Show the plot
-
     return Trigger_time
 
 def BroadBand_from_data(Sx, Fs:int ,medfilt_window: int, trigger:int, plot:bool):
@@ -367,7 +364,6 @@ def BroadBand_from_data(Sx, Fs:int ,medfilt_window: int, trigger:int, plot:bool)
     # Downsample the filtered signal
     DS_Sx = resample_poly(envelope, 1, medfilt_window)  # Resample by the median filter window size
     DS_Fs = Fs / medfilt_window  # New sampling rate after downsampling
-    #DS_t = np.linspace(0, (len(DS_Sx) / DS_Fs), len(DS_Sx))  # Time vector for the downsampled signal
 
     # Define kernel size for the median filter based on window size
     kernel_size = int(window_size * DS_Fs) | 1  # Ensure odd size
@@ -396,6 +392,7 @@ def BroadBand_from_data(Sx, Fs:int ,medfilt_window: int, trigger:int, plot:bool)
 
     # Step 5: Determine the middle index of the longest group
     middle_index = kernel_size + longest_group[len(longest_group) // 2]
+
     # Calculate the noise start and stop indices based on the middle of the group
     nosie_start = int(middle_index - (window_size * DS_Fs // 2))
     nosie_stop = int(middle_index + (window_size * DS_Fs // 2))
@@ -422,8 +419,6 @@ def BroadBand_from_data(Sx, Fs:int ,medfilt_window: int, trigger:int, plot:bool)
         plt.figure(figsize=(12, 6))  # Set up the figure for plotting
         plt.plot(BBnorm_t, signal_vals + trigger)  # Plot the normalized signal
         plt.axhline(y=trigger, color='red', linestyle='--', label="Trigger")  # Plot the trigger threshold
-        #plt.axvline(x=nosie_start / DS_Fs, color='red', linestyle='--')  # Mark the start of the noise window
-        #plt.axvline(x=nosie_stop / DS_Fs, color='red', linestyle='--')  # Mark the end of the noise window
         plt.title("BBnorm")  # Title of the plot
         plt.xlabel("Time [s]")  # X-axis label
         plt.ylabel("Amplitude [dB]")  # Y-axis label
@@ -481,7 +476,6 @@ def DEMON_from_file(input_file, Fs, Fds,freq_filt ,fmax=100, s_max=10):
     sxx_rms_norm = sxx_rms/sxx_rms_med
     plt.figure(figsize=(9,9))
     plt.subplot(1, 1, 1)
-
     plt.pcolormesh(td_rms, fd_rms, 10*np.log10(sxx_rms_norm), vmin=0,vmax=s_max)
     plt.xlabel("Time [s]")
     plt.ylabel("Demon Frequency [Hz]")
