@@ -1,84 +1,55 @@
+import React, { useState } from "react";
 import {
   Table,
   TableHeader,
-  TableBody,
   TableColumn,
+  TableBody,
   TableRow,
   TableCell,
-} from '@heroui/table';
+  Spinner,
+} from "@heroui/react";
+import { Ship } from "./ShipMarker";
+import FetchAis from FetchAis;
 
-const AisDataTable = () => {
+
+
+const MAX_SHIPS = 10;
+
+const AisDataTable: React.FC = () => {
+  const [ships, setShips] = useState<Ship[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Function to fetch AIS data
+  parsedShips = fetchAis();
+  setShips(parsedShips);
+  setIsLoading(false);
+ 
   return (
-    <Table aria-label="10 nearest AIS signals">
-      <TableHeader>
-        <TableColumn>MMSI</TableColumn>
-        <TableColumn>STATUS</TableColumn>
-        <TableColumn>LATITUDE</TableColumn>
-        <TableColumn>LONGITUDE</TableColumn>
-      </TableHeader>
-      <TableBody>
-        <TableRow key="1">
-          <TableCell>258584000</TableCell>
-          <TableCell>7</TableCell>
-          <TableCell>59.427761</TableCell>
-          <TableCell>10.466560</TableCell>
-        </TableRow>
-        <TableRow key="2">
-          <TableCell>258027670</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.391972</TableCell>
-          <TableCell>10.481112</TableCell>
-        </TableRow>
-        <TableRow key="3">
-          <TableCell>257846800</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.429482</TableCell>
-          <TableCell>10.653664</TableCell>
-        </TableRow>
-        <TableRow key="4">
-          <TableCell>231613000</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.459068</TableCell>
-          <TableCell>10.509167</TableCell>
-        </TableRow>
-        <TableRow key="4">
-          <TableCell>231613000</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.459068</TableCell>
-          <TableCell>10.509167</TableCell>
-        </TableRow>
-        <TableRow key="4">
-          <TableCell>231613000</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.459068</TableCell>
-          <TableCell>10.509167</TableCell>
-        </TableRow>
-        <TableRow key="4">
-          <TableCell>231613000</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.459068</TableCell>
-          <TableCell>10.509167</TableCell>
-        </TableRow>
-        <TableRow key="4">
-          <TableCell>231613000</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.459068</TableCell>
-          <TableCell>10.509167</TableCell>
-        </TableRow>
-        <TableRow key="4">
-          <TableCell>231613000</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.459068</TableCell>
-          <TableCell>10.509167</TableCell>
-        </TableRow>
-        <TableRow key="4">
-          <TableCell>231613000</TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>59.459068</TableCell>
-          <TableCell>10.509167</TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+
+      <Table aria-label="Live AIS Data Table">
+        <TableHeader>
+          <TableColumn key="MMSI">MMSI</TableColumn>
+          <TableColumn key="SHIP_NAME">Ship Name</TableColumn>
+          <TableColumn key="STATUS">STATUS</TableColumn>
+          <TableColumn key="LATITUDE">LATITUDE</TableColumn>
+          <TableColumn key="LONGITUDE">LONGITUDE</TableColumn>
+        </TableHeader>
+        <TableBody
+          isLoading={isLoading}
+          items={ships}
+          loadingContent={<Spinner label="Loading..." />}
+        >
+          {(ship: Ship) => (
+            <TableRow key={ship.mmsi}>
+              <TableCell>{ship.mmsi}</TableCell>
+              <TableCell>{ship.shipName}</TableCell>
+              <TableCell>{ship.STATUS}</TableCell>
+              <TableCell>{ship.LATITUDE.toFixed(6)}</TableCell>
+              <TableCell>{ship.LONGITUDE.toFixed(6)}</TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
   );
 };
 

@@ -20,6 +20,7 @@
     "@heroui/tabs": "^2.2.8",
     "@heroui/theme": "^2.4.6",
     "@heroui/tooltip": "^2.2.8",
+    "@react-stately/data": "^3.12.1",
     "@types/ws": "^8.5.14",
     "axios": "^1.7.9",
     "leaflet": "^1.9.4",

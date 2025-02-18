@@ -12,17 +12,20 @@ const shipIcon = new L.Icon({
   className: 'ship-icon',
 });
 
-interface Ship {
+export interface Ship {
   mmsi: string;
-  ship_name: string;
+  shipName: string;
+  shipType: string;
+  aisClass: string;
   callsign: string;
   speed: string;
   destination: string;
-  true_heading: string;
+  trueHeading: string;
   length: string;
   breadth: string;
   latitude: number;
   longitude: number;
+  dateTimeUtc: Date;
 }
 
 const ShipMarker: React.FC<{ ship: Ship }> = ({ ship }) => {
@@ -33,17 +36,17 @@ const ShipMarker: React.FC<{ ship: Ship }> = ({ ship }) => {
       icon={shipIcon}
       eventHandlers={{
         click: () => {
-          console.log(`Clicked on: ${ship.ship_name}, MMSI: ${ship.mmsi}`);
+          console.log(`Clicked on: ${ship.shipName}, MMSI: ${ship.mmsi}`);
         },
       }}
     >
       <Popup>
-        <strong>Ship Name:</strong> {ship.ship_name} <br />
+        <strong>Ship Name:</strong> {ship.shipName} <br />
         <strong>MMSI:</strong> {ship.mmsi} <br />
         <strong>Call Sign:</strong> {ship.callsign} <br />
         <strong>Speed:</strong> {ship.speed} knots <br />
         <strong>Destination:</strong> {ship.destination} <br />
-        <strong>Heading:</strong> {ship.true_heading}° <br />
+        <strong>Heading:</strong> {ship.trueHeading}° <br />
         <strong>Length:</strong> {ship.length} m <br />
         <strong>Breadth:</strong> {ship.breadth} m
       </Popup>
