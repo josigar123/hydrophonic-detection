@@ -1,28 +1,17 @@
 import grpc
 from concurrent import futures
-import app.services.SignalProcessingService.grpc_generated_files.grpc_stub_for_spectrogram_regeneration.spectrogram_generator_service_pb2 as spectrogram_generator_service_pb2
-import app.services.SignalProcessingService.grpc_generated_files.grpc_stub_for_spectrogram_regeneration.spectrogram_generator_service_pb2_grpc as spectrogram_generator_service_pb2_grpc
-from models.spectrogram_parameter_model import SpectrogramParameterModel
+import spectrogram_generator_service_pb2
+import spectrogram_generator_service_pb2_grpc
 from services.process_spectrogram_parameters import SpectrogramPlotter
 
 class SpectrogramGeneratorService(spectrogram_generator_service_pb2_grpc.SpectrogramGeneratorServicer):
     
-    def GenerateSpectrogram(self, request, context):
+    def GenerateSpectrogram(self, request: spectrogram_generator_service_pb2.SpectrogramGeneratorRequest, context):
         
-        spectrogram_params = SpectrogramParameterModel(
-            window_type=request.window_type,
-            n_segment=request.n_segment,
-            highpass_cutoff=request.highpass_cutoff,
-            lowpass_cutoff=request.lowpass_cutoff,
-            color_scale_min=request.color_scale_min,
-            max_displayed_frequency=request.max_displayed_frequency,
-            wav_data=request.wav_data
-        )
+        spectrogram_plotter = SpectrogramPlotter(request)
+        x, _, sample_rate = spectrogram_plotter.process_wav_file(request.wav_data, request.highpass_cutoff)
         
-        spectrogram_plotter = SpectrogramPlotter(spectrogram_params)
-        x, _, sample_rate = spectrogram_plotter.process_wav_file(spectrogram_params.wav_data, spectrogram_params.highpass_cutoff)
-        
-        image_byte_array = spectrogram_plotter.plot_and_save_spectrogram(x, sample_rate, spectrogram_params.window_type, spectrogram_params.n_segment, spectrogram_params.max_displayed_frequency, spectrogram_params.color_scale_min)
+        image_byte_array = spectrogram_plotter.plot_and_save_spectrogram(x, sample_rate, request.window_type, request.n_segment, request.max_displayed_frequency, request.color_scale_min)
         
         return spectrogram_generator_service_pb2.SpectrogramGeneratorResponse (
             message="Spectrogram generated successfully",

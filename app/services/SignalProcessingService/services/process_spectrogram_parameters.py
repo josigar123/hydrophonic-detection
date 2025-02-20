@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io import wavfile
 import numpy as np
-import grpc_generated_files.grpc_stub_for_spectrogram_regeneration.spectrogram_generator_service_pb2 as spectrogram_generator_service_pb2
-from app.services.SignalProcessingService.utilities.utils import butter_highpass_filter
+import servers.spectrogram_generator_service_pb2 as spectrogram_generator_service_pb2
 import io
 
 class SpectrogramPlotter:

@@ -1,7 +1,7 @@
 import grpc
 from concurrent import futures
-import grpc_generated_files.grpc_stub_for_spectrogram_streaming.spectrogram_pb2 as spectrogram_pb2
-import grpc_generated_files.grpc_stub_for_spectrogram_streaming.spectrogram_pb2_grpc as spectrogram_pb2_grpc
+import spectrogram_pb2
+import spectrogram_pb2_grpc
 from services.spectrogram_streamer_service import SpectrogramStreamer
 from typing import Iterator
 
@@ -25,7 +25,7 @@ class SpectrogramService(spectrogram_pb2_grpc.SpectrogramServiceServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     spectrogram_pb2_grpc.add_SpectrogramServiceServicer_to_server(SpectrogramService(), server)
-    server.add_insecure_port('[::]50050')
+    server.add_insecure_port('[::]:50050')
     server.start()
     print("Successfully bound to port 50050")
     server.wait_for_termination()

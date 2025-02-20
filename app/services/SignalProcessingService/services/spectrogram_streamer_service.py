@@ -1,7 +1,7 @@
 from scipy import signal
 from scipy.io import wavfile
 import numpy as np
-import grpc_generated_files.grpc_stub_for_spectrogram_streaming.spectrogram_pb2 as spectrogram_pb2
+import servers.spectrogram_pb2 as spectrogram_pb2
 import io
 
 class SpectrogramStreamer:

@@ -1,14 +1,11 @@
 #!/bin/bash
 
-mkdir -p grpc_generated_files/grpc_stub_for_spectrogram_regeneration
-mkdir -p grpc_generated_files/grpc_stub_for_spectrogram_streaming
-
 python3 -m grpc_tools.protoc -I=protos \
-  --python_out=grpc_generated_files/grpc_stub_for_spectrogram_regeneration \
-  --grpc_python_out=grpc_generated_files/grpc_stub_for_spectrogram_regeneration \
+  --python_out=servers \
+  --grpc_python_out=servers \
   spectrogram_generator_service.proto
 
 python3 -m grpc_tools.protoc -I=protos \
-  --python_out=grpc_generated_files/grpc_stub_for_spectrogram_streaming \
-  --grpc_python_out=grpc_generated_files/grpc_stub_for_spectrogram_streaming \
+  --python_out=servers \
+  --grpc_python_out=servers \
   spectrogram.proto
