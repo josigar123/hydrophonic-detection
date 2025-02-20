@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@heroui/button';
 import { SmoothieChart, TimeSeries } from 'smoothie';
 
 // Nice bg colour: #232323
