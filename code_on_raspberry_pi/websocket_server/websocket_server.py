@@ -6,10 +6,22 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
 CHUNK = 1024
-DEVICE_INDEX = 1
 
-IP = "10.0.0.13"
 PORT = 8765
+
+print("#############SERVER SETUP#############")
+IP=input("Enter private ip:")
+
+print("Audio devices found:")
+p = pyaudio.PyAudio()
+
+for i in range(p.get_device_count()):
+    dev = p.get_device_info_by_index(i)
+    print(f"Index {i}: {dev['name']} - Input Channels: {dev['maxInputChannels']}")
+
+p.terminate()
+DEVICE_INDEX = int(input("Select an index from the above list:"))
+print("#############SETUP END#############")
 
 async def stream_audio(websocket):
     p = pyaudio.PyAudio()
