@@ -41,37 +41,37 @@ const AisDataTable = () => {
           <TableCell>59.459068</TableCell>
           <TableCell>10.509167</TableCell>
         </TableRow>
-        <TableRow key="4">
+        <TableRow key="5">
           <TableCell>231613000</TableCell>
           <TableCell>0</TableCell>
           <TableCell>59.459068</TableCell>
           <TableCell>10.509167</TableCell>
         </TableRow>
-        <TableRow key="4">
+        <TableRow key="6">
           <TableCell>231613000</TableCell>
           <TableCell>0</TableCell>
           <TableCell>59.459068</TableCell>
           <TableCell>10.509167</TableCell>
         </TableRow>
-        <TableRow key="4">
+        <TableRow key="7">
           <TableCell>231613000</TableCell>
           <TableCell>0</TableCell>
           <TableCell>59.459068</TableCell>
           <TableCell>10.509167</TableCell>
         </TableRow>
-        <TableRow key="4">
+        <TableRow key="8">
           <TableCell>231613000</TableCell>
           <TableCell>0</TableCell>
           <TableCell>59.459068</TableCell>
           <TableCell>10.509167</TableCell>
         </TableRow>
-        <TableRow key="4">
+        <TableRow key="9">
           <TableCell>231613000</TableCell>
           <TableCell>0</TableCell>
           <TableCell>59.459068</TableCell>
           <TableCell>10.509167</TableCell>
         </TableRow>
-        <TableRow key="4">
+        <TableRow key="10">
           <TableCell>231613000</TableCell>
           <TableCell>0</TableCell>
           <TableCell>59.459068</TableCell>

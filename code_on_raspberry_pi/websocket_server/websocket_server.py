@@ -1,9 +1,19 @@
 import asyncio
 import websockets
 import pyaudio
+import wave
+import io
 
-FORMAT = pyaudio.paInt16
-CHANNELS = 2
+
+'''
+
+TODO: Convert each chunk into an in-memory WAV file before transmitting through the websocket
+the frontend will then not have to deal with converting the raw PCM audio for visualization
+since the web audio api has native WAV support.
+
+'''
+FORMAT = pyaudio.paInt16 # 16-bit Integer
+CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
 PORT = 8765
@@ -32,12 +42,23 @@ async def stream_audio(websocket):
                     input_device_index=DEVICE_INDEX,
                     frames_per_buffer=CHUNK)
 
-    print("Streaming raw PCM audio...")
-
+    print("Streaming audio...")
+    print("Converting read data to WAV")
     try:
         while True:
             data = stream.read(CHUNK, exception_on_overflow=False)
-            await websocket.send(data)
+
+            # Converting the data to wav, by setting header vals, a small in-memory wav file
+            wav_buffer = io.BytesIO()
+            wf = wave.open(wav_buffer, "wb")
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(p.get_sample_size(FORMAT))
+            wf.setframerate(RATE)
+            wf.writeframes(data)
+            wf.close()
+
+            wav_data = wav_buffer.getvalue()
+            await websocket.send(wav_data)
 
     except websockets.exceptions.ConnectionClosed:
         print("Client disconnected")

@@ -3,8 +3,6 @@ import { SmoothieChart, TimeSeries } from 'smoothie';
 import { useAudioStream } from '../Hooks/useAudioStream';
 import { Button } from '@heroui/button';
 
-// Nice bg colour: #232323
-
 const websocketUrl = 'ws://10.0.0.13:8765';
 
 const AudioRecorder = () => {
@@ -12,106 +10,108 @@ const AudioRecorder = () => {
   const smoothieChartRef = useRef<SmoothieChart | null>(null);
   const timeSeriesRef = useRef<TimeSeries | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
   const analyserNodeRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const { audioData, isConnected } = useAudioStream(websocketUrl);
+
+  const { audioData, isConnected, error } = useAudioStream(websocketUrl);
   const [listening, setListening] = useState(false);
 
   useEffect(() => {
-    if (!canvasRef.current || !isConnected) return;
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close();
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
+    if (!canvasRef.current || !isConnected || !listening || !audioData) return;
 
-    if (listening) {
-      audioCtxRef.current = new AudioContext();
-      analyserNodeRef.current = audioCtxRef.current.createAnalyser();
-      analyserNodeRef.current.fftSize = 256;
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
 
-      if (audioData == null) return;
+      audioCtxRef.current.decodeAudioData(audioData).then((audioBuffer) => {
+        const channelData = audioBuffer.getChannelData(0); // Extract PCM data
+        const bufferLength = channelData.length;
 
-      audioCtxRef.current.decodeAudioData(audioData.buffer, (buffer) => {
-        const source = audioCtxRef.current!.createBufferSource();
-        source.buffer = buffer;
-
-        if (analyserNodeRef.current) {
-          source.connect(analyserNodeRef.current);
+        // If smoothie chart doesn't exist, initialize it
+        if (!smoothieChartRef.current) {
+          smoothieChartRef.current = new SmoothieChart({
+            grid: {
+              strokeStyle: 'rgb(125, 0, 0)',
+              fillStyle: 'rgb(60, 0, 0)',
+              lineWidth: 1,
+              millisPerLine: 250,
+              verticalSections: 6,
+            },
+            labels: { fillStyle: 'rgb(60, 0, 0)' },
+          });
+          smoothieChartRef.current.streamTo(canvasRef.current);
         }
-        source.start();
+
+        if (!timeSeriesRef.current) {
+          timeSeriesRef.current = new TimeSeries();
+          smoothieChartRef.current.addTimeSeries(timeSeriesRef.current, {
+            strokeStyle: 'rgb(0, 255, 0)',
+            fillStyle: 'rgba(0, 255, 0, 0.4)',
+            lineWidth: 3,
+          });
+        }
+
+        let index = 0;
+        const step = Math.floor(bufferLength / 1000); // Reduce resolution for smoother visualization
+
+        const updateChart = () => {
+          if (!timeSeriesRef.current) return;
+
+          // Take a sample point from the channelData
+          const sampleValue = channelData[index] || 0; // Avoid out-of-bounds errors
+          timeSeriesRef.current.append(new Date().getTime(), sampleValue);
+
+          index = (index + step) % bufferLength; // Loop through the audio data
+          animationFrameRef.current = requestAnimationFrame(updateChart);
+        };
+
+        updateChart();
       });
-
-      const bufferLength = analyserNodeRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      if (!smoothieChartRef.current) {
-        smoothieChartRef.current = new SmoothieChart({
-          grid: {
-            strokeStyle: 'rgb(125, 0, 0)',
-            fillStyle: 'rgb(60, 0, 0)',
-            lineWidth: 1,
-            millisPerLine: 250,
-            verticalSections: 6,
-          },
-          labels: { fillStyle: 'rgb(60, 0, 0)' },
-        });
-        smoothieChartRef.current.streamTo(canvasRef.current);
-      }
-
-      if (!timeSeriesRef.current) {
-        timeSeriesRef.current = new TimeSeries();
-        smoothieChartRef.current.addTimeSeries(timeSeriesRef.current, {
-          strokeStyle: 'rgb(0, 255, 0)',
-          fillStyle: 'rgba(0, 255, 0, 0.4)',
-          lineWidth: 3,
-        });
-      }
-
-      const updateChart = () => {
-        if (!analyserNodeRef.current || !timeSeriesRef.current) return;
-
-        analyserNodeRef.current.getByteTimeDomainData(dataArray);
-
-        const average =
-          dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-
-        timeSeriesRef.current.append(new Date().getTime(), average);
-
-        animationFrameRef.current = requestAnimationFrame(updateChart);
-      };
-
-      updateChart();
+    } catch (err) {
+      console.error('Error processing audio:', err);
     }
 
     return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
       if (audioCtxRef.current) {
         audioCtxRef.current.close();
         audioCtxRef.current = null;
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [audioData, isConnected, listening]);
 
   const handleStartListening = () => {
+    if (error) {
+      console.error('Cannot start listening while there is an error:', error);
+      return;
+    }
     setListening(true);
   };
 
   const handleStopListening = () => {
     setListening(false);
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.stop();
+    }
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close();
+      audioCtxRef.current = null;
+    }
   };
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
+      {error && <div className="text-red-500 mb-4">Error: {error}</div>}
       <canvas
         ref={canvasRef}
         width="800"
         height="300"
         className="bg-[#232323] rounded-lg mb-4"
-      ></canvas>
+      />
       <Button onPress={handleStartListening}>Start Listening</Button>
       <Button onPress={handleStopListening}>Stop Listening</Button>
     </div>
