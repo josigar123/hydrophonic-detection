@@ -11,7 +11,6 @@ const AudioRecorder = () => {
   const timeSeriesRef = useRef<TimeSeries | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
-  const analyserNodeRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   const { audioData, isConnected, error } = useAudioStream(websocketUrl);
@@ -29,7 +28,6 @@ const AudioRecorder = () => {
         const channelData = audioBuffer.getChannelData(0); // Extract PCM data
         const bufferLength = channelData.length;
 
-        // If smoothie chart doesn't exist, initialize it
         if (!smoothieChartRef.current) {
           smoothieChartRef.current = new SmoothieChart({
             grid: {
@@ -40,6 +38,8 @@ const AudioRecorder = () => {
               verticalSections: 6,
             },
             labels: { fillStyle: 'rgb(60, 0, 0)' },
+            maxValue: 1,
+            minValue: -1,
           });
           smoothieChartRef.current.streamTo(canvasRef.current);
         }
@@ -54,16 +54,14 @@ const AudioRecorder = () => {
         }
 
         let index = 0;
-        const step = Math.floor(bufferLength / 1000); // Reduce resolution for smoother visualization
+        const step = Math.floor(bufferLength / 1000);
 
         const updateChart = () => {
           if (!timeSeriesRef.current) return;
-
-          // Take a sample point from the channelData
-          const sampleValue = channelData[index] || 0; // Avoid out-of-bounds errors
+          const sampleValue = channelData[index] || 0;
           timeSeriesRef.current.append(new Date().getTime(), sampleValue);
 
-          index = (index + step) % bufferLength; // Loop through the audio data
+          index = (index + step) % bufferLength;
           animationFrameRef.current = requestAnimationFrame(updateChart);
         };
 
