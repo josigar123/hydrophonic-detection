@@ -21,7 +21,7 @@ export function useAudioStream(url: string) {
 
     socket.onmessage = (event) => {
       try {
-        const data = event.data.arraybuffer();
+        const data = event.data;
         setAudioData(data);
       } catch (error) {
         console.log('Error processing audio:', error);
