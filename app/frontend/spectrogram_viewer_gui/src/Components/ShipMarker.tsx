@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
 import { Marker, Popup, Polyline } from 'react-leaflet';
+import useMarkerRotation from "../utils/useMarkerRotation";
+import { useRef, useState } from "react";
+import 'leaflet-rotatedmarker'; 
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 export interface Ship {
   mmsi: string;
@@ -21,41 +22,59 @@ export interface Ship {
   path: [number, number][];
 }
 
+interface ShipMarkerProps {
+  ship: Ship;
+}
+
 const regularShipIcon = new L.Icon({
-  iconUrl: '/assets/icons/ship.svg',
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
+  iconUrl: '/assets/icons/ship_regular.svg',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
   popupAnchor: [0, -10],
   className: 'ship-icon'
 });
 
 const militaryShipIcon = new L.Icon({
-    iconUrl: '/assets/icons/ship1.svg',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconUrl: '/assets/icons/ship_military.svg',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
     popupAnchor: [0, -10],
     className: 'military-ship-icon',
   });
+  
 
+function ShipMarker({ ship }: ShipMarkerProps) {
+  const markerRef = useRef<L.Marker>(null);
+  const [isTracking, setIsTracking] = useState(false);
+  useMarkerRotation(
+    markerRef.current,
+    parseFloat(ship.trueHeading) || ship.course,
+    "center"
+  );
 
-const ShipMarker: React.FC<{ ship: Ship }> = ({ ship }) => {
   const shipIcon =
-  ship.shipType === '35' || ship.shipType === '55' || ship.shipType === '51'
+  ship.shipType === '35' || 
+  ship.shipType === '55' || 
+  ship.shipType === '51'
     ? militaryShipIcon
     : regularShipIcon;
-
 
   return (
     <>
       <Marker
+        ref={markerRef}
         position={[ship.latitude, ship.longitude]}
         icon={shipIcon}
-        rotationAngle={parseFloat(ship.trueHeading) || ship.course}
-        rotationOrigin="center"
       >
-        <Popup>
+        <Popup autoClose={false} closeOnClick={false}>
           <div className="ship-popup">
             <h3 className="font-bold mb-2">{ship.shipName}</h3>
+
+            <button onClick={() => setIsTracking(prev => !prev)}> 
+              {isTracking ? 'Stop Tracking' : 'Track Ship'}
+            </button>
+
+
             <table className="w-full">
               <tbody>
                 <tr>
@@ -84,19 +103,22 @@ const ShipMarker: React.FC<{ ship: Ship }> = ({ ship }) => {
                 </tr>
                 <tr>
                   <td className="font-semibold">Size:</td>
-                  <td>{ship.length}m × {ship.breadth}m</td>
+                  <td>
+                    {ship.length}m × {ship.breadth}m
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </Popup>
       </Marker>
-      {ship.path.length > 1 && (
+
+      {isTracking && ship.path.length > 1 && (
         <Polyline 
           positions={ship.path.map(coord => [coord[1], coord[0]])} 
-          color="blue" 
+          color="blue"
           opacity={0.6} 
-          weight={2}
+          weight={3}
         />
       )}
     </>
