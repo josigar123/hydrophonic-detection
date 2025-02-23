@@ -1,0 +1,12 @@
+syntax = "proto3";
+package wavstreamer;
+
+message WavData {
+    bytes waw_chunk = 1;
+}
+
+message EmptyRequest {}
+
+service WavStreamer{
+    rpc WavStreamer(EmptyRequest) returns (stream WavData);
+}

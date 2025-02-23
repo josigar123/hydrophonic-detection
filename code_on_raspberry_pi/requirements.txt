@@ -1,1 +1,1 @@
-websockets pyaudio
+websockets pyaudio grpcio grpcio-tools protobuf filelock pyyaml
