@@ -9,7 +9,7 @@ This file will be used to handle streaming of the spectrogram data generated
 by the wav-chunks recieved from the PI
 
 '''
-class SpectrogramStreamer:
+class SpectrogramDataGenerator:
     
     window_type: str
     n_segment: int
@@ -23,16 +23,6 @@ class SpectrogramStreamer:
         self.color_scale_min = -40
         self.max_displayed_frequency = 1000
     
-    '''
-    def update_params(self, params: spectrogram_pb2.SpectrogramParams):
-        self.window_type = params.window_type
-        self.n_segment= params.n_segment
-        self.color_scale_min = params.color_scale_min
-        self.max_displayed_frequency = params.max_displayed_frequency
-        self.wav_data = params.wav_data
-        print("Updated params:", self.__dict__)
-
-    '''
     def process_wav_chunk(self, wav_data: bytes):
 
         wav_file = io.BytesIO(wav_data)
