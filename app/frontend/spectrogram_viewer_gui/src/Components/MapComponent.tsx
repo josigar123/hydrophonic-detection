@@ -10,7 +10,7 @@
     const [center] = useState<[number, number]>([59.431633, 10.478039]);
     const { ships, isLoading, error } = useShips();
     return (
-      <div className="h-screen w-full relative">
+      <div className="h-full w-full relative">
         <MapContainer
           center={center}
           zoom={13}
