@@ -49,7 +49,7 @@ class WavStreamerServicer(wav_streamer_pb2_grpc.WavStreamerServicer):
                     wf.close()
 
                     wav_data = wav_buffer.getvalue()
-                    yield wav_streamer_pb2.WavData(data=wav_data)
+                    yield wav_streamer_pb2.WavData(wav_chunk=wav_data)
                     frames = []
         except grpc.RpcError as e:
             print(f"Client disconnected: {e.details()}")
