@@ -7,8 +7,8 @@ def recv_wav_stream():
     stub = wav_streamer_pb2_grpc.WavStreamerStub(channel)
 
     try:
-        for response in stub.WavStreamer(wav_streamer_pb2.WavRequest()):
-            print(f"Received WAV chunk of size: {len(response.data)} bytes")
+        for response in stub.WavStreamer(wav_streamer_pb2.EmptyRequest()):
+            print(f"Received WAV chunk of size: {len(response.waw_chunk)} bytes")
     except grpc.RpcError as e:
         print(f"gRPC error: {e.details()}")
 

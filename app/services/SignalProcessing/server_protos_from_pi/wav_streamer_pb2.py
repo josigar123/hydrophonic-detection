@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12wav_streamer.proto\x12\x0bwavstreamer\"\x1c\n\x07WavData\x12\x11\n\twaw_chunk\x18\x01 \x01(\x0c\"\x0e\n\x0c\x45mptyRequest2O\n\x0bWavStreamer\x12@\n\x0bWavStreamer\x12\x19.wavstreamer.EmptyRequest\x1a\x14.wavstreamer.WavData0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12wav_streamer.proto\x12\x0bwavstreamer\"\x1c\n\x07WavData\x12\x11\n\twav_chunk\x18\x01 \x01(\x0c\"\x0e\n\x0c\x45mptyRequest2O\n\x0bWavStreamer\x12@\n\x0bWavStreamer\x12\x19.wavstreamer.EmptyRequest\x1a\x14.wavstreamer.WavData0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
