@@ -65,9 +65,9 @@ class WavStreamerServicer(wav_streamer_pb2_grpc.WavStreamerServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     wav_streamer_pb2_grpc.add_WavStreamerServicer_to_server(WavStreamerServicer(), server)
-    server.add_insecure_port('[::]:50052')
+    server.add_insecure_port('10.0.0.13:50052')
     server.start()
-    print("Succesfully bound to port 50052")
+    print("Succesfully bound to port 50052 on 10.0.0.13")
     server.wait_for_termination()
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import spectrogram_generator_service_pb2 as spectrogram__generator__service__pb2
+import wav_streamer_pb2 as wav__streamer__pb2
 
 GRPC_GENERATED_VERSION = '1.70.0'
 GRPC_VERSION = grpc.__version__
@@ -18,14 +18,14 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in spectrogram_generator_service_pb2_grpc.py depends on'
+        + f' but the generated code in wav_streamer_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class SpectrogramGeneratorStub(object):
+class WavStreamerStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -34,43 +34,43 @@ class SpectrogramGeneratorStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GenerateSpectrogram = channel.unary_unary(
-                '/spectrogramgenerator.SpectrogramGenerator/GenerateSpectrogram',
-                request_serializer=spectrogram__generator__service__pb2.SpectrogramGeneratorRequest.SerializeToString,
-                response_deserializer=spectrogram__generator__service__pb2.SpectrogramGeneratorResponse.FromString,
+        self.WavStreamer = channel.unary_stream(
+                '/wavstreamer.WavStreamer/WavStreamer',
+                request_serializer=wav__streamer__pb2.EmptyRequest.SerializeToString,
+                response_deserializer=wav__streamer__pb2.WavData.FromString,
                 _registered_method=True)
 
 
-class SpectrogramGeneratorServicer(object):
+class WavStreamerServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GenerateSpectrogram(self, request, context):
+    def WavStreamer(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_SpectrogramGeneratorServicer_to_server(servicer, server):
+def add_WavStreamerServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GenerateSpectrogram': grpc.unary_unary_rpc_method_handler(
-                    servicer.GenerateSpectrogram,
-                    request_deserializer=spectrogram__generator__service__pb2.SpectrogramGeneratorRequest.FromString,
-                    response_serializer=spectrogram__generator__service__pb2.SpectrogramGeneratorResponse.SerializeToString,
+            'WavStreamer': grpc.unary_stream_rpc_method_handler(
+                    servicer.WavStreamer,
+                    request_deserializer=wav__streamer__pb2.EmptyRequest.FromString,
+                    response_serializer=wav__streamer__pb2.WavData.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'spectrogramgenerator.SpectrogramGenerator', rpc_method_handlers)
+            'wavstreamer.WavStreamer', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('spectrogramgenerator.SpectrogramGenerator', rpc_method_handlers)
+    server.add_registered_method_handlers('wavstreamer.WavStreamer', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class SpectrogramGenerator(object):
+class WavStreamer(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GenerateSpectrogram(request,
+    def WavStreamer(request,
             target,
             options=(),
             channel_credentials=None,
@@ -80,12 +80,12 @@ class SpectrogramGenerator(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
-            '/spectrogramgenerator.SpectrogramGenerator/GenerateSpectrogram',
-            spectrogram__generator__service__pb2.SpectrogramGeneratorRequest.SerializeToString,
-            spectrogram__generator__service__pb2.SpectrogramGeneratorResponse.FromString,
+            '/wavstreamer.WavStreamer/WavStreamer',
+            wav__streamer__pb2.EmptyRequest.SerializeToString,
+            wav__streamer__pb2.WavData.FromString,
             options,
             channel_credentials,
             insecure,
