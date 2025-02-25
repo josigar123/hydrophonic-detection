@@ -87,7 +87,6 @@ public class ShipRepository : IShipRepository
     {
         try
         {
-            ship.UpdatedAt = DateTime.Now;
             var response = await _container.CreateItemAsync<Ships>(ship, new PartitionKey(ship.Mmsi));
             return response.Resource;
         }
@@ -108,7 +107,6 @@ public class ShipRepository : IShipRepository
     {
         try
         {
-            updatedShip.UpdatedAt = DateTime.Now;
             var response = await _container.UpsertItemAsync<Ships>(updatedShip, new PartitionKey(updatedShip.Mmsi));
             return response.Resource;
         }

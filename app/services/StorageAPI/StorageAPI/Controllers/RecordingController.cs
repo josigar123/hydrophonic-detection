@@ -7,7 +7,7 @@ using StorageAPI.Services;
 namespace StorageAPI.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/v1/[controller]")]
 public class RecordingController(IRecordingRepository recordingRepository, BlobStorageService blobStorageService)
     : ControllerBase
 {
