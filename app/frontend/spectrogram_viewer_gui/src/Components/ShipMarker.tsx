@@ -1,6 +1,7 @@
 import { Marker, Popup, Polyline } from 'react-leaflet';
 import useMarkerRotation from "../utils/useMarkerRotation";
 import { useRef, useState } from "react";
+import { Button } from "@heroui/button"
 import 'leaflet-rotatedmarker'; 
 import L from 'leaflet';
 
@@ -69,12 +70,6 @@ function ShipMarker({ ship }: ShipMarkerProps) {
         <Popup autoClose={false} closeOnClick={false}>
           <div className="ship-popup">
             <h3 className="font-bold mb-2">{ship.shipName}</h3>
-
-            <button onClick={() => setIsTracking(prev => !prev)}> 
-              {isTracking ? 'Stop Tracking' : 'Track Ship'}
-            </button>
-
-
             <table className="w-full">
               <tbody>
                 <tr>
@@ -107,6 +102,9 @@ function ShipMarker({ ship }: ShipMarkerProps) {
                     {ship.length}m × {ship.breadth}m
                   </td>
                 </tr>
+                <Button size="md"  variant="light" onPress={() => setIsTracking(prev => !prev)}> 
+                  {isTracking ? 'Stop Tracking' : 'Track Ship'}
+                </Button>
               </tbody>
             </table>
           </div>

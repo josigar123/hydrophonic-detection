@@ -45,7 +45,12 @@
       return (
         <>
           <Modal isOpen={isOpen} onOpenChange={onOpenChange}
-          backdrop={'transparent'} size={'xs'} placement={'bottom'}>
+          backdrop={'transparent'} size={'xs'} placement={'top'}
+          classNames={{
+            backdrop: "z-[1000]",
+            wrapper: "z-[1000]",
+            base: "z-[1000]"
+          }}>
             <ModalContent >
               {(onClose) => (
                 <>
