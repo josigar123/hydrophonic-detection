@@ -245,3 +245,5 @@ WAStorageEmulatorDb*.*
 *.m4a
 
 *kafka_2.13-3.9.0*
+
+host_info.json

@@ -16,7 +16,6 @@ try:
     print("Creating consumer...")
     consumer = KafkaConsumer(
         bootstrap_servers=[broker_ip],
-        group_id=consumer_group,  # Add explicit group ID
         auto_offset_reset='earliest',
         enable_auto_commit=True,  # Change to True for troubleshooting
         session_timeout_ms=10000,  # Increase timeout
