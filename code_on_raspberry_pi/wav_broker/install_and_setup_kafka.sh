@@ -1,18 +1,74 @@
 #!/bin/bash
 
-if ! dpkg -l | grep -q openjdk-11-jdk; then
-    echo "Installing OpenJDK 11..."
-    sudo apt update
-    sudo apt install -y openjdk-11-jdk
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
+    OS_FAMILY=$ID_LIKE
+elif [ -f /etc/lsb-release ]; then
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
 else
-    echo "OpenJDK 11 is already installed."
+    OS=$(uname -s)
 fi
 
-if ! dpkg -l | grep -q wget; then
-    echo "Installing wget..."
-    sudo apt install -y wget
+echo "Detected OS: $OS"
+
+if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]]; then
+    if ! dpkg -l | grep -q openjdk-11-jdk; then
+        echo "Installing OpenJDK 11 on Debian/Ubuntu..."
+        sudo apt update
+        sudo apt install -y openjdk-11-jdk
+    else
+        echo "OpenJDK 11 is already installed."
+    fi
+    if ! dpkg -l | grep -q wget; then
+        echo "Installing wget on Debian/Ubuntu..."
+        sudo apt install -y wget
+    else
+        echo "wget is already installed."
+    fi
+elif [[ "$OS" == "arch" || "$OS_FAMILY" == *"arch"* ]]; then
+    if ! pacman -Q jdk11-openjdk &>/dev/null; then
+        echo "Installing OpenJDK 11 on Arch Linux..."
+        sudo pacman -Sy --noconfirm jdk11-openjdk
+    else
+        echo "OpenJDK 11 is already installed."
+    fi
+    if ! pacman -Q wget &>/dev/null; then
+        echo "Installing wget on Arch Linux..."
+        sudo pacman -Sy --noconfirm wget
+    else
+        echo "wget is already installed."
+    fi
+elif [[ "$OS" == "fedora" || "$OS" == "rhel" || "$OS" == "centos" || "$OS_FAMILY" == *"rhel"* ]]; then
+    if ! rpm -q java-11-openjdk-devel &>/dev/null; then
+        echo "Installing OpenJDK 11 on RHEL/Fedora/CentOS..."
+        sudo dnf install -y java-11-openjdk-devel
+    else
+        echo "OpenJDK 11 is already installed."
+    fi
+    if ! rpm -q wget &>/dev/null; then
+        echo "Installing wget on RHEL/Fedora/CentOS..."
+        sudo dnf install -y wget
+    else
+        echo "wget is already installed."
+    fi
+elif [[ "$OS" == "opensuse" || "$OS" == "suse" ]]; then
+    if ! rpm -q java-11-openjdk-devel &>/dev/null; then
+        echo "Installing OpenJDK 11 on openSUSE..."
+        sudo zypper install -y java-11-openjdk-devel
+    else
+        echo "OpenJDK 11 is already installed."
+    fi
+    if ! rpm -q wget &>/dev/null; then
+        echo "Installing wget on openSUSE..."
+        sudo zypper install -y wget
+    else
+        echo "wget is already installed."
+    fi
 else
-    echo "wget is already installed."
+    echo "Unsupported OS: $OS"
+    echo "Please install Java 11 JDK and wget manually."
 fi
 
 if [ ! -f kafka_2.13-3.9.0.tgz ]; then
@@ -64,6 +120,5 @@ echo "Starting ZooKeeper..."
 bin/zookeeper-server-start.sh -daemon config/zookeeper.properties
 echo "Waiting for ZooKeeper to start..."
 sleep 5
-
 echo "Starting Kafka..."
 bin/kafka-server-start.sh config/server.properties
