@@ -11,10 +11,7 @@ try:
         auto_offset_reset='earliest',
         enable_auto_commit=False,
     )
-    # Try to list topics to check connection
-    print(f"Attempting to connect to broker at {broker_ip}...")
-    consumer.poll(timeout_ms=1000)  # Poll to verify connection
-    print("Successfully connected to the broker!")
+
     consumer.subscribe([topic])
 
     while True:

@@ -104,7 +104,12 @@ fi
 rm -rf kafka_2.13-3.9.0.tgz
 cd kafka_2.13-3.9.0
 
-PRIVATE_IP=$(hostname -I | awk '{print $1}')
+if [[ "$OS" == "arch" || "$OS_FAMILY" == *"arch"* ]]; then
+    PRIVATE_IP=$(ip -4 addr show | grep -v '127.0.0.1' | grep -oP 'inet \K[\d.]+')
+else
+    PRIVATE_IP=$(hostname -I | awk '{print $1}')
+fi
+
 echo "Private IP address of the host: $PRIVATE_IP"
 echo "Updating Kafka configuration..."
 
