@@ -39,7 +39,7 @@ else
 fi
 
 # Create the topic for audio-data
-AUDIO_TOPIC = "audio-stream"
+AUDIO_TOPIC="audio-stream"
 bin/kafka-topics.sh --create --topic $AUDIO_TOPIC --bootstrap-server $PRIVATE_IP:$BROKER_PORT --partitions 1 --replication-factor 1
 
 
@@ -50,7 +50,8 @@ cd ..
 HOST_INFO_FILE="broker_info.json"
 echo "{
     \"ip\": \"$PRIVATE_IP\",
-    \"brokerPort\": \"$BROKER_PORT\"
+    \"brokerPort\": \"$BROKER_PORT\",
+    \"topicName\": \"$AUDIO_TOPIC\"
 }" > $HOST_INFO_FILE
 
 echo "Configuration updated and saved to $HOST_INFO_FILE"

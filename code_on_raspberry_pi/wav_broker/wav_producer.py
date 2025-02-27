@@ -5,13 +5,14 @@ import pyaudio
 import io
 
 with open("broker_info.json", "r") as file:
-    host_info = json.load(file)
+    broker_info = json.load(file)
 
 with open("recording_parameters.json", "r") as file:
     recording_parameters = json.load(file)
 
-broker_ip  = host_info["ip"]
-broker_port = host_info["brokerPort"]
+broker_ip  = broker_info["ip"]
+broker_port = broker_info["brokerPort"]
+topic = broker_info["topicName"]
 
 print("##############PRODUCER SETUP##############")
 p = pyaudio.PyAudio()
@@ -70,7 +71,7 @@ try:
             wf.close()
 
             wav_data = wav_buffer.getvalue()
-            producer.send(value=wav_data)
+            producer.send(topic, value=wav_data)
             frames = []
 
 except Exception as e:
