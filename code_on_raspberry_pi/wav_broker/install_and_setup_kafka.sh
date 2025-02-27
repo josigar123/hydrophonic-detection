@@ -46,18 +46,24 @@ else
 fi
 
 rm -rf kafka_2.13-3.9.0.tgz
-
 cd kafka_2.13-3.9.0
 
 PRIVATE_IP=$(hostname -I | awk '{print $1}')
 echo "Private IP address of the host: $PRIVATE_IP"
-
 echo "Updating Kafka configuration..."
-sed -i "s/^listeners=PLAINTEXT:\/\/0.0.0.0:9092/listeners=PLAINTEXT:\/\/$PRIVATE_IP:9092/" config/server.properties
-sed -i "s/^advertised.listeners=PLAINTEXT:\/\/your_public_ip:9092/advertised.listeners=PLAINTEXT:\/\/$PRIVATE_IP:9092/" config/server.properties
+
+if grep -q "^listeners=" config/server.properties; then
+    sed -i "s|^listeners=.*|listeners=PLAINTEXT://0.0.0.0:9092|" config/server.properties
+    sed -i "s|^advertised.listeners=.*|advertised.listeners=PLAINTEXT://$PRIVATE_IP:9092|" config/server.properties
+else
+    sed -i "s|#listeners=.*|listeners=PLAINTEXT://0.0.0.0:9092|" config/server.properties
+    sed -i "s|#advertised.listeners=.*|advertised.listeners=PLAINTEXT://$PRIVATE_IP:9092|" config/server.properties
+fi
 
 echo "Starting ZooKeeper..."
-bin/zookeeper-server-start.sh config/zookeeper.properties &
+bin/zookeeper-server-start.sh -daemon config/zookeeper.properties
+echo "Waiting for ZooKeeper to start..."
+sleep 5
 
 echo "Starting Kafka..."
 bin/kafka-server-start.sh config/server.properties
