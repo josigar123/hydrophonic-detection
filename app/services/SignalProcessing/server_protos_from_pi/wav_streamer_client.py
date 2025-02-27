@@ -25,7 +25,7 @@ def recv_wav_and_forward_stream():
     stub = wav_streamer_pb2_grpc.WavStreamerStub(channel)
 
     async def forward_data():
-        async for response in stub.WavStreamer(wav_streamer_pb2.EmptyRequest()):
+        for response in stub.WavStreamer(wav_streamer_pb2.EmptyRequest()):
             print(f"Received WAV chunk of size: {len(response.wav_chunk)} bytes")
             await send_to_websocket(response.wav_chunk)
     try:

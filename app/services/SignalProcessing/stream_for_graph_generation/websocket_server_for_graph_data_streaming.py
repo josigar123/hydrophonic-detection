@@ -14,6 +14,7 @@ Second: send that data out of the socket so that a web-client can connect and re
 clients = set()
 
 async def recieve_wav_data(websocket):
+    spectrogram_data_generator = SpectrogramDataGenerator()
     clients.add(websocket)
     try:
         async for message in websocket:
@@ -22,7 +23,6 @@ async def recieve_wav_data(websocket):
                 continue
 
             # Process the data here
-            spectrogram_data_generator = SpectrogramDataGenerator()
             f, t, sx_db = spectrogram_data_generator.process_wav_chunk(message)
             spectrogram_data_list = [f, t, sx_db]
             await broadcast_to_clients(spectrogram_data_list)
@@ -30,7 +30,7 @@ async def recieve_wav_data(websocket):
     except Exception as e:
         print(f"Error handling client: {e}")
     finally:
-        clients.remove(websocket)
+        clients.discard(websocket)
 
 async def broadcast_to_clients(processed_data):
 
