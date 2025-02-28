@@ -2,6 +2,7 @@ import PlotView from '../Components/PlotView';
 import AisDataTable from '../Components/AisDataTable';
 import MapComponent from '../Components/MapComponent';
 import AudioRecorder from '../Components/AudioRecorder';
+import SpectrogramView from '../Components/SpectrogramView';
 
 const MainPage = () => {
   return (
@@ -24,7 +25,8 @@ const MainPage = () => {
         <div className="h-full grid grid-cols-2 gap-8 p-4">
           <div className="h-full overflow-hidden">
             {/*<AmplitudeView />*/}
-            <AudioRecorder />
+            {/*<AudioRecorder />*/}
+            <SpectrogramView />
           </div>
           <div className="h-full overflow-hidden">
             <AisDataTable />

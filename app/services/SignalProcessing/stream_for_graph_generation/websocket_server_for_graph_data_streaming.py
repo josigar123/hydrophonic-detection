@@ -1,7 +1,7 @@
 import asyncio
 import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 import json
 
 '''
@@ -32,7 +32,10 @@ spectrogram_data_generator = SpectrogramDataGenerator()
 
 async def handle_connection(websocket, path):
 
-    query_params = parse_qs(path)
+    parsed_url = urlparse(path)
+    query_params = parse_qs(parsed_url.query)
+
+    print("Path for connection: " + path)
     client_name = query_params.get('client_name', ['Uknown'])[0]
     print(f"Client {client_name} connected to WebSocket from {websocket.remote_address}")
     clients[client_name] = websocket
@@ -58,7 +61,7 @@ async def handle_connection(websocket, path):
 
 async def forward_to_frontend(data):
     if 'spectrogram_client' in clients:
-        await asyncio.wait(clients['spectrogram_client'].send(data))
+        await clients['spectrogram_client'].send(data)
     else:
         print("No frontend client connected...")
 async def main():
