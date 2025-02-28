@@ -28,11 +28,11 @@ class SpectrogramDataGenerator:
         wav_file = io.BytesIO(wav_data)
         sample_rate, samples = wavfile.read(wav_file)
 
-        f, t, sx = signal.spectrogram(samples, sample_rate, window=self.window_type, nperseg=self.n_segment, detrend=False)
-        sx_db = 10 * np.log10(sx/sx.max())
+        frequencies, times, spectrogram = signal.spectrogram(samples, sample_rate, window=self.window_type, nperseg=self.n_segment, detrend=False)
+        sx_db = 10 * np.log10(spectrogram/spectrogram.max())
 
         # Removes DC offset and noramlize
         samples = samples - np.mean(samples)
 
-        return f.tolist(), t.tolist(), sx_db.tolist()
+        return frequencies.tolist(), times.tolist(), sx_db.tolist()
             

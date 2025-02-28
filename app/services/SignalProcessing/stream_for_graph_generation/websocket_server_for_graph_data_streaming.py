@@ -1,6 +1,8 @@
 import asyncio
 import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
+from urllib.parse import parse_qs
+import json
 
 '''
 
@@ -8,51 +10,59 @@ This file will contain the websocket server that is going to:
 First: process the incoming wav chunk and generate appropriate graph data (Only spectrogram to start with)
 Second: send that data out of the socket so that a web-client can connect and read the data
 
+Server must also when connected to the frontend client, be able
+to recieve requests for updating the spectrogram data generation 
+that is being sent back to the frontend
+
+The frontend client will recieve the following JSON object:
+
+{
+    "frequencies": [1,2,3,46],
+    "times": [2,3,5,6],
+    "spectrogamDb": [1,2,6,2]
+}
 
 '''
 
-clients = set()
+# This dictionary holds a clients websocket and name
+clients = {}
 
-async def recieve_wav_data(websocket):
-    spectrogram_data_generator = SpectrogramDataGenerator()
-    clients.add(websocket)
-    try:
-        async for message in websocket:
-            if message is None:
-                print("Warning: no message recieved")
-                continue
+# A simple data generation, only with default parameters
+spectrogram_data_generator = SpectrogramDataGenerator()
 
-            # Process the data here
-            f, t, sx_db = spectrogram_data_generator.process_wav_chunk(message)
-            spectrogram_data_list = [f, t, sx_db]
-            await broadcast_to_clients(spectrogram_data_list)
+async def handle_connection(websocket, path):
 
-    except Exception as e:
-        print(f"Error handling client: {e}")
-    finally:
-        clients.discard(websocket)
-
-async def broadcast_to_clients(processed_data):
-
-    if not clients:
-        print("No clients to broadcast to")
-        return
+    query_params = parse_qs(path)
+    client_name = query_params.get('client_name', ['Uknown'])[0]
+    print(f"Client {client_name} connected to WebSocket from {websocket.remote_address}")
+    clients[client_name] = websocket
     
-    tasks = []
-    for client in clients:
-        tasks.append(send_to_client(client, processed_data))
-    
-    await asyncio.gather(*tasks, return_exceptions=True)
+    if client_name == "audio_consumer":
 
-async def send_to_client(client, processed_data):
-    try:
-        await client.send(processed_data)
-    except Exception as e:
-        print(f"Failed to send data to client: {e}")
-        clients.discard(client)
+        try:
+            async for message in websocket:
+                frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(message)
 
+                data = {"frequencies": frequencies,
+                        "times": times,
+                        "spectrogramDb": spectrogram_db}
+                data_json = json.dumps(data)
+                await forward_to_frontend(data_json)
+        except websockets.exceptions.ConnectionClosed as e:
+            print(f"Client disconnected: {e}")
+        except Exception as e:
+            print(f"Error in handle_connection: {e}")
+        finally:
+            clients.pop(client_name, None)
+
+
+async def forward_to_frontend(data):
+    if 'spectrogram_client' in clients:
+        await asyncio.wait(clients['spectrogram_client'].send(data))
+    else:
+        print("No frontend client connected...")
 async def main():
-    async with websockets.serve(recieve_wav_data, "localhost", 8766):
+    async with websockets.serve(handle_connection, "localhost", 8766):
         print(f"WebSocket server running on ws://localhost:8766")
         await asyncio.Future()
 

@@ -1,8 +1,8 @@
-from kafka import KafkaConsumer
 import websockets
 import asyncio
 import json
 from aiokafka import AIOKafkaConsumer
+
 
 '''
 
@@ -13,6 +13,8 @@ Consumer must:
 First: recieve the wav-data from the broker, that the producer pushes,
 Second: for each message received from the broker, have a ws connection where the 
         data is sent to, 
+
+MUST SUPPLY client_name query param when connecting to websocket
 
 '''
 
@@ -72,7 +74,7 @@ async def consume_audio(consumer: AIOKafkaConsumer, socket_client: WebSocketClie
             await consumer.stop()
 
 async def main():
-    socket_client = WebSocketClient("ws://localhost:8766")
+    socket_client = WebSocketClient("ws://localhost:8766?client_name=audio_consumer")
     async_audio_consumer = AIOKafkaConsumer(
         broker_topic,
         bootstrap_servers=[f"{broker_ip}:{broker_port}"],
