@@ -152,7 +152,7 @@ const AudioRecorder = () => {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4">
+    <div className="flex flex-col items-center gap-4 p-2">
       <canvas
         ref={canvasRef}
         width="800"

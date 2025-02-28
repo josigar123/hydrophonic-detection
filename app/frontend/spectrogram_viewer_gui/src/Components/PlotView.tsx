@@ -49,18 +49,9 @@ const PlotView = () => {
   ];
 
   return (
-    <div className="h-full flex flex-col">
+<div className="h-full flex flex-col bg-slate-400 rounded-lg p-1">
+  <div className="flex w-full flex-col">
       <div className="absolute top-2 right-2">
-        <Tooltip
-          placement="right"
-          closeDelay={1}
-          delay={1}
-          content="Reset zoom"
-        >
-          <Button size="sm" radius="lg">
-            <img src={recenterIcon} alt="Recenter icon" className="w-6 h-6" />
-          </Button>
-        </Tooltip>
       </div>
       <Tabs
         key="bordered"
@@ -70,8 +61,8 @@ const PlotView = () => {
         className="h-full"
       >
         <Tab key="spectrogram" title="Spectrogram">
-          <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
-            <div className="flex-1 min-h-0 overflow-auto flex justify-center items-center mb-4">
+          <div className="h-full flex flex-col bg-slate-400 rounded-lg p-1">
+            <div className="flex-1 min-h-0 overflow-auto flex justify-center items-center mb-2">
               <img
                 src={spectrogramContext?.spectrogramUrl || placeholderImage}
                 alt="Spectrogram"
@@ -88,8 +79,8 @@ const PlotView = () => {
           </div>
         </Tab>
         <Tab key="DEMON" title="DEMON">
-          <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
-            <div className="flex-1 min-h-0 overflow-auto flex justify-center items-center mb-4">
+          <div className="h-full flex flex-col bg-slate-400 rounded-lg p-1">
+            <div className="flex-1 min-h-0 overflow-auto flex justify-center items-center mb-2">
               <img
                 src={placeholderImage}
                 alt="DEMON Spectrogram"
@@ -106,6 +97,7 @@ const PlotView = () => {
           </div>
         </Tab>
       </Tabs>
+    </div>
     </div>
   );
 };
