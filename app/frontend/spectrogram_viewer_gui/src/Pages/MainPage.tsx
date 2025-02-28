@@ -5,35 +5,29 @@ import AudioRecorder from '../Components/AudioRecorder';
 
 const MainPage = () => {
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
-      
-      {/* Main content area - fills available space */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Left column */}
-        <div className="flex-1 flex flex-col min-h-0 p-2">
-          {/* PlotView with fixed height for controls */}
-          <div className="flex-1 overflow-auto mb-2 flex flex-col">
-            {/* Set a minimum height to ensure it's visible, but allows growth */}
-            <div className="min-h-[300px] md:min-h-[400px] flex-1">
-              <PlotView />
-            </div>
-          </div>
-          
-          {/* AudioRecorder - adjust height to balance with PlotView */}
-          <div className="h-[250px] overflow-hidden">
+    <div className="min-h-screen flex flex-col overflow-hidden">
+      <h2 className="flex-none p-2 text-gray-600">Themis</h2>
+      {/* Top half */}
+
+    <div className="flex-1 min-h-0">
+      <div className="h-full grid grid-cols-2 gap-8 p-4">
+        <div className="h-full overflow-hidden">
+          <PlotView />
+        </div>
+        <div className="h-[60vh] overflow-hidden">
+          <MapComponent />
+        </div>
+      </div>
+    </div>
+
+      {/* Bottom half */}
+      <div className="flex-1 min-h-0">
+        <div className="h-full grid grid-cols-2 gap-8 p-4">
+          <div className="h-full overflow-hidden">
+            {/*<AmplitudeView />*/}
             <AudioRecorder />
           </div>
-        </div>
-        
-        {/* Right column */}
-        <div className="flex-1 flex flex-col min-h-0 p-2">
-          {/* Map with good vertical space */}
-          <div className="flex-1 mb-2 overflow-hidden min-h-[300px]">
-            <MapComponent />
-          </div>
-          
-          {/* AIS Data Table */}
-          <div className="h-[250px] overflow-auto">
+          <div className="h-full overflow-hidden">
             <AisDataTable />
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Marker, Popup, Polyline } from 'react-leaflet';
-import useMarkerRotation from "../hooks/useMarkerRotation";
+import useMarkerRotation from "../utils/useMarkerRotation";
 import { useRef, useState } from "react";
 import { Button } from "@heroui/button"
 import 'leaflet-rotatedmarker'; 
@@ -37,8 +37,8 @@ const regularShipIcon = new L.Icon({
 
 const militaryShipIcon = new L.Icon({
     iconUrl: '/assets/icons/ship_military.svg',
-    iconSize: [30, 30],
-    iconAnchor: [15, ],
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
     popupAnchor: [0, -10],
     className: 'military-ship-icon',
   });
@@ -55,7 +55,8 @@ function ShipMarker({ ship }: ShipMarkerProps) {
 
   const shipIcon =
   ship.shipType === '35' || 
-  ship.shipType === '55'
+  ship.shipType === '55' || 
+  ship.shipType === '51'
     ? militaryShipIcon
     : regularShipIcon;
 
