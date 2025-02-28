@@ -1,1 +1,1 @@
-websockets pyaudio grpcio grpcio-tools protobuf filelock pyyaml kafka-python
+websockets pyaudio grpcio grpcio-tools protobuf filelock pyyaml kafka-python aiokafka

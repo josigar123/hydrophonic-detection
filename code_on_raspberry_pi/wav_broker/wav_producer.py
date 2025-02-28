@@ -31,7 +31,7 @@ for i in range(device_count):
 p.terminate()
 
 DEVICE_INDEX = input(f"From the list above, select your devices index [0, {device_count-1}]")
-while DEVICE_INDEX.isalpha() or (DEVICE_INDEX < 0 or DEVICE_INDEX >= device_count):
+while DEVICE_INDEX.isalpha() or (int(DEVICE_INDEX) < 0 or int(DEVICE_INDEX) >= device_count):
     print(f"ILLEGAL VALUE: {DEVICE_INDEX}")
     DEVICE_INDEX = input(f"From the list above, select your devices index [0, {device_count-1}]")
 
@@ -49,14 +49,14 @@ def create_audio_stream(pyaudio_instance):
                                    channels=CHANNELS,
                                    rate=SAMPLE_RATE,
                                    input=True,
-                                   input_device_index=DEVICE_INDEX,
+                                   input_device_index=int(DEVICE_INDEX),
                                    frames_per_buffer=RECORDING_CHUNK_SIZE)
     return stream    
 
 frames = []
+pyaudio_instance = pyaudio.PyAudio()
+stream = create_audio_stream(pyaudio_instance)
 try:
-    pyaudio_instance = pyaudio.PyAudio()
-    stream = create_audio_stream(pyaudio_instance)
     while True:
         data = stream.read(RECORDING_CHUNK_SIZE, exception_on_overflow=False)
         frames.append(data)
@@ -75,8 +75,11 @@ try:
             frames = []
 
 except Exception as e:
-    print("Error", e)
+    print("Error streaming audio: ", e)
 finally:
+    print("Stopping Kafka producer...")
+    producer.flush()
+    producer.close()
     stream.stop_stream()
     stream.close()
     pyaudio_instance.terminate()
