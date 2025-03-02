@@ -40,33 +40,62 @@ async def handle_connection(websocket, path):
     print(f"Client {client_name} connected to WebSocket from {websocket.remote_address}")
     clients[client_name] = websocket
     
-    if client_name == "audio_consumer":
+    
 
-        try:
+    try:
+        if client_name == "audio_consumer":
             async for message in websocket:
-                frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(message)
 
-                data = {"frequencies": frequencies,
-                        "times": times,
-                        "spectrogramDb": spectrogram_db}
-                data_json = json.dumps(data)
-                await forward_to_frontend(data_json)
-        except websockets.exceptions.ConnectionClosed as e:
-            print(f"Client disconnected: {e}")
-        except Exception as e:
-            print(f"Error in handle_connection: {e}")
-        finally:
+                try:
+                    frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(message)
+
+                    data = {"frequencies": frequencies,
+                                "times": times,
+                                "spectrogramDb": spectrogram_db}
+                    data_json = json.dumps(data)
+                    await forward_to_frontend(data_json)
+                except Exception as e:
+                    print(f"Error processing message: {e}")
+        else:
+
+            async for message in websocket:
+                try:
+                    print(f"Received message from {client_name}: {message[:100]}...")
+                except Exception as e:
+                    print(f"Error handling message from {client_name}: {e}")
+    except websockets.exceptions.ConnectionClosed as e:
+        print(f"Client '{client_name}' disconnected: {e}")
+    finally:
+
+        if client_name in clients and clients[client_name] == websocket:
             clients.pop(client_name, None)
+            print(f"Removed {client_name} from active clients")
 
 
 async def forward_to_frontend(data):
     if 'spectrogram_client' in clients:
-        await clients['spectrogram_client'].send(data)
+        try:
+            await clients['spectrogram_client'].send(data)
+            print("Sending data to spectrogram_client")
+        except websockets.exceptions.ConnectionClosed:
+            print("Connection to spectrogram_client was closed while sending")
+            if 'spectrogram_client' in clients:
+                clients.pop('spectrogram_client', None)
+        except Exception as e:
+            print(f"Error sending to spectrogram_client: {e}")
     else:
         print("No frontend client connected...")
+
 async def main():
-    async with websockets.serve(handle_connection, "localhost", 8766):
-        print(f"WebSocket server running on ws://localhost:8766")
-        await asyncio.Future()
+    server = await websockets.serve(
+        handle_connection,
+        "localhost",
+        8766,
+        ping_interval=30,
+        ping_timeout=10
+    )
+
+    print("WebSocket server running on ws://localhost:8766")
+    await asyncio.Future()
 
 asyncio.run(main())
