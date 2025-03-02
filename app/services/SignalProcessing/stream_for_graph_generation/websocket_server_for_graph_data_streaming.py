@@ -39,21 +39,13 @@ async def handle_connection(websocket, path):
     client_name = query_params.get('client_name', ['Uknown'])[0]
     print(f"Client {client_name} connected to WebSocket from {websocket.remote_address}")
     clients[client_name] = websocket
-    
-    
 
     try:
         if client_name == "audio_consumer":
             async for message in websocket:
 
                 try:
-                    frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(message)
-
-                    data = {"frequencies": frequencies,
-                                "times": times,
-                                "spectrogramDb": spectrogram_db}
-                    data_json = json.dumps(data)
-                    await forward_to_frontend(data_json)
+                    await forward_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
         else:
@@ -75,7 +67,16 @@ async def handle_connection(websocket, path):
 async def forward_to_frontend(data):
     if 'spectrogram_client' in clients:
         try:
-            await clients['spectrogram_client'].send(data)
+            frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(data)
+     
+            data = {
+                    "frequencies": frequencies,
+                    "times": times,
+                    "spectrogramDb": spectrogram_db
+                            }
+            data_json = json.dumps(data)
+
+            await clients['spectrogram_client'].send(data_json)
             print("Sending data to spectrogram_client")
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
@@ -83,6 +84,17 @@ async def forward_to_frontend(data):
                 clients.pop('spectrogram_client', None)
         except Exception as e:
             print(f"Error sending to spectrogram_client: {e}")
+    elif 'waveform_client' in clients:
+        try:
+            
+            await clients['waveform_client'].send(data)
+            print("Sending data to waveform_client")
+        except websockets.exceptions.ConnectionClosed:
+            print("Connection to waveform_client was closed while sending")
+            if 'waveform_client' in clients:
+                clients.pop('waveform_client', None)
+        except Exception as e:
+            print(f"Error sending to waveform_client: {e}")
     else:
         print("No frontend client connected...")
 

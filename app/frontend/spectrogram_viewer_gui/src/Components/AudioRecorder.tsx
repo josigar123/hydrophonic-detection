@@ -4,6 +4,7 @@ import { useAudioStream } from '../Hooks/useAudioStream';
 import { Button } from '@heroui/button';
 
 const websocketUrl = 'ws://10.0.0.13:8765';
+const websocketURL = 'ws://10.0.0.10:8766?client_name=waveform_client';
 
 const AudioRecorder = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
