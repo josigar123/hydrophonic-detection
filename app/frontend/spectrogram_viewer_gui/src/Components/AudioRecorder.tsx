@@ -3,8 +3,7 @@ import { SmoothieChart, TimeSeries } from 'smoothie';
 import { useAudioStream } from '../Hooks/useAudioStream';
 import { Button } from '@heroui/button';
 
-const websocketUrl = 'ws://10.0.0.13:8765';
-const websocketURL = 'ws://10.0.0.10:8766?client_name=waveform_client';
+const websocketUrl = 'ws://localhost:8766?client_name=waveform_client';
 
 const AudioRecorder = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -14,7 +13,10 @@ const AudioRecorder = () => {
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  const { audioData, isConnected, error } = useAudioStream(websocketUrl);
+  const { audioData, isConnected, error, connect, disconnect } = useAudioStream(
+    websocketUrl,
+    false
+  );
   const [listening, setListening] = useState(false);
 
   useEffect(() => {
@@ -111,7 +113,17 @@ const AudioRecorder = () => {
         height="300"
         className="bg-[#232323] rounded-lg mb-4"
       />
-      <Button onPress={handleStartListening}>Start Listening</Button>
+      <div className="mb-4">
+        <p>Connection status: {isConnected ? 'Connected' : 'Disconnected'}</p>
+        {error && <p className="text-red-500">Error: {error}</p>}
+      </div>
+      <Button onPress={connect} disabled={isConnected}>
+        Connect to stream
+      </Button>
+      <Button onPress={disconnect} disabled={!isConnected}>
+        Disconnect from stream
+      </Button>
+      <Button onPress={handleStartListening}>Listen</Button>
       <Button onPress={handleStopListening}>Stop Listening</Button>
     </div>
   );
