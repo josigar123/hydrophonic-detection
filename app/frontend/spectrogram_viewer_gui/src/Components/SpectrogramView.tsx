@@ -6,7 +6,7 @@ const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 
 const SpectrogramView = () => {
   const { spectrogramData, isConnected, error, connect, disconnect } =
-    useSpectrogramStream(websocketUrl, false); // Set autoConnect to false
+    useSpectrogramStream(websocketUrl, false);
 
   useEffect(() => {
     if (isConnected) {
@@ -38,10 +38,7 @@ const SpectrogramView = () => {
       </div>
 
       {isConnected && spectrogramData.spectrogramDb.length > 0 && (
-        <div className="mt-4">
-          <p>Receiving spectrogram data...</p>
-          {/* You could render your spectrogram visualization here */}
-        </div>
+        <div className="mt-4"></div>
       )}
     </div>
   );

@@ -12,7 +12,6 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   const shouldConnectRef = useRef(autoConnect);
 
   const connect = useCallback(() => {
-    // Don't create a new connection if one already exists
     if (
       socketRef.current &&
       (socketRef.current.readyState === WebSocket.OPEN ||
@@ -21,7 +20,6 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
       return;
     }
 
-    // Clear any previous errors
     setError(null);
 
     try {
@@ -56,7 +54,6 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
         setIsConnected(false);
         socketRef.current = null;
 
-        // If connection was intended to be maintained, attempt to reconnect
         if (shouldConnectRef.current) {
           console.log('Attempting to reconnect in 3 seconds...');
           setTimeout(() => {
@@ -87,7 +84,6 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
     }
   }, []);
 
-  // Set the connection state based on the autoConnect parameter or manual connect call
   useEffect(() => {
     if (autoConnect) {
       shouldConnectRef.current = true;
