@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';

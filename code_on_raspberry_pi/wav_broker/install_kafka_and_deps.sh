@@ -7,6 +7,8 @@ if [ -f /etc/os-release ]; then
 elif [ -f /etc/lsb-release ]; then
     . /etc/lsb-release
     OS=$DISTRIB_ID
+elif [[ "$(uname -s)" == "Darwin" ]]; then
+    OS="macos"
 else
     OS=$(uname -s)
 fi
@@ -14,61 +16,48 @@ fi
 echo "Detected OS: $OS"
 
 if [[ "$OS" == "ubuntu" || "$OS" == "debian" ]]; then
-    if ! dpkg -l | grep -q openjdk-11-jdk; then
-        echo "Installing OpenJDK 11 on Debian/Ubuntu..."
-        sudo apt update
-        sudo apt install -y openjdk-11-jdk
-    else
-        echo "OpenJDK 11 is already installed."
-    fi
-    if ! dpkg -l | grep -q wget; then
-        echo "Installing wget on Debian/Ubuntu..."
-        sudo apt install -y wget
-    else
-        echo "wget is already installed."
-    fi
+    PKG_MANAGER="sudo apt"
+    JAVA_PACKAGE="openjdk-11-jdk"
+    WGET_PACKAGE="wget"
+    UPDATE_CMD="$PKG_MANAGER update"
 elif [[ "$OS" == "arch" || "$OS_FAMILY" == *"arch"* ]]; then
-    if ! pacman -Q jdk11-openjdk &>/dev/null; then
-        echo "Installing OpenJDK 11 on Arch Linux..."
-        sudo pacman -Sy --noconfirm jdk11-openjdk
-    else
-        echo "OpenJDK 11 is already installed."
-    fi
-    if ! pacman -Q wget &>/dev/null; then
-        echo "Installing wget on Arch Linux..."
-        sudo pacman -Sy --noconfirm wget
-    else
-        echo "wget is already installed."
-    fi
+    PKG_MANAGER="sudo pacman -Sy --noconfirm"
+    JAVA_PACKAGE="jdk11-openjdk"
+    WGET_PACKAGE="wget"
 elif [[ "$OS" == "fedora" || "$OS" == "rhel" || "$OS" == "centos" || "$OS_FAMILY" == *"rhel"* ]]; then
-    if ! rpm -q java-11-openjdk-devel &>/dev/null; then
-        echo "Installing OpenJDK 11 on RHEL/Fedora/CentOS..."
-        sudo dnf install -y java-11-openjdk-devel
-    else
-        echo "OpenJDK 11 is already installed."
-    fi
-    if ! rpm -q wget &>/dev/null; then
-        echo "Installing wget on RHEL/Fedora/CentOS..."
-        sudo dnf install -y wget
-    else
-        echo "wget is already installed."
-    fi
+    PKG_MANAGER="sudo dnf install -y"
+    JAVA_PACKAGE="java-11-openjdk-devel"
+    WGET_PACKAGE="wget"
 elif [[ "$OS" == "opensuse" || "$OS" == "suse" ]]; then
-    if ! rpm -q java-11-openjdk-devel &>/dev/null; then
-        echo "Installing OpenJDK 11 on openSUSE..."
-        sudo zypper install -y java-11-openjdk-devel
-    else
-        echo "OpenJDK 11 is already installed."
-    fi
-    if ! rpm -q wget &>/dev/null; then
-        echo "Installing wget on openSUSE..."
-        sudo zypper install -y wget
-    else
-        echo "wget is already installed."
+    PKG_MANAGER="sudo zypper install -y"
+    JAVA_PACKAGE="java-11-openjdk-devel"
+    WGET_PACKAGE="wget"
+elif [[ "$OS" == "macos" ]]; then
+    PKG_MANAGER="brew install"
+    JAVA_PACKAGE="openjdk@11"
+    WGET_PACKAGE="wget"
+    if ! command -v brew &>/dev/null; then
+        echo "Homebrew not found. Installing..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
 else
     echo "Unsupported OS: $OS"
     echo "Please install Java 11 JDK and wget manually."
+    exit 1
+fi
+
+if ! command -v java &>/dev/null; then
+    echo "Installing OpenJDK 11..."
+    $PKG_MANAGER $JAVA_PACKAGE
+else
+    echo "OpenJDK 11 is already installed."
+fi
+
+if ! command -v wget &>/dev/null; then
+    echo "Installing wget..."
+    $PKG_MANAGER $WGET_PACKAGE
+else
+    echo "wget is already installed."
 fi
 
 if [ ! -f kafka_2.13-3.9.0.tgz ]; then

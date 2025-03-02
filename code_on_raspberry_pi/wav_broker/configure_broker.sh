@@ -19,7 +19,9 @@ fi
 
 cd kafka_2.13-3.9.0
 
-if [[ "$OS" == "arch" || "$OS_FAMILY" == *"arch"* ]]; then
+if [[ "$OS" == "Darwin" ]]; then
+    PRIVATE_IP=$(ipconfig getifaddr en0)
+elif [[ "$OS" == "arch" || "$OS_FAMILY" == *"arch"* ]]; then
     PRIVATE_IP=$(ip -4 addr show | grep -v '127.0.0.1' | grep -oP 'inet \K[\d.]+')
 else
     PRIVATE_IP=$(hostname -I | awk '{print $1}')
@@ -31,17 +33,16 @@ echo "Private IP address of the host: $PRIVATE_IP"
 echo "Updating Kafka configuration..."
 
 if grep -q "^listeners=" config/server.properties; then
-    sed -i "s|^listeners=.*|listeners=PLAINTEXT://0.0.0.0:$BROKER_PORT|" config/server.properties
-    sed -i "s|^advertised.listeners=.*|advertised.listeners=PLAINTEXT://$PRIVATE_IP:$BROKER_PORT|" config/server.properties
+    sed -i "" "s|^listeners=.*|listeners=PLAINTEXT://0.0.0.0:$BROKER_PORT|" config/server.properties
+    sed -i "" "s|^advertised.listeners=.*|advertised.listeners=PLAINTEXT://$PRIVATE_IP:$BROKER_PORT|" config/server.properties
 else
-    sed -i "s|#listeners=.*|listeners=PLAINTEXT://0.0.0.0:$BROKER_PORT|" config/server.properties
-    sed -i "s|#advertised.listeners=.*|advertised.listeners=PLAINTEXT://$PRIVATE_IP:$BROKER_PORT|" config/server.properties
+    sed -i "" "s|#listeners=.*|listeners=PLAINTEXT://0.0.0.0:$BROKER_PORT|" config/server.properties
+    sed -i "" "s|#advertised.listeners=.*|advertised.listeners=PLAINTEXT://$PRIVATE_IP:$BROKER_PORT|" config/server.properties
 fi
 
 # Create the topic for audio-data
 AUDIO_TOPIC="audio-stream"
 bin/kafka-topics.sh --create --topic $AUDIO_TOPIC --bootstrap-server $PRIVATE_IP:$BROKER_PORT --partitions 1 --replication-factor 1
-
 
 # Exit the kafka directory
 cd ..
