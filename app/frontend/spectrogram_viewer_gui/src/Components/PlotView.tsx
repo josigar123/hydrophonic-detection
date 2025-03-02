@@ -65,8 +65,8 @@ const PlotView = () => {
       <Tabs
         key="bordered"
         aria-label="Graph choice"
-        size="md"
-        radius="full"
+        size="sm"
+        radius="sm"
         className="h-full"
       >
         <Tab key="spectrogram" title="Spectrogram">

@@ -16,7 +16,7 @@
     useDisclosure,
   } from '@heroui/react';
   import { Ship } from './ShipMarker';
-  import { useShips } from '../utils/useShips';
+  import { useShips } from '../hooks/useShips';
   import { getHaversineDistance } from '../utils/distance';
 
   const MAX_SHIPS = 40;
@@ -86,8 +86,8 @@
               )}
             </ModalContent>
           </Modal>
-    
-        <div className='max-h-96 overflow-y-auto'>
+          <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
+          <div className="h-0 flex-grow overflow-auto">
           <Table aria-label='Live AIS Data Table'>
             <TableHeader>
               <TableColumn key='MMSI'>MMSI</TableColumn>
@@ -119,7 +119,8 @@
               )}
             </TableBody>
           </Table>
-        </div>
+          </div>
+          </div>
         </>
       );
     };

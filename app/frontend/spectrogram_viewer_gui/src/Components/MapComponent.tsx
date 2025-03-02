@@ -1,16 +1,20 @@
-  import { useState } from 'react';
-  import { MapContainer, TileLayer } from 'react-leaflet';
-  import ShipMarker, { Ship } from './ShipMarker';
-  import { useShips } from '../utils/useShips';
-  import { getHaversineDistance } from '../utils/distance';
+import { useState } from 'react';
+import { MapContainer, TileLayer } from 'react-leaflet';
+import ShipMarker, { Ship } from './ShipMarker';
+import { useShips } from '../hooks/useShips';
+import { getHaversineDistance } from '../utils/distance';
 
-  const MAX_RANGE = 200; //km
 
-  const MapComponent = () => {
-    const [center] = useState<[number, number]>([59.431633, 10.478039]);
-    const { ships, isLoading, error } = useShips();
-    return (
-      <div className="h-full w-full relative">
+const MAX_RANGE = 200; // km
+
+const MapComponent = () => {
+  const [center] = useState<[number, number]>([59.431633, 10.478039]);
+  const { ships, isLoading, error } = useShips();
+  
+  return (
+
+    <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
+      <div className="h-full w-full">
         <MapContainer
           center={center}
           zoom={13}
@@ -23,19 +27,19 @@
           />
             {ships
               .filter(
-                (ship : Ship) =>
+                (ship: Ship) =>
                   getHaversineDistance(ship.latitude, ship.longitude, center[0], center[1]) < MAX_RANGE 
               )
-              .map((ship : Ship) => (
+              .map((ship: Ship) => (
                 <ShipMarker
                   key={ship.mmsi}
                   ship={ship}
                 />
               ))}
-          ));
-        </MapContainer>
+      </MapContainer>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  export default MapComponent;
+export default MapComponent;
