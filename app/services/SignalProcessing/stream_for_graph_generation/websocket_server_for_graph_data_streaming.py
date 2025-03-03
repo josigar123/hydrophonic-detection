@@ -69,12 +69,12 @@ async def forward_to_frontend(data):
         try:
             frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(data)
      
-            data = {
+            data_dict = {
                     "frequencies": frequencies,
                     "times": times,
-                    "spectrogramDb": spectrogram_db
+                    "spectrogramDb": spectrogram_db # SpectrogramDb Is a matrix
                             }
-            data_json = json.dumps(data)
+            data_json = json.dumps(data_dict)
 
             await clients['spectrogram_client'].send(data_json)
             print("Sending data to spectrogram_client")
@@ -84,7 +84,10 @@ async def forward_to_frontend(data):
                 clients.pop('spectrogram_client', None)
         except Exception as e:
             print(f"Error sending to spectrogram_client: {e}")
-    elif 'waveform_client' in clients:
+    else:
+        print("spectrogram_client not connected")
+
+    if 'waveform_client' in clients:
         try:
             
             await clients['waveform_client'].send(data)
@@ -96,7 +99,7 @@ async def forward_to_frontend(data):
         except Exception as e:
             print(f"Error sending to waveform_client: {e}")
     else:
-        print("No frontend client connected...")
+        print("waveform_client not connected...")
 
 async def main():
     server = await websockets.serve(
