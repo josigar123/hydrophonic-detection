@@ -1,8 +1,8 @@
 import { Marker, Popup, Polyline } from 'react-leaflet';
-import useMarkerRotation from "../hooks/useMarkerRotation";
-import { useRef, useState } from "react";
-import { Button } from "@heroui/button"
-import 'leaflet-rotatedmarker'; 
+import useMarkerRotation from '../Hooks/useMarkerRotation';
+import { useRef, useState } from 'react';
+import { Button } from '@heroui/button';
+import 'leaflet-rotatedmarker';
 import L from 'leaflet';
 
 export interface Ship {
@@ -32,17 +32,16 @@ const regularShipIcon = new L.Icon({
   iconSize: [30, 30],
   iconAnchor: [15, 15],
   popupAnchor: [0, -10],
-  className: 'ship-icon'
+  className: 'ship-icon',
 });
 
 const militaryShipIcon = new L.Icon({
-    iconUrl: '/assets/icons/ship_military.svg',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -10],
-    className: 'military-ship-icon',
-  });
-  
+  iconUrl: '/assets/icons/ship_military.svg',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+  popupAnchor: [0, -10],
+  className: 'military-ship-icon',
+});
 
 function ShipMarker({ ship }: ShipMarkerProps) {
   const markerRef = useRef<L.Marker>(null);
@@ -50,14 +49,13 @@ function ShipMarker({ ship }: ShipMarkerProps) {
   useMarkerRotation(
     markerRef.current,
     parseFloat(ship.trueHeading) || ship.course,
-    "center"
+    'center'
   );
 
   const shipIcon =
-  ship.shipType === '35' || 
-  ship.shipType === '55'
-    ? militaryShipIcon
-    : regularShipIcon;
+    ship.shipType === '35' || ship.shipType === '55'
+      ? militaryShipIcon
+      : regularShipIcon;
 
   return (
     <>
@@ -101,7 +99,11 @@ function ShipMarker({ ship }: ShipMarkerProps) {
                     {ship.length}m × {ship.breadth}m
                   </td>
                 </tr>
-                <Button size="md"  variant="light" onPress={() => setIsTracking(prev => !prev)}> 
+                <Button
+                  size="md"
+                  variant="light"
+                  onPress={() => setIsTracking((prev) => !prev)}
+                >
                   {isTracking ? 'Stop Tracking' : 'Track Ship'}
                 </Button>
               </tbody>
@@ -111,15 +113,15 @@ function ShipMarker({ ship }: ShipMarkerProps) {
       </Marker>
 
       {isTracking && ship.path.length > 1 && (
-        <Polyline 
-          positions={ship.path.map(coord => [coord[1], coord[0]])} 
+        <Polyline
+          positions={ship.path.map((coord) => [coord[1], coord[0]])}
           color="blue"
-          opacity={0.6} 
+          opacity={0.6}
           weight={3}
         />
       )}
     </>
   );
-};
+}
 
 export default ShipMarker;
