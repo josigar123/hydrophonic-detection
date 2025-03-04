@@ -12,7 +12,8 @@ const MainPage = () => {
       <div className="flex-1 min-h-0">
         <div className="h-full grid grid-cols-2 gap-8 p-4">
           <div className="h-full overflow-hidden">
-            <PlotView />
+            {/*<PlotView />*/}
+            <SpectrogramView />
           </div>
           <div className="h-full overflow-hidden">
             <MapComponent />
@@ -25,7 +26,6 @@ const MainPage = () => {
         <div className="h-full grid grid-cols-2 gap-8 p-4">
           <div className="h-full overflow-hidden">
             <AudioRecorder />
-            {/*<SpectrogramView />*/}
           </div>
           <div className="h-full overflow-hidden">
             <AisDataTable />

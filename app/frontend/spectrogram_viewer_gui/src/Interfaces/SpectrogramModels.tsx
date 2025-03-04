@@ -11,3 +11,9 @@ export interface SpectrogramParameterRequestBody {
 export interface SpectrogramParameterResponseBody {
   imageBlob: Blob;
 }
+
+export interface SpectrogramData {
+  frequencies: number[];
+  times: number[];
+  spectrogramDb: number[][];
+}

@@ -1,165 +1,160 @@
-import { useEffect, useRef } from 'react';
-import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
-import { Button } from '@heroui/button';
-import {
-  ChartXY,
-  ColorRGBA,
-  HeatmapScrollingGridSeriesIntensityValues,
-  LightningChart,
-  SolidFill,
-  lightningChart,
-  PalettedFill,
-  LUT,
-  emptyLine,
-  AxisScrollStrategies,
-  AxisTickStrategies,
-  LegendBoxBuilders,
-  regularColorSteps,
-  Themes,
-} from '@lightningchart/lcjs';
+import React, { useState, useEffect } from 'react';
+import Plot from 'react-plotly.js';
+import { useSpectrogramStream } from '../Hooks/useSpectrogramStream'; // Import your custom hook
+import { Data, Layout, Datum } from 'plotly.js';
+import { SpectrogramData } from '../Interfaces/SpectrogramModels';
 
-import { createSpectrumDataGenerator } from '@lightningchart/xydata';
-
-const dataSampleSize = 512;
-const sampleRateHz = 100;
-const heatmapMinTimeStepMs = (0.5 * 1000) / sampleRateHz;
-const viewMs = 10 * 1000;
+interface SpectrogramProps {
+  autoConnect?: boolean;
+}
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 
-const SpectrogramView = () => {
+const RealTimeSpectrogram: React.FC<SpectrogramProps> = ({
+  autoConnect = true,
+}) => {
+  // Use the custom hook to handle WebSocket connection and data
   const { spectrogramData, isConnected, error, connect, disconnect } =
-    useSpectrogramStream(websocketUrl, false);
+    useSpectrogramStream(websocketUrl, autoConnect);
 
-  const lightningChartRef = useRef<LightningChart | null>(null);
-  const chartRef = useRef<ChartXY | null>(null);
-  const heatmapSeriesRef =
-    useRef<HeatmapScrollingGridSeriesIntensityValues | null>(null);
-
-  useEffect(function initializeSpectrogramOnMount() {
-    if (!lightningChartRef.current) {
-      // Get instance from license
-      lightningChartRef.current = lightningChart({
-        license: 'AAAAAAAAAAAAAAAAAAAAA',
-        licenseInformation: {
-          appTitle: 'LightningChart JS Trial',
-          company: 'LightningChart Ltd.',
-        },
-      });
-
-      // Create XY chart to hold heatmap
-      chartRef.current = lightningChartRef.current.ChartXY({
-        defaultAxisX: { type: 'linear-highPrecision' },
-        theme: Themes.darkGold,
-      });
-      chartRef.current
-        .setTitle('Spectrogram')
-        .setTitleFont((font) => font.setSize(10).setFamily('Segoe UI'))
-        .setTitleFillStyle(new SolidFill({ color: ColorRGBA(255, 0, 0) }))
-        .setTitlePosition('series-left-top');
-
-      chartRef.current.axisX
-        .setScrollStrategy(AxisScrollStrategies.progressive)
-        .setDefaultInterval((state) => ({
-          end: state.dataMax,
-          start: (state.dataMax ?? 0) - viewMs,
-          stopAxisAfter: false,
-        }))
-        .setTickStrategy(AxisTickStrategies.DateTime);
-
-      chartRef.current.axisY
-        .setTitle('Frequency')
-        .setUnits('Hz')
-        .setInterval({ start: 0, end: dataSampleSize });
-
-      const theme = chartRef.current.getTheme();
-      const lut = new LUT({
-        steps: regularColorSteps(0, 75, theme.examples.spectrogramColorPalette),
-        units: 'dB',
-        interpolate: true,
-      });
-      const paletteFill = new PalettedFill({ lut, lookUpProperty: 'value' });
-
-      heatmapSeriesRef.current = chartRef.current
-        .addHeatmapScrollingGridSeries({
-          scrollDimension: 'columns',
-          resolution: dataSampleSize,
-        })
-        .setStep({ x: heatmapMinTimeStepMs, y: 1 })
-        .setFillStyle(paletteFill)
-        .setWireframeStyle(emptyLine)
-        .setDataCleaning({
-          minDataPointCount: 1000,
-        });
-
-      const legend = chartRef.current
-        .addLegendBox(LegendBoxBuilders.HorizontalLegendBox)
-        // Dispose example UI elements automatically if they take too much space. This is to avoid bad UI on mobile / etc. devices.
-        .setAutoDispose({
-          type: 'max-width',
-          maxWidth: 0.8,
-        })
-        .add(chartRef.current);
-
-      let tFirstSample: number;
-      const handleIncomingData = (timestamp: number, sample: number[]) => {
-        if (!tFirstSample) {
-          tFirstSample = timestamp;
-          heatmapSeriesRef.current?.setStart({ x: timestamp, y: 0 });
-        }
-        // Calculate sample index from timestamp to place sample in correct location in heatmap.
-        const iSample = Math.round(
-          (timestamp - tFirstSample) / heatmapMinTimeStepMs
-        );
-        heatmapSeriesRef.current?.invalidateIntensityValues({
-          iSample,
-          values: [sample],
-        });
-      };
+  // Store historical data to build the full spectrogram
+  const [spectrogramHistory, setSpectrogramHistory] = useState<SpectrogramData>(
+    {
+      frequencies: [],
+      times: [],
+      spectrogramDb: [],
     }
-  }, []);
+  );
 
   useEffect(() => {
-    if (isConnected && heatmapSeriesRef.current && spectrogramData) {
-      const frequencies = spectrogramData.frequencies;
-      const times = spectrogramData.times;
-      const spectrogramDb = spectrogramData.spectrogramDb;
+    if (
+      spectrogramData.frequencies.length > 0 &&
+      spectrogramData.times.length > 0 &&
+      spectrogramData.spectrogramDb.length > 0
+    ) {
+      setSpectrogramHistory((prev) => {
+        const newTime = spectrogramData.times[spectrogramData.times.length - 1];
 
-      const data: number[][] = [];
+        const frequenciesChanged =
+          JSON.stringify(prev.frequencies) !==
+          JSON.stringify(spectrogramData.frequencies);
 
-      for (let i = 0; i < times.length; i++) {
-        const row: number[] = [];
-        for (let j = 0; j < frequencies.length; j++) {
-          const dbValue = spectrogramDb[j + i * frequencies.length];
-          row.push(dbValue);
+        let newFrequencies = prev.frequencies;
+        let newMatrix = [...prev.spectrogramDb];
+
+        if (frequenciesChanged) {
+          newFrequencies = [...spectrogramData.frequencies];
+
+          newMatrix = prev.spectrogramDb.map((row) => {
+            const newRow = Array(newFrequencies.length).fill(null);
+            prev.frequencies.forEach((freq, i) => {
+              const newIndex = newFrequencies.indexOf(freq);
+              if (newIndex !== -1 && i < row.length) {
+                newRow[newIndex] = row[i];
+              }
+            });
+            return newRow;
+          });
         }
-        data.push(row);
-      }
+
+        if (!prev.times.includes(newTime)) {
+          newMatrix.push([...spectrogramData.spectrogramDb]);
+
+          const maxTimePoints = 100;
+          let newTimes = [...prev.times, newTime];
+
+          if (newMatrix.length > maxTimePoints) {
+            newMatrix = newMatrix.slice(-maxTimePoints);
+            newTimes = newTimes.slice(-maxTimePoints);
+          }
+
+          return {
+            frequencies: newFrequencies,
+            times: newTimes, // Ensure this is `times`, not `timePoints`
+            spectrogramDb: newMatrix, // Ensure this is `spectrogramDb`, not `spectrogramMatrix`
+          };
+        }
+
+        return prev;
+      });
     }
-  }, [spectrogramData, isConnected]);
+  }, [spectrogramData]);
+
+  const getPlotlyData = (): Data[] => {
+    return [
+      {
+        z: spectrogramHistory.spectrogramDb as Datum[][],
+        x: spectrogramHistory.times as Datum[],
+        y: spectrogramHistory.frequencies as Datum[],
+        type: 'heatmap' as const,
+        colorscale: 'Viridis' as const,
+        zsmooth: 'best' as const,
+      },
+    ];
+  };
+
+  const layout: Partial<Layout> = {
+    title: 'Real-time Spectrogram',
+    xaxis: {
+      title: 'Time',
+      automargin: true,
+    },
+    yaxis: {
+      title: 'Frequency (Hz)',
+      automargin: true,
+      type: 'log' as const,
+    },
+    margin: {
+      l: 50,
+      r: 50,
+      b: 50,
+      t: 50,
+      pad: 4,
+    },
+    autosize: true,
+  };
+
+  const config = {
+    responsive: true,
+    displayModeBar: true,
+  };
+
+  const handleConnect = () => {
+    connect();
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+  };
 
   return (
-    <div className="p-4">
-      <div className="mb-4">
-        <p>Connection status: {isConnected ? 'Connected' : 'Disconnected'}</p>
-        {error && <p className="text-red-500">Error: {error}</p>}
-      </div>
-
-      <div className="space-x-4">
-        <Button onPress={connect} disabled={isConnected}>
+    <div className="spectrogram-container">
+      <div className="controls">
+        <button onClick={handleConnect} disabled={isConnected}>
           Connect
-        </Button>
-
-        <Button onPress={disconnect} disabled={!isConnected}>
+        </button>
+        <button onClick={handleDisconnect} disabled={!isConnected}>
           Disconnect
-        </Button>
+        </button>
+        <span
+          className={`status ${isConnected ? 'connected' : 'disconnected'}`}
+        >
+          {isConnected ? 'Connected' : 'Disconnected'}
+        </span>
+        {error && <div className="error">{error}</div>}
       </div>
 
-      {isConnected && spectrogramData.spectrogramDb.length > 0 && (
-        <div className="mt-4"></div>
-      )}
+      <div style={{ width: '100%', height: '600px' }}>
+        <Plot
+          data={getPlotlyData()}
+          layout={layout}
+          config={config}
+          style={{ width: '100%', height: '100%' }}
+          useResizeHandler={true}
+        />
+      </div>
     </div>
   );
 };
 
-export default SpectrogramView;
+export default RealTimeSpectrogram;
