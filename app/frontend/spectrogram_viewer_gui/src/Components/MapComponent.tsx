@@ -1,80 +1,44 @@
-import React from 'react';
+import { useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import ShipMarker from './ShipMarker';
+import ShipMarker, { Ship } from './ShipMarker';
+import { useShips } from '../hooks/useShips';
+import { getHaversineDistance } from '../utils/distance';
 
-const ships = [
-  //Static ships for test-purposes
-  {
-    mmsi: '255806300',
-    speed: '14.9',
-    length: '135',
-    status: '0',
-    breadth: '22',
-    callsign: 'CQAX2',
-    maneuvre: '0',
-    ais_class: 'A',
-    ship_name: 'ENERGY',
-    ship_type: '71',
-    destination: 'GBIMM',
-    true_heading: '274',
-    latitude: 59.443766,
-    longitude: 10.505762,
-  },
 
-  {
-    mmsi: '636021470',
-    speed: '0',
-    length: '364',
-    status: '0',
-    breadth: '18',
-    callsign: 'V2HF9',
-    maneuvre: '0',
-    ais_class: 'B',
-    ship_name: 'MSC MARA',
-    ship_type: '71',
-    destination: 'BEZEE=>NEANR',
-    true_heading: '139',
-    latitude: 59.432681,
-    longitude: 10.469885,
-  },
+const MAX_RANGE = 200; // km
 
-  {
-    mmsi: '435021770',
-    speed: '5',
-    length: '39',
-    status: '0',
-    breadth: '11',
-    callsign: 'V2HF9',
-    maneuvre: '0',
-    ais_class: 'B',
-    ship_name: 'Fram',
-    ship_type: '71',
-    destination: 'HORTEN',
-    true_heading: '139',
-    latitude: 59.434165,
-    longitude: 10.515032,
-  },
-];
-
-const MapComponent: React.FC = () => {
+const MapComponent = () => {
+  const [center] = useState<[number, number]>([59.431633, 10.478039]);
+  const { ships, isLoading, error } = useShips();
+  
   return (
-    <>
-      <MapContainer
-        center={[59.431633, 10.478039]}
-        zoom={13}
-        scrollWheelZoom={true}
-        className="w-full h-full"
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {ships.map((ship) => (
-          <ShipMarker key={ship.mmsi} ship={ship} />
-        ))}
+
+    <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
+      <div className="h-full w-full">
+        <MapContainer
+          center={center}
+          zoom={13}
+          scrollWheelZoom={true}
+          style={{ height: '100%', width: '100%' }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+            {ships
+              .filter(
+                (ship: Ship) =>
+                  getHaversineDistance(ship.latitude, ship.longitude, center[0], center[1]) < MAX_RANGE 
+              )
+              .map((ship: Ship) => (
+                <ShipMarker
+                  key={ship.mmsi}
+                  ship={ship}
+                />
+              ))}
       </MapContainer>
-    </>
+      </div>
+    </div>
   );
 };
 

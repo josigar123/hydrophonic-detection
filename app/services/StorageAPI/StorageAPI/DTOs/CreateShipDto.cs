@@ -16,9 +16,12 @@ public class CreateShipDto
     [JsonProperty(PropertyName = "flag")]
     public string Flag { get; set; } = string.Empty;
     
-    [JsonProperty(PropertyName = "lastKnownPosition")]
-    public string LastKnownPosition { get; set; } = string.Empty;
+    [JsonProperty(PropertyName = "latitude")]
+    public double Latitude { get; set; }
     
-    [JsonProperty(PropertyName = "updatedAt")]
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    [JsonProperty(PropertyName = "longitude")]
+    public double Longitude { get; set; }
+    
+    [JsonProperty(PropertyName = "lastSeen")]
+    public DateTime LastSeen { get; set; }
 }

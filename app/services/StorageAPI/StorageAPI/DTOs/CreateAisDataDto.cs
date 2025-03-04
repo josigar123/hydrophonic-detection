@@ -8,20 +8,20 @@ public class CreateAisDataDto
     public string Mmsi { get; set; } = string.Empty;
     
     [JsonProperty(PropertyName = "timestamp")]
-    public DateTime Timestamp { get; set; } = DateTime.Now;
+    public DateTime Timestamp { get; set; }
 
     [JsonProperty(PropertyName = "latitude")]
-    public string Latitude { get; set; } = string.Empty;
+    public double Latitude { get; set; } 
     
     [JsonProperty(PropertyName = "longitude")]
-    public string Longitude { get; set; } = string.Empty;
+    public double Longitude { get; set; } 
     
     [JsonProperty(PropertyName = "speed")]
-    public string Speed { get; set; } = string.Empty;
+    public double Speed { get; set; }
     
     [JsonProperty(PropertyName = "heading")]
-    public string Heading { get; set; } = string.Empty;
+    public int Heading { get; set; }
 
     [JsonProperty(PropertyName = "rawMessage")]
-    public string RawMessage { get; set; } = string.Empty;
+    public string? RawMessage { get; set; } = string.Empty;
 }

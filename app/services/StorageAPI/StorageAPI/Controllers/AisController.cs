@@ -6,7 +6,7 @@ using StorageAPI.Services;
 namespace StorageAPI.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/v1/[controller]")]
 public class AisController(IAisRepository aisRepository) : ControllerBase
 {
     [HttpGet]
