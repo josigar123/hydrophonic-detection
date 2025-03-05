@@ -68,7 +68,7 @@ def demon_analysis(audio_data, fs, pars):
     # Define window length
     d = round(1/pars['DEMON']['fsd'] * fs)
     fsd1 = fs/d
-    
+    print(f"d = {d}, fsd1 = {fsd1} fs={fs}")
     # Calculate number of windows
     num_windows = int(np.floor(len(filtered_audio) / d))
     
