@@ -11,8 +11,6 @@ const MapComponent = () => {
   const { ships, isLoading, error } = useShips();
 
   return (
-    <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
-      <div className="h-full w-full">
         <MapContainer
           center={center}
           zoom={13}
@@ -37,8 +35,6 @@ const MapComponent = () => {
               <ShipMarker key={ship.mmsi} ship={ship} />
             ))}
         </MapContainer>
-      </div>
-    </div>
   );
 };
 

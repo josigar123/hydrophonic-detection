@@ -54,6 +54,7 @@ function ShipMarker({ ship }: ShipMarkerProps) {
 
   const shipIcon =
     ship.shipType === '35' || ship.shipType === '55'
+    || ship.shipType == '90'
       ? militaryShipIcon
       : regularShipIcon;
 

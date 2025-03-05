@@ -1,4 +1,3 @@
-import PlotView from '../Components/PlotView';
 import AisDataTable from '../Components/AisDataTable';
 import MapComponent from '../Components/MapComponent';
 import AudioRecorder from '../Components/AudioRecorder';
@@ -6,33 +5,21 @@ import SpectrogramView from '../Components/SpectrogramView';
 
 const MainPage = () => {
   return (
-    <div className="min-h-screen flex flex-col overflow-hidden">
-      {/* Top half */}
-
-    <div className="flex-1 min-h-0">
-      <div className="h-full grid grid-cols-2 gap-8 p-4">
-        <div className="h-full overflow-hidden">
-          <SpectrogramView />
-        </div>
-        <div className="h-[60vh] overflow-hidden">
-          <MapComponent />
-        </div>
-      </div>
-      
-    </div>
-
-      {/* Bottom half */}
-      <div className="flex-1 min-h-0">
-        <div className="h-full grid grid-cols-2 gap-8 p-4">
-          <div className="h-full overflow-hidden">
+    <div className="grid grid-cols-2 grid-rows-2 gap-2 lg:gap-4 w-full h-screen p-2 lg:p-4">
+          <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
+            <SpectrogramView />
+          </div>
+          <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
+            <MapComponent />
+          </div>
+          <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
             <AudioRecorder />
           </div>
-          <div className="h-full overflow-hidden">
+          <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
             <AisDataTable />
           </div>
         </div>
-      </div>
-    </div>
+
   );
 };
 

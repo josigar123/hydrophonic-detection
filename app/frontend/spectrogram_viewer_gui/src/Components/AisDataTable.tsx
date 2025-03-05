@@ -91,11 +91,11 @@ const AisDataTable = () => {
                     <span className="font-bold">Breadth:</span>{' '}
                     <span>{selectedShip.breadth}</span>
                     <span className="font-bold">Latitude:</span>{' '}
-                    <span>{selectedShip.latitude.toFixed(6)}</span>
+                    <span>{selectedShip.latitude.toFixed(1)}</span>
                     <span className="font-bold">Longitude:</span>{' '}
-                    <span>{selectedShip.longitude.toFixed(6)}</span>
+                    <span>{selectedShip.longitude.toFixed(1)}</span>
                     <span className="font-bold">Course:</span>{' '}
-                    <span>{selectedShip.course}</span>
+                    <span>{selectedShip.course.toFixed(1)}</span>
                     <span className="font-bold">Last Updated:</span>{' '}
                     <span>{selectedShip.dateTimeUtc.toLocaleString()}</span>
                   </div>
@@ -112,7 +112,7 @@ const AisDataTable = () => {
           )}
         </ModalContent>
       </Modal>
-      <div className="h-full flex flex-col bg-slate-400 rounded-lg p-4">
+      <div className="h-full flex flex-col bg-grey-400 items-justify rounded-lg p-4">
         <div className="h-0 flex-grow overflow-auto">
           <Table aria-label="Live AIS Data Table">
             <TableHeader>
