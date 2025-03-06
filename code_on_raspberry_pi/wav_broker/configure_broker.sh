@@ -41,8 +41,8 @@ else
 fi
 
 # Create the topic for audio-data
-AUDIO_TOPIC="audio-stream"
-bin/kafka-topics.sh --create --topic $AUDIO_TOPIC --bootstrap-server $PRIVATE_IP:$BROKER_PORT --partitions 1 --replication-factor 1
+#AUDIO_TOPIC="audio-stream"
+#bin/kafka-topics.sh --create --topic $AUDIO_TOPIC --bootstrap-server $PRIVATE_IP:$BROKER_PORT --partitions 1 --replication-factor 1
 
 # Exit the kafka directory
 cd ..

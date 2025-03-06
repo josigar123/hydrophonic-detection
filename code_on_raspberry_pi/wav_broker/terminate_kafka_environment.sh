@@ -23,7 +23,7 @@ fi
 echo "Kafka and ZooKeeper have been stopped."
 
 echo "Deleting kafka installation"
-/bin/rm -rf "kafka_2.13-3.9.0
+/bin/rm -rf "kafka_2.13-3.9.0"
 
 echo "Removing tmp files"
 /bin/rm -rf /tmp/kafka-logs /tmp/zookeeper /tmp/kraft-combined-logs
