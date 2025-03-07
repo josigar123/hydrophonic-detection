@@ -9,8 +9,15 @@ import {
   HeatmapColorMap,
   EAutoRange,
   TWebAssemblyChart,
+  NumberRange,
+  TextLabelProvider,
+  ENumericFormat,
+  HeatmapLegend,
+  LabelProviderBase2D,
+  CursorModifier,
 } from 'scichart';
 import { SciChartReact } from 'scichart-react';
+import { Button } from '@heroui/button';
 
 const MAX_HISTORY = 100;
 const UPDATE_FREQUEN_MS = 100;
@@ -32,6 +39,9 @@ const SpectrogramView = () => {
   const heatmapSeriesRef = useRef<UniformHeatmapRenderableSeries | null>(null);
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastDataRef = useRef<SpectrogramDataType | null>(null);
+
+  // Will hold all the intensities for visualization
+  const intensitiesRef = useRef<number[][]>([]);
 
   const handleConnect = () => {
     connect();
@@ -55,50 +65,75 @@ const SpectrogramView = () => {
       new NumericAxis(wasmContext, {
         axisTitle: 'Time',
         autoRange: EAutoRange.Always,
+        drawLabels: false,
+        drawMinorTickLines: false,
+        drawMajorTickLines: false,
+        labelProvider: new TextLabelProvider({
+          labelFormat: ENumericFormat.Engineering,
+          labelPostfix: 's',
+        }),
       })
     );
     sciChartSurface.yAxes.add(
       new NumericAxis(wasmContext, {
         axisTitle: 'Frequency',
         autoRange: EAutoRange.Always,
+        drawLabels: false,
+        drawMinorTickLines: false,
+        drawMajorTickLines: false,
+        labelProvider: new TextLabelProvider({
+          labelFormat: ENumericFormat.Engineering,
+          labelPostfix: 'Hz',
+        }),
       })
     );
 
     const initialWidth = MAX_HISTORY;
     const initialHeight = 1;
 
+    // Initialize all intensities to 0
     const zValues = Array(initialHeight)
       .fill(0)
       .map(() => Array(initialWidth).fill(0));
 
+    // Creates data series to pass in final data series
     const heatMapDataSeries = new UniformHeatmapDataSeries(wasmContext, {
-      zValues,
+      zValues: zValues,
       xStart: 0,
       xStep: 1,
       yStart: 0,
       yStep: 1,
     });
 
+    // Create the colour map
+    const heatmapColorMap = new HeatmapColorMap({
+      minimum: -40,
+      maximum: 0,
+      gradientStops: [
+        { offset: 0, color: '#000000' },
+        { offset: 0.25, color: '#800080' },
+        { offset: 0.5, color: '#FF0000' },
+        { offset: 0.75, color: '#FFFF00' },
+        { offset: 1, color: '#FFFFFF' },
+      ],
+    });
+
+    // Creates the initial data series with config
     const heatmapSeries = new UniformHeatmapRenderableSeries(wasmContext, {
       dataSeries: heatMapDataSeries,
-      colorMap: new HeatmapColorMap({
-        minimum: -80,
-        maximum: 0,
-        gradientStops: [
-          { offset: 1, color: '#EC0F6C' },
-          { offset: 0.9, color: '#F48420' },
-          { offset: 0.7, color: '#DC7969' },
-          { offset: 0.5, color: '#67BDAF' },
-          { offset: 0.3, color: '#50C7E0' },
-          { offset: 0.2, color: '#264B93' },
-          { offset: 0, color: '#14233C' },
-        ],
-      }),
+      colorMap: heatmapColorMap,
     });
 
     sciChartSurface.renderableSeries.add(heatmapSeries);
 
     heatmapSeriesRef.current = heatmapSeries;
+    sciChartSurface.chartModifiers.add(
+      new CursorModifier({
+        showTooltip: true,
+        showAxisLabels: true,
+        tooltipContainerBackground: 'rgba(0, 0, 0, 0.7)',
+      })
+    );
     sciChartRef.current = { sciChartSurface, wasmContext };
 
     return { sciChartSurface };
@@ -107,44 +142,43 @@ const SpectrogramView = () => {
   const updateSpectrogram = useCallback(() => {
     if (!heatmapSeriesRef.current || !sciChartRef.current) return;
 
-    const { sciChartSurface, wasmContext } = sciChartRef.current;
+    // Fetch the current sciChartRef for updating, no need for wasm context
+    const { sciChartSurface } = sciChartRef.current;
 
+    // Destructure the spectrogram data recvd from ws
     const { frequencies, times, spectrogramDb }: SpectrogramDataType =
       spectrogramData;
 
     if (!frequencies.length || !times.length || !spectrogramDb.length) return;
 
-    lastDataRef.current = spectrogramData;
+    // If the time steps have changed, update the X-Axis
+    if (times.length > 0) {
+      const xAxis = sciChartSurface.xAxes.get(0); // Assume there is only one X-Axis
 
-    const frequencyCount = frequencies.length;
-    const timeSteps = Math.min(spectrogramDb[0]?.length || 0, MAX_HISTORY);
+      if (xAxis) {
+        const newRangeStart = times[0]; // Get the new start time for the X-Axis range
+        const newRangeEnd = times[times.length - 1]; // Get the new end time
+        const visibleRange = new NumberRange(newRangeStart, newRangeEnd);
 
-    if (timeSteps === 0) return;
+        xAxis.setVisibleRangeWithLimits(visibleRange); // Set the visible range with limits
+      }
+    }
 
-    const zValues = Array(frequencyCount)
-      .fill(0)
-      .map((_, freqIndex) => {
-        const freqData = [];
-        const spectrumAtFreq = spectrogramDb[freqIndex] || [];
+    // Append new data to intensitiesRef, and remove the oldest if necessary
+    if (intensitiesRef.current.length >= MAX_HISTORY) {
+      intensitiesRef.current.shift(); // Remove the oldest data to keep within the limit
+    }
 
-        for (let i = 0; i < timeSteps; i++) {
-          freqData.push(spectrumAtFreq[i] || 0);
-        }
+    intensitiesRef.current.push(...spectrogramDb); // Append the new data
 
-        return freqData;
-      });
+    // Updating the heatmap data series with the new intensities
+    const updatedHeatmapDataSeries = heatmapSeriesRef.current
+      .dataSeries as UniformHeatmapDataSeries;
 
-    const newDataSeries = new UniformHeatmapDataSeries(wasmContext, {
-      zValues,
-      xStart: 0,
-      xStep: 1,
-      yStart: 0,
-      yStep: frequencies.length > 1 ? frequencies[1] - frequencies[0] : 1,
-    });
+    updatedHeatmapDataSeries.setZValues(intensitiesRef.current);
 
-    heatmapSeriesRef.current.dataSeries = newDataSeries;
-
-    sciChartSurface.invalidateElement();
+    heatmapSeriesRef.current.dataSeries = updatedHeatmapDataSeries;
+    sciChartSurface.invalidateElement(); // Re-render the chart
   }, [spectrogramData]);
 
   useEffect(() => {
@@ -169,20 +203,6 @@ const SpectrogramView = () => {
 
   return (
     <div className="spectrogram-container">
-      <div className="controls">
-        <button onClick={handleConnect} disabled={isConnected}>
-          Connect
-        </button>
-        <button onClick={handleDisconnect} disabled={!isConnected}>
-          Disconnect
-        </button>
-        <span
-          className={`status ${isConnected ? 'connected' : 'disconnected'}`}
-        >
-          {isConnected ? 'Connected' : 'Disconnected'}
-        </span>
-        {error && <div className="error">{error}</div>}
-      </div>
       <div id="scichart-root" style={{ width: '100%', height: '500px' }}>
         <SciChartReact
           initChart={initSciChart}
@@ -194,6 +214,20 @@ const SpectrogramView = () => {
           }
           style={{ width: '100%', height: '100%', maxWidth: '900px' }}
         />
+      </div>
+      <div className="controls">
+        <Button onPress={handleConnect} disabled={isConnected}>
+          Connect
+        </Button>
+        <Button onPress={handleDisconnect} disabled={!isConnected}>
+          Disconnect
+        </Button>
+        <span
+          className={`status ${isConnected ? 'connected' : 'disconnected'}`}
+        >
+          {isConnected ? 'Connected' : 'Disconnected'}
+        </span>
+        {error && <div className="error">{error}</div>}
       </div>
     </div>
   );

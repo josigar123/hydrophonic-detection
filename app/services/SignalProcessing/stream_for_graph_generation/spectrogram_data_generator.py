@@ -19,7 +19,7 @@ class SpectrogramDataGenerator:
     # Constructor with default values
     def __init__(self):
         self.window_type = "hann"
-        self.n_segment= 256
+        self.n_segment= 512
         self.color_scale_min = -40
         self.max_displayed_frequency = 1000
     
