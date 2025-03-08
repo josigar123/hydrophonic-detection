@@ -72,6 +72,7 @@ const SpectrogramView = () => {
           labelFormat: ENumericFormat.Engineering,
           labelPostfix: 's',
         }),
+        visibleRange: new NumberRange(0, 10 * 196),
       })
     );
     sciChartSurface.yAxes.add(
@@ -85,11 +86,14 @@ const SpectrogramView = () => {
           labelFormat: ENumericFormat.Engineering,
           labelPostfix: 'Hz',
         }),
+        visibleRange: new NumberRange(0, 1000), // Sets visible range only to 1000Hz
       })
     );
 
-    const initialWidth = MAX_HISTORY;
-    const initialHeight = 1;
+    const initialWidth = 196;
+    const initialHeight = 129;
+    console.log('INITIAL WIDTH: ', initialWidth);
+    console.log('INITIAL HEIGHT: ', initialHeight);
 
     // Initialize all intensities to 0
     const zValues = Array(initialHeight)
@@ -107,8 +111,9 @@ const SpectrogramView = () => {
 
     // Create the colour map
     const heatmapColorMap = new HeatmapColorMap({
-      minimum: -40,
-      maximum: 0,
+      minimum: -40, // Value to adjust dynamically
+      maximum: 0, // Value to adjust dynamically
+      // TODO: Checkf if there exists and enum for gradientStops
       gradientStops: [
         { offset: 0, color: '#000000' },
         { offset: 0.25, color: '#800080' },
@@ -151,23 +156,13 @@ const SpectrogramView = () => {
 
     if (!frequencies.length || !times.length || !spectrogramDb.length) return;
 
-    // If the time steps have changed, update the X-Axis
-    if (times.length > 0) {
-      const xAxis = sciChartSurface.xAxes.get(0); // Assume there is only one X-Axis
-
-      if (xAxis) {
-        const newRangeStart = times[0]; // Get the new start time for the X-Axis range
-        const newRangeEnd = times[times.length - 1]; // Get the new end time
-        const visibleRange = new NumberRange(newRangeStart, newRangeEnd);
-
-        xAxis.setVisibleRangeWithLimits(visibleRange); // Set the visible range with limits
-      }
-    }
-
     // Append new data to intensitiesRef, and remove the oldest if necessary
-    if (intensitiesRef.current.length >= MAX_HISTORY) {
-      intensitiesRef.current.shift(); // Remove the oldest data to keep within the limit
-    }
+
+    intensitiesRef.current.shift(); // Remove the oldest data to keep within the limit
+
+    console.log('NO. OF TIME SLICES: ', times.length);
+    console.log('NO. OF FREQUENCY BINS: ', frequencies.length);
+    lastDataRef.current = spectrogramData;
 
     intensitiesRef.current.push(...spectrogramDb); // Append the new data
 
@@ -178,7 +173,7 @@ const SpectrogramView = () => {
     updatedHeatmapDataSeries.setZValues(intensitiesRef.current);
 
     heatmapSeriesRef.current.dataSeries = updatedHeatmapDataSeries;
-    sciChartSurface.invalidateElement(); // Re-render the chart
+    sciChartSurface.invalidateElement(); // Re-render the chart, might re-render the whole chart which can be inefficient
   }, [spectrogramData]);
 
   useEffect(() => {
