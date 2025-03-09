@@ -3,6 +3,8 @@ import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
 from urllib.parse import parse_qs, urlparse
 import json
+from kafka import KafkaConsumer
+import threading
 
 '''
 
@@ -19,10 +21,55 @@ The frontend client will recieve the following JSON object:
 {
     "frequencies": [1,2,3,46],
     "times": [2,3,5,6],
-    "spectrogamDb": [1,2,6,2]
+    "spectrogamDb": [[1,2,6,2]],
 }
 
 '''
+
+default_config = {
+    "channels": 1,
+    "sampleRate": 44100,
+    "recordingChunkSize": 1024
+}
+current_config = default_config
+
+'''This function will read the current recording config from a Kafka topic
+
+    config looks like this:
+        {
+            "channels": 1,
+            "sampleRate": 44100,
+            "recordingChunkSize": 1024
+        }
+
+'''
+def config_consumer_thread():
+    """Thread function to consume configuration messages from Kafka"""
+    global current_config
+    
+    # Initialize the configuration consumer
+    config_consumer = KafkaConsumer(
+        'recording-configurations',
+        bootstrap_servers=[f"10.0.0.10:9092"],
+        auto_offset_reset='latest',  # Start reading from the latest message
+        enable_auto_commit=True,
+        value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+    )
+    
+    print("Starting configuration consumer thread...")
+    for message in config_consumer:
+        try:
+            # Update the current configuration
+            config_data = message.value
+            print(f"Received new configuration: {config_data}")
+            current_config = config_data
+            
+        except Exception as e:
+            print(f"Error processing configuration message: {e}")
+
+# Start the configuration consumer in a separate thread
+config_thread = threading.Thread(target=config_consumer_thread, daemon=True)
+config_thread.start()
 
 # This dictionary holds a clients websocket and name
 clients = {}
@@ -67,7 +114,7 @@ async def handle_connection(websocket, path):
 async def forward_to_frontend(data):
     if 'spectrogram_client' in clients:
         try:
-            frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(data)
+            frequencies, times, spectrogram_db = spectrogram_data_generator.process_audio_chunk(data, current_config["sampleRate"], bit_depth=1, channels=current_config["channels"])
      
             data_dict = {
                     "frequencies": frequencies,

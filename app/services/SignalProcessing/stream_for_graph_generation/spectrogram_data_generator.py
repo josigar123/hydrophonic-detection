@@ -24,10 +24,18 @@ class SpectrogramDataGenerator:
         self.color_scale_min = -40
         self.max_displayed_frequency = 1000
     
-    def process_wav_chunk(self, wav_data: bytes):
+    def process_audio_chunk(self, pcm_data: bytes, sample_rate: int, bit_depth: int = 16, channels: int = 1):
 
-        wav_file = io.BytesIO(wav_data)
-        sample_rate, samples = wavfile.read(wav_file)
+        if bit_depth == 16:
+            samples = np.frombuffer(pcm_data, dtype=np.int16)
+        else:
+            raise ValueError(f"Unsupported bit depth: {bit_depth}")
+
+        if channels > 1:
+            samples = samples.reshape(-1, channels)
+
+            # First channel
+            samples = samples[:, 0]
 
         # Removes DC offset and noramlize
         samples = samples - np.mean(samples)
