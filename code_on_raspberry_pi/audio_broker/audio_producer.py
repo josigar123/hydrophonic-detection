@@ -53,12 +53,13 @@ print()
 # INIT OF KAFKA PRODUCER
 producer = KafkaProducer(
     bootstrap_servers=[f"{broker_ip}:{broker_port}"],
-    value_serializer= lambda m: json.dumps(m.decode('utf-8'))
-)
+    value_serializer= lambda v: v)
+
 
 print("##############PRODUCING CONFIG TO recording-configurations##############")
 config_producer = KafkaProducer(bootstrap_servers=[f"{broker_ip}:{broker_port}"],
-                                value_serializer=lambda v: v)
+                                value_serializer=lambda m: json.dumps(m).encode("utf-8")
+                                )
 config_topic = "recording-configurations"
 config_producer.send(config_topic, recording_parameters) # Sends as JSON
 config_producer.flush()
@@ -76,7 +77,7 @@ with sd.InputStream(
     samplerate=SAMPLE_RATE,
     channels=CHANNELS,
     blocksize=RECORDING_CHUNK_SIZE,
-    device=DEVICE_INDEX,
+    device=int(DEVICE_INDEX),
     dtype=np.int16,
     callback=audio_callback
 ): 
