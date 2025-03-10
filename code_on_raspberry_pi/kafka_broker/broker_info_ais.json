@@ -1,0 +1,7 @@
+{
+    "ip": "localhost",
+    "brokerPort": "9092",
+    "topicName": "ais_data"
+  }
+
+  
