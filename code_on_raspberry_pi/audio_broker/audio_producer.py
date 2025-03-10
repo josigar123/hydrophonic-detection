@@ -30,7 +30,8 @@ print("##############PRODUCER SETUP##############")
 # A larger Chunk size results in less processing overheaf, but leads to a higher latency and less frequent updates
 CHANNELS = recording_parameters["channels"]
 SAMPLE_RATE = recording_parameters["sampleRate"]
-RECORDING_CHUNK_SIZE = recording_parameters["recordingChunkSize"] # no. of samples per audio frame, 1 sample is 1 recorded amplitude value                         # A format of 16-bit int gives 2 byte per sample, so we are recording 2048 byter per channel
+RECORDING_CHUNK_SIZE = recording_parameters["recordingChunkSize"] # no. of samples per audio frame, 1 sample is 1 recorded amplitude value
+ # A format of 16-bit int gives 2 byte per sample, so we are recording 2048 byter per channel
 SAMPLES_PER_SECOND = SAMPLE_RATE / RECORDING_CHUNK_SIZE
 
 print("Audio devices found:")

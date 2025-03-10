@@ -1,4 +1,5 @@
 import asyncio
+from aiokafka import AIOKafkaConsumer
 import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
 from urllib.parse import parse_qs, urlparse
@@ -43,33 +44,29 @@ current_config = default_config
         }
 
 '''
-def config_consumer_thread():
-    """Thread function to consume configuration messages from Kafka"""
+async def consume_config():
+    """Async function to consume configuration messages from Kafka before WebSocket server starts."""
     global current_config
-    
-    # Initialize the configuration consumer
-    config_consumer = KafkaConsumer(
+
+    consumer = AIOKafkaConsumer(
         'recording-configurations',
-        bootstrap_servers=[f"10.0.0.10:9092"],
-        auto_offset_reset='latest',  # Start reading from the latest message
+        bootstrap_servers='10.0.0.10:9092',
+        auto_offset_reset='latest',
         enable_auto_commit=True,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
-    
-    print("Starting configuration consumer thread...")
-    for message in config_consumer:
-        try:
-            # Update the current configuration
-            config_data = message.value
-            print(f"Received new configuration: {config_data}")
-            current_config = config_data
-            
-        except Exception as e:
-            print(f"Error processing configuration message: {e}")
 
-# Start the configuration consumer in a separate thread
-config_thread = threading.Thread(target=config_consumer_thread, daemon=True)
-config_thread.start()
+    await consumer.start()
+    try:
+        async for message in consumer:
+            try:
+                config_data = message.value
+                print(f"Received new configuration: {config_data}")
+                current_config = config_data
+            except Exception as e:
+                print(f"Error processing configuration message: {e}")
+    finally:
+        await consumer.stop()
 
 # This dictionary holds a clients websocket and name
 clients = {}
@@ -92,6 +89,7 @@ async def handle_connection(websocket, path):
             async for message in websocket:
 
                 try:
+                    print(f"Recording parameters: {current_config}")
                     await forward_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
@@ -149,6 +147,9 @@ async def forward_to_frontend(data):
         print("waveform_client not connected...")
 
 async def main():
+
+    consumer_task = asyncio.create_task(consume_config())
+
     server = await websockets.serve(
         handle_connection,
         "localhost",
@@ -158,6 +159,6 @@ async def main():
     )
 
     print("WebSocket server running on ws://localhost:8766")
-    await asyncio.Future()
+    await asyncio.gather(consumer_task)
 
 asyncio.run(main())
