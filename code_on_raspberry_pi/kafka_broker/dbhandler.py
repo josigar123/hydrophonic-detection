@@ -40,7 +40,7 @@ class MongoDBHandler:
         mmsi = data["mmsi"]
         msg_type = data.get("message_type")
 
-        if msg_type in [1,2,3,18] and "location" in data:
+        if msg_type in [1,2,3,18,19] and "location" in data:
             update_data = {
                 "$set": {
                     "last_position": data["location"],
@@ -65,7 +65,74 @@ class MongoDBHandler:
             }
             self.ship_collection.update_one({"mmsi": mmsi}, update_data, upsert=True)
             
+
+    def store_recordings(self, data):
+        try:
+            data["server_timestamp"] = datetime.now()
+
+            result = self.recordings_collection.insert_one(data)
+
+            return result.inserted_id
+        except Exception as e:
+            print(f"Error storing Recording data: {e}")
+            return None
         
+    def get_recordings(self, recording_id):
+        try:
+            return self.recordings_collection.find_one({"recording_id": recording_id})
+        except Exception as e:
+            print(f"Error retrieving recording: {e}")
+            return None
+        
+    def find_ais_logs_in_timerange_and_area(self, start_time, end_time, location, max_distance_meters=1000):
+        try:
+            return list(self.ais_collection.find({
+                "timestamp": {
+                    "$gte": start_time,
+                    "$lte": end_time
+                },
+                "location": {
+                    "$nearSphere": {
+                    "$geometry": location,
+                    "$maxDistance": max_distance_meters
+                    }
+                }
+            }))
+        except Exception as e:
+            print(f"Error finding AIS logs in timerange and area: {e}")
+            return []
+        
+    def update_detection_potential_source(self, detection_id, potential_sources):
+        try:
+            return self.detections_collection.update_one(
+                {"detection_id": detection_id},
+                {"$set": {"potential_sources": potential_sources}}
+            )
+        except Exception as e:
+            print(f"Error updating detection potential sources: {e}")
+            return None
+        
+
+    def store_detections(self, data):
+        try:
+            data["server_timestamp"] = datetime.now()
+
+            result = self.detections_collection.insert_one(data)
+
+            return result.inserted_id
+        except Exception as e:
+            print(f"Error storing Detection data: {e}")
+            return None
+        
+    def get_detections(self, detection_id):
+        try:
+            return self.detections_collection.find_one({"detection_id": detection_id})
+        except Exception as e:
+            print(f"Error retrieving detection: {e}")
+            return None
+    
+        
+
     def close(self):
         if self.client:
             self.client.close()
