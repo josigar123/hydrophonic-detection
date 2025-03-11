@@ -43,14 +43,6 @@ const SpectrogramView = () => {
   // Will hold all the intensities for visualization
   const intensitiesRef = useRef<number[][]>([]);
 
-  const handleConnect = () => {
-    connect();
-  };
-
-  const handleDisconnect = () => {
-    disconnect();
-  };
-
   const initSciChart = async () => {
     const { sciChartSurface, wasmContext } = await SciChartSurface.create(
       'scichart-root',
@@ -211,10 +203,10 @@ const SpectrogramView = () => {
         />
       </div>
       <div className="controls">
-        <Button onPress={handleConnect} disabled={isConnected}>
+        <Button onPress={connect} disabled={isConnected}>
           Connect
         </Button>
-        <Button onPress={handleDisconnect} disabled={!isConnected}>
+        <Button onPress={disconnect} disabled={!isConnected}>
           Disconnect
         </Button>
         <span
