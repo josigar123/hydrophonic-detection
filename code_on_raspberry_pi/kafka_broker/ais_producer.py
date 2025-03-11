@@ -1,8 +1,8 @@
-import json ##finished 
+import json
 import time
 from kafka import KafkaProducer
 import pyais
-from pyais.stream import TCPConnection
+from pyais.stream import TCPConnection 
 
 with open("broker_info_ais.json", "r") as file:
     broker_info = json.load(file)
@@ -11,17 +11,20 @@ with open("broker_info_ais.json", "r") as file:
 broker_ip = broker_info["ip"]
 broker_port = broker_info ["brokerPort"]
 topic = broker_info["topicName"]
+ais_host = broker_info["aisHost"]
+ais_port = int(broker_info["aisPort"])
 batch_size = 10
 send_interval = 5
 
 print("##############PRODUCER SETUP##############")
 print(f"Connecting to Kafka broker: {broker_ip}:{broker_port}")
 print(f"Sending to topic: {topic}")
+print(f"AIS source: {ais_host}:{ais_port}")
 
 
 producer = KafkaProducer(
     bootstrap_servers=[f"{broker_ip}:{broker_port}"],
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
 try:
@@ -35,29 +38,32 @@ try:
     for msg in ais_stream:
         try:
             decoded = msg.decode()
+            print(f"Decoded message type: {type(decoded).__name__}")
 
             ais_data = {
-                'timestamp': time.time(),
-                'message_type': decoded.msg_type,
-                'mmsi': decoded.mmsi,
-                'data': decoded.content
+                "timestamp": time.time(),
+                "message_type": decoded.msg_type,
+                "mmsi": decoded.mmsi,
+                "raw_message": str(msg)
             }
 
-            if decoded.msg_type in [1, 2, 3]:
+            if decoded.msg_type in [1, 2, 3, 18, 19]:
+                print("Position report message detected")
                 ais_data.update({
-                    'latitude': decoded.lat,
-                    'longitude': decoded.lon,
-                    'course': decoded.course,
-                    'speed': decoded.speed,
-                    'heading': decoded.heading
+                    "latitude": decoded.lat,
+                    "longitude": decoded.lon,
+                    "course": decoded.course,
+                    "speed": decoded.speed,
+                    "heading": decoded.heading
                 })
             elif decoded.msg_type == 5:
+                print("Static and voyage data message detected")
                 ais_data.update({
-                    'imo': decoded.imo,
-                    'callsign': decoded.callsign,
-                    'name': decoded.name,
-                    'ship_type': decoded.ship_type,
-                    'destination': decoded.destination
+                    "mmsi": decoded.mmsi,
+                    "callsign": decoded.callsign,
+                    "name": decoded.name if hasattr(decoded, "name") else " ",
+                    "ship_type": decoded.ship_type,
+                    "destination": decoded.destination
                 })
 
 
@@ -69,7 +75,6 @@ try:
                     for message in message_batch:
                         producer.send (topic, value=message)
 
-                    #producer.send(topic, value={"batch": messages_batch})
                     print(f"Sent {len(message_batch)} messages to Kafka broker")
                     message_batch = []
                     last_send_time = current_time
@@ -82,7 +87,7 @@ except Exception as e:
 
 finally:
     print("Stopping Kafka producer...")
-    if 'producer' in locals():
+    if "producer" in locals():
         producer.flush()
         producer.close()
     print("Stopped producer")

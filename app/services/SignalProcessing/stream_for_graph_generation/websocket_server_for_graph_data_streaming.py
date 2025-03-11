@@ -48,7 +48,7 @@ async def handle_connection(websocket, path):
                     await forward_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
-        elif client_name == "ais_consumer":
+        if client_name == "ais_consumer":
             async for message in websocket:
                 try:
                     await forward_ais_to_frontend(message)

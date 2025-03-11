@@ -3,8 +3,16 @@ import asyncio
 import json
 from datetime import datetime
 from aiokafka import AIOKafkaConsumer
+from dbhandler import MongoDBHandler 
+
+with open("mongodb_config.json", "r") as file:
+    mongo_config = json.load(file)
 
 
+db_handler = MongoDBHandler(
+    connection_string=mongo_config["connection_string"],
+    db_name=mongo_config["database"]
+)
 '''
 
 This file subscribes to an ais-stream topic on a kafka broker
@@ -90,6 +98,8 @@ async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient
     try:
         async for msg in consumer:
             try:
+                ais_data = json.loads(msg.value)
+                db_handler.store_ais_data(ais_data)
                 print(f"Consumed message, offset: {msg.offset}")
 
                 success = await socket_client.send(msg.value)
