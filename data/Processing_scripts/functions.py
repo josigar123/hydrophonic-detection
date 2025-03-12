@@ -25,13 +25,22 @@ def plot_spectrogram(x, fs, tperseg, freq_filt, hfilt_length, f_max, s_min,s_max
         Number of time bins for horizontal smoothing
     plot: bool
         Determines if plot is generated
+    
+    Output
+    ---------
+    t: array of floats
+        Time array for spectrogram
+    f: array of floats
+        frequency array for spectrogram
+    sx_db: 2D-array of floats
+        Spectrogram values in dB
     """
 
     # Calculate spectrogram
     nperseg=int(tperseg*fs)
     f, t, sx = signal.spectrogram(x, fs, nperseg=nperseg, detrend=False)
     sx_norm = medfilt_vertcal_norm(sx,freq_filt)
-    sx_db = 10*np.log10(sx_norm)   # Convert to dB
+    sx_db = 10*np.log10(np.maximum(sx_norm,1e-10))   # Convert to dB
     sx_db, f, t = spec_hfilt2(sx_db,f,t,window_length=hfilt_length)
 
     if plot:
@@ -375,6 +384,23 @@ def BroadBand_from_data(Sx, Fs:int ,hilbert_win: int, window_size:float ,trigger
         plt.show()  # Show the plot
     return Trigger_time
 
+def BB_data(Sx, Fs, hilbert_win, window_size, Threshold):
+    # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
+    # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
+    envelope = moving_average_padded(np.square(np.abs(hilbert(Sx))),hilbert_win)
+
+        # Downsample the filtered signal
+    DS_Sx = resample_poly(envelope, 1, hilbert_win)  # Resample by the median filter window size
+    DS_Fs = Fs / hilbert_win  # New sampling rate after downsampling
+
+    # Define kernel size for the median filter based on window size
+    kernel_size = int(window_size * DS_Fs) | 1  # Ensure odd size
+    signal_med = moving_average_padded(DS_Sx, kernel_size)  # Apply median filter for further noise removal
+
+    BB_sig = 10*np.log10(signal_med)
+    t = np.linspace(0,len(BB_sig)/Fs,len(BB_sig))
+    return BB_sig, t
+
 def DEMON_from_file(input_file, Fs, Fds,freq_filt ,fmax=100, s_max=10, window="hamming"):
     #DEMON 2
     import numpy as np
@@ -424,6 +450,7 @@ def DEMON_from_file(input_file, Fs, Fds,freq_filt ,fmax=100, s_max=10, window="h
     #Normaliserer sxx
 
     sxx_rms_norm = sxx_rms/sxx_rms_med
+
     plt.figure(figsize=(9,9))
     plt.subplot(1, 1, 1)
     plt.pcolormesh(td_rms, fd_rms, 10*np.log10(sxx_rms_norm), vmin=0,vmax=s_max)
@@ -434,7 +461,7 @@ def DEMON_from_file(input_file, Fs, Fds,freq_filt ,fmax=100, s_max=10, window="h
     plt.colorbar(label="Magnitude [dB]")  # Colorbar for intensity scale
     return 0
 
-def DEMON_from_data(sx, fs, Fds,freq_filt,hfilt_length ,fmax=100, s_max=10, window="hamming", plot=True):
+def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=10, window="hamming", plot=True):
     #DEMON 2
     """
     PARAMETERS:
@@ -446,12 +473,15 @@ def DEMON_from_data(sx, fs, Fds,freq_filt,hfilt_length ,fmax=100, s_max=10, wind
         
         Fds: int
             Demon sample frequency
+
+        tperseg: float
+            Seconds of audiodata for spectrogram fft
         
         freq_filt: int (odd)
             Number of frequency bins for smoothing and normalizing
         
         hfilt_length: int
-            Number of time bins for smoothing
+            Number of seconds used for horizontal smoothing
         
         fmax: float
             Max frequency for DEMON spectrogram
@@ -472,7 +502,7 @@ def DEMON_from_data(sx, fs, Fds,freq_filt,hfilt_length ,fmax=100, s_max=10, wind
     rms_values = average_filter(analytic_signal, kernal_size)
 
     #hente freq
-    nperseg= Fds*3 #Number of samples in time axis to use for each vertical spectrogram coloumn
+    nperseg= int(Fds*tperseg) #Number of samples in time axis to use for each vertical spectrogram coloumn
 
     fd_rms, td_rms, sxx_rms = signal.spectrogram(rms_values,Fds,
                                                     nperseg=nperseg,
@@ -520,8 +550,8 @@ def medfilt_vertcal_norm(spec,vertical_medfilt_size):
         sxx_med[:,i] = signal.medfilt(spec[:,i],kernel_size=vertical_medfilt_size)
 
     #Normaliserer sxx
-
-    sxx_norm = spec/sxx_med
+    epsilon = np.min(sxx_med[sxx_med > 0]) if np.any(sxx_med > 0) else np.finfo(float).eps
+    sxx_norm = spec/np.maximum(sxx_med, epsilon)
 
     return sxx_norm
     
@@ -558,3 +588,5 @@ def spec_hfilt2(spec, freq, time, window_length: float):
 
     return smoothed_spec, freq, new_time
 
+def NB_detect(spec,Threshold):
+    return True in (spec > Threshold)
