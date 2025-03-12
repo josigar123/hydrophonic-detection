@@ -12,7 +12,7 @@ const MainPage = () => {
         <MapComponent />
       </div>
       <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
-        <WaveformSelection numChannels={2} />
+        <WaveformSelection numChannels={4} />
       </div>
       <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
         <AisDataTable />
