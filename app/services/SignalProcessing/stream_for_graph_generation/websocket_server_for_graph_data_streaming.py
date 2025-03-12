@@ -93,6 +93,12 @@ async def handle_connection(websocket, path):
                     await forward_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
+        if client_name == "ais_consumer":
+            async for message in websocket:
+                try:
+                    await forward_ais_to_frontend(message)
+                except Exception as e:
+                    print(f"Error processing message {e}")
         else:
 
             async for message in websocket:
@@ -107,6 +113,21 @@ async def handle_connection(websocket, path):
         if client_name in clients and clients[client_name] == websocket:
             clients.pop(client_name, None)
             print(f"Removed {client_name} from active clients")
+
+
+async def forward_ais_to_frontend(data):
+    if 'map_client' in clients:
+        try:
+            await clients['map_client'].send(data)
+            print("Forwarded AIS data to map_client")
+        except websockets.exceptions.ConnectionClosed:
+            print("Connection to map_client was closed while sending")
+            if 'map_client' in clients:
+                clients.pop('map_client', None)
+        except Exception as e:
+            print(f"Error sending to map_client: {e}")
+    else:
+        print("map_client not connected")
 
 
 async def forward_to_frontend(data):
