@@ -1,8 +1,11 @@
 import asyncio
+from aiokafka import AIOKafkaConsumer
 import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
 from urllib.parse import parse_qs, urlparse
 import json
+from kafka import KafkaConsumer
+import threading
 
 '''
 
@@ -19,10 +22,51 @@ The frontend client will recieve the following JSON object:
 {
     "frequencies": [1,2,3,46],
     "times": [2,3,5,6],
-    "spectrogamDb": [1,2,6,2]
+    "spectrogamDb": [[1,2,6,2]],
 }
 
 '''
+
+default_config = {
+    "channels": 1,
+    "sampleRate": 44100,
+    "recordingChunkSize": 1024
+}
+current_config = default_config
+
+'''This function will read the current recording config from a Kafka topic
+
+    config looks like this:
+        {
+            "channels": 1,
+            "sampleRate": 44100,
+            "recordingChunkSize": 1024
+        }
+
+'''
+async def consume_config():
+    """Async function to consume configuration messages from Kafka before WebSocket server starts."""
+    global current_config
+
+    consumer = AIOKafkaConsumer(
+        'recording-configurations',
+        bootstrap_servers='10.0.0.10:9092',
+        auto_offset_reset='latest',
+        enable_auto_commit=True,
+        value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+    )
+
+    await consumer.start()
+    try:
+        async for message in consumer:
+            try:
+                config_data = message.value
+                print(f"Received new configuration: {config_data}")
+                current_config = config_data
+            except Exception as e:
+                print(f"Error processing configuration message: {e}")
+    finally:
+        await consumer.stop()
 
 # This dictionary holds a clients websocket and name
 clients = {}
@@ -45,9 +89,16 @@ async def handle_connection(websocket, path):
             async for message in websocket:
 
                 try:
+                    print(f"Recording parameters: {current_config}")
                     await forward_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
+        if client_name == "ais_consumer":
+            async for message in websocket:
+                try:
+                    await forward_ais_to_frontend(message)
+                except Exception as e:
+                    print(f"Error processing message {e}")
         else:
 
             async for message in websocket:
@@ -64,10 +115,25 @@ async def handle_connection(websocket, path):
             print(f"Removed {client_name} from active clients")
 
 
+async def forward_ais_to_frontend(data):
+    if 'map_client' in clients:
+        try:
+            await clients['map_client'].send(data)
+            print("Forwarded AIS data to map_client")
+        except websockets.exceptions.ConnectionClosed:
+            print("Connection to map_client was closed while sending")
+            if 'map_client' in clients:
+                clients.pop('map_client', None)
+        except Exception as e:
+            print(f"Error sending to map_client: {e}")
+    else:
+        print("map_client not connected")
+
+
 async def forward_to_frontend(data):
     if 'spectrogram_client' in clients:
         try:
-            frequencies, times, spectrogram_db = spectrogram_data_generator.process_wav_chunk(data)
+            frequencies, times, spectrogram_db = spectrogram_data_generator.process_audio_chunk(data, current_config["sampleRate"], bit_depth=1, channels=current_config["channels"])
      
             data_dict = {
                     "frequencies": frequencies,
@@ -102,6 +168,9 @@ async def forward_to_frontend(data):
         print("waveform_client not connected...")
 
 async def main():
+
+    consumer_task = asyncio.create_task(consume_config())
+
     server = await websockets.serve(
         handle_connection,
         "localhost",
@@ -111,6 +180,6 @@ async def main():
     )
 
     print("WebSocket server running on ws://localhost:8766")
-    await asyncio.Future()
+    await asyncio.gather(consumer_task)
 
 asyncio.run(main())
