@@ -1,5 +1,5 @@
 {
-  "channels": 1,
+  "channels": 4,
   "sampleRate": 44100,
   "recordingChunkSize": 1024
 }
