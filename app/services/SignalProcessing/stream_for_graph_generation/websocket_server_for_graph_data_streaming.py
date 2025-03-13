@@ -129,7 +129,6 @@ async def forward_ais_to_frontend(data):
     else:
         print("map_client not connected")
 
-
 async def forward_to_frontend(data):
     if 'spectrogram_client' in clients:
         try:
@@ -141,7 +140,6 @@ async def forward_to_frontend(data):
                     "spectrogramDb": spectrogram_db # SpectrogramDb Is a matrix
                             }
             data_json = json.dumps(data_dict)
-
             await clients['spectrogram_client'].send(data_json)
             print("Sending data to spectrogram_client")
         except websockets.exceptions.ConnectionClosed:
@@ -152,7 +150,7 @@ async def forward_to_frontend(data):
             print(f"Error sending to spectrogram_client: {e}")
     else:
         print("spectrogram_client not connected")
-
+        
     if 'waveform_client' in clients:
         try:
             
