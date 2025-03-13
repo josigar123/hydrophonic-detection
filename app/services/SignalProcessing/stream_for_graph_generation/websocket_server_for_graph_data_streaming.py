@@ -50,7 +50,7 @@ async def consume_config():
 
     consumer = AIOKafkaConsumer(
         'recording-configurations',
-        bootstrap_servers='10.0.0.10:9092',
+        bootstrap_servers='localhost:9092',
         auto_offset_reset='latest',
         enable_auto_commit=True,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
