@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@arction/lcjs": "^5.2.1",
     "@heroui/accordion": "^2.2.8",
     "@heroui/button": "^2.2.10",
     "@heroui/dropdown": "^2.3.10",
@@ -54,6 +55,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vite-plugin-commonjs": "^0.10.4"
   }
 }

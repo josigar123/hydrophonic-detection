@@ -2,6 +2,7 @@ import AisDataTable from '../Components/AisDataTable';
 import MapComponent from '../Components/MapComponent';
 import SpectrogramView from '../Components/SpectrogramView';
 import WaveformSelection from '../Components/WaveformSelection';
+
 const MainPage = () => {
   return (
     <div className="grid grid-cols-2 grid-rows-2 gap-2 lg:gap-4 w-full h-screen p-2 lg:p-4">

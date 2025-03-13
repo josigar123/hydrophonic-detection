@@ -1,7 +1,5 @@
 from scipy import signal
-from scipy.io import wavfile
 import numpy as np
-import io
 from utils import spec_hfilt2, medfilt_vertcal_norm
 
 '''
@@ -45,7 +43,7 @@ class SpectrogramDataGenerator:
 
         return frequencies.tolist(), times.tolist(), sx_db.tolist()
 
-    def crete_spectrogram_data(self, x, fs, tperseg, freq_filt, hfilt_length, f_max, s_min,s_max):
+    def create_spectrogram_data(self, pcm_data: bytes, sample_rate: float, channels: int, tperseg, freq_filt, hfilt_length, bit_depth: int = 16):
         """Plot spectrogram of signal x.
 
         Parameters
@@ -66,11 +64,20 @@ class SpectrogramDataGenerator:
             Minimum intensity of plot, only on frontend
         s_max: int
             Maximum intensity of plot, only on frontend
-        """
+        """       
+
+        if bit_depth == 16:
+            samples = np.frombuffer(pcm_data, dtype=np.int16)
+        else:
+            raise ValueError(f"Unsupported bit depth: {bit_depth}")
+
+        samples = samples.reshape(-1, channels)
+        # Convert multi-channels audio to mono
+        mono_signal = np.mean(samples, axis=1)
 
         # Calculate spectrogram
-        nperseg=int(tperseg*fs)
-        f, t, sx = signal.spectrogram(x, fs, nperseg=nperseg, detrend=False)
+        nperseg=int(tperseg*sample_rate)
+        f, t, sx = signal.spectrogram(mono_signal, sample_rate, nperseg=nperseg, detrend=False)
         sx_norm = medfilt_vertcal_norm(sx,freq_filt)
         sx_db = 10*np.log10(sx_norm)   # Convert to dB
         sx_db, f, t = spec_hfilt2(sx_db,f,t,window_length=hfilt_length)
