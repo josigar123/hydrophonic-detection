@@ -46,3 +46,22 @@ def spec_hfilt2(spec, freq, time, window_length: float):
     new_time = time[:num_segments * segment_size].reshape(num_segments, segment_size).mean(axis=1)
 
     return smoothed_spec, freq, new_time
+
+def average_filter(signal, window_size):
+    """
+    Applies an average filter to downsample the signal.
+    
+    Parameters:
+    - signal (1D array): The input signal
+    - window_size (int): Number of samples to average per output sample
+    
+    Returns:
+    - downsampled_signal (1D array): The smoothed, downsampled signal
+    """
+    num_samples = len(signal) // window_size  # Determine new length
+    return np.mean(signal[:num_samples * window_size].reshape(-1, window_size), axis=1)
+
+# Take a spectrogram matrix containing intensities and a threshold in dB
+# Prøv me default på 9
+def narrowband_detection(spectrogramDb, threshold=9):
+    return True in (spectrogramDb > threshold)
