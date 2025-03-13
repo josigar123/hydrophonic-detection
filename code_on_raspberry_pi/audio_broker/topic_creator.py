@@ -3,9 +3,14 @@ from kafka.admin import KafkaAdminClient, NewTopic
 def create_topic(broker_info, topic_name):
 
     admin_client = KafkaAdminClient(
-        bootstrap_server=f"{broker_info["ip"]}:{broker_info["port"]}"
+        bootstrap_servers=f"{broker_info["ip"]}:{broker_info["port"]}"
     )
 
+    existing_topics = admin_client.list_topics()
+    if topic_name in existing_topics:
+        print(f"Topic: {topic_name}, already exists, no operation taken")
+        return
+        
     topic = NewTopic(topic_name, num_partitions=1, replication_factor=1)
 
     try:

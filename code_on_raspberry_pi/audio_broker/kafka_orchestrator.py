@@ -14,7 +14,7 @@ then produce audio continously
 BROKER_INFO_FILE = "broker_info.json"
 RECORDING_PARAMETERS_FILE = "recording_parameters.json"
 
-RECORDING_PARAMETERS_TOPIC = "recording-configurations"
+RECORDING_PARAMETERS_TOPIC = "recording-parameters"
 AUDIO_STREAM_TOPIC = "audio-stream"
 
 if __name__ == "__main__":

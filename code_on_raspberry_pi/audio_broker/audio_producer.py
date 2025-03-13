@@ -32,10 +32,10 @@ def get_device_index():
     DEVICE_INDEX = input(f"From the list above, select your devices index [0, {device_count-1}]: ")
     while DEVICE_INDEX.isalpha() or (int(DEVICE_INDEX) < 0 or int(DEVICE_INDEX) >= device_count):
         print(f"ILLEGAL VALUE: {DEVICE_INDEX}")
-        DEVICE_INDEX = int(input(f"From the list above, select your devices index [0, {device_count-1}]"))
+        DEVICE_INDEX = input(f"From the list above, select your devices index [0, {device_count-1}]")
 
     print("##############SETUP END##############")
-    return DEVICE_INDEX
+    return int(DEVICE_INDEX)
 
 def produce_audio(broker_info: dict, audio_topic: str,  recording_parameters: dict, device_index: int):
     # INIT OF KAFKA PRODUCER
@@ -52,9 +52,9 @@ def produce_audio(broker_info: dict, audio_topic: str,  recording_parameters: di
         producer.send(audio_topic, value=indata.tobytes())
 
     with sd.InputStream(
-        samplerate=recording_parameters["sampleRate"],
-        channels=recording_parameters["channels"],
-        blocksize=recording_parameters["recordingChunkSize"],
+        samplerate=float(recording_parameters["sampleRate"]),
+        channels=int(recording_parameters["channels"]),
+        blocksize=int(recording_parameters["recordingChunkSize"]),
         device=device_index,
         dtype=np.int16,
         callback=audio_callback
