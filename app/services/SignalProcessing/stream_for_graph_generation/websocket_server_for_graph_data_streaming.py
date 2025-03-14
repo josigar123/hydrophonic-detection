@@ -46,16 +46,17 @@ async def consume_recording_config():
     """Async function to consume configuration messages from Kafka before WebSocket server starts."""
     global recording_config
 
+    topic = 'recording-parameters'
     consumer = AIOKafkaConsumer(
-        'recording-parameters',
+        topic,
         bootstrap_servers='10.0.0.24:9092',
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
         enable_auto_commit=False,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
 
     await consumer.start()
-    try:   
+    try:
         message = await consumer.getone()
         try:
             config_data = message.value
@@ -188,7 +189,6 @@ async def main():
 
     consumer_task = asyncio.create_task(consume_recording_config())
 
-    print("Serving WebSockets")
     server = await websockets.serve(
         handle_connection,
         "localhost",
