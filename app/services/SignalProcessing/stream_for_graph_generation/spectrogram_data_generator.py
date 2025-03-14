@@ -43,7 +43,8 @@ class SpectrogramDataGenerator:
 
         return frequencies.tolist(), times.tolist(), sx_db.tolist()
 
-    def create_spectrogram_data(self, pcm_data: bytes, sample_rate: float, channels: int, tperseg, freq_filt, hfilt_length, bit_depth: int = 16):
+    # hfilt_length determines the minimum length of the audio signal to be supplied to the function
+    def create_spectrogram_data(self, pcm_data: bytes, sample_rate: float, channels: int, tperseg: float, freq_filt: int, hfilt_length: int, window: str, bit_depth: int = 16):
         """Plot spectrogram of signal x.
 
         Parameters
@@ -77,7 +78,7 @@ class SpectrogramDataGenerator:
 
         # Calculate spectrogram
         nperseg=int(tperseg*sample_rate)
-        f, t, sx = signal.spectrogram(mono_signal, sample_rate, nperseg=nperseg, detrend=False)
+        f, t, sx = signal.spectrogram(mono_signal, sample_rate, window, nperseg=nperseg, detrend=False)
         sx_norm = medfilt_vertcal_norm(sx,freq_filt)
         sx_db = 10*np.log10(sx_norm)   # Convert to dB
         sx_db, f, t = spec_hfilt2(sx_db,f,t,window_length=hfilt_length)

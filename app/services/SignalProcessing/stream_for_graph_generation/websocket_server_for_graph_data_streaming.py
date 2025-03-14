@@ -107,20 +107,32 @@ async def handle_connection(websocket, path):
                 except Exception as e:
                     print(f"Error processing message {e}")
         
+        '''
+            NOTE: When spectrogram client first connects, expect a JSON object containing parameters for generating the AIS data
+
+            Expect an object on this form:
+
+            "spectrogramConfig": {
+                "tperseg": int,
+                "freq_filter": int (odd),
+                "hfilt_length": int,
+                "window": string
+            }
+        '''
         if client_name == "spectrogram_client":
             async for message in websocket:
                 try:
 
                     data = json.loads(message)
-                    if "config" in data:
-                        spectrogram_client_config[client_name]  = data["config"]
+                    if "spectrogramConfig" in data:
+                        spectrogram_client_config[client_name]  = data["spectrogramConfig"]
                         print(f"Updated spectrogram configuration: {spectrogram_client_config[client_name]}")
                     else:
                         print(f"Received unknow message from {client_name}: {data}")
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
-        else:
 
+        if client_name not in clients.keys:
             async for message in websocket:
                 try:
                     print(f"Received message from {client_name}: {message[:100]}...")
@@ -149,11 +161,63 @@ async def forward_ais_to_frontend(data):
     else:
         print("map_client not connected")
 
+audio_buffer = b"" # A byte array to accumulate audio
+
+# This will return the number of samples required to fill hfilt_length seconds of sound 
+def calculate_required_samples(hfilt_length: int, sample_rate: int):
+    return int(hfilt_length * sample_rate)
+
+def calculate_bytes_per_sample(bit_depth: int, channels: int):
+    if bit_depth == 16:
+        return 2 * channels  # 16-bit is 2 bytes per channel
+    elif bit_depth == 32:
+        return 4 * channels  # 32-bit is 4 bytes per channel
+    else:
+        raise ValueError(f"Unsupported bit depth: {bit_depth}")
+
+
 async def forward_to_frontend(data):
     if 'spectrogram_client' in clients:
         try:
-            frequencies, times, spectrogram_db = spectrogram_data_generator.process_audio_chunk(data, recording_config["sampleRate"], bit_depth=1, channels=recording_config["channels"])
-     
+            # Config has been set when spectrogram_client connected
+            spectrogram_config = spectrogram_client_config.get("spectrogram_client")
+
+            if spectrogram_config:
+                tperseg = spectrogram_config.get("tperseg")
+                freq_filter = spectrogram_config.get("freq_filter")
+                hfilt_length = spectrogram_config.get("hfilt_length")
+                window = spectrogram_config.get("window")
+            #frequencies, times, spectrogram_db = spectrogram_data_generator.process_audio_chunk(data, recording_config["sampleRate"], bit_depth=recording_config["bitDepth"], channels=recording_config["channels"])
+
+            # TODO: Rewrite so that these values are only calculated once, not very expensive operations anyway
+            required_samples = calculate_required_samples(hfilt_length, recording_config["sampleRate"])
+            bytes_per_sample = calculate_bytes_per_sample(recording_config["bitDepth"], recording_config["channels"])
+            required_buffer_size = required_samples * bytes_per_sample
+
+
+            audio_buffer += data
+
+            print(f"Current audio_buffer length: {len(audio_buffer)}")
+            print(f"Required buffer size to send: {required_buffer_size}")
+
+            if len(audio_buffer) >= required_buffer_size:
+                
+                print("Buffer filled, generating and sending data...")
+                frequencies, times, spectrogram_db = spectrogram_data_generator.create_spectrogram_data(audio_buffer,recording_config["sampleRate"], recording_config["channels"], tperseg, freq_filter, hfilt_length, window, recording_config["bitDepth"])
+
+                data_dict = {
+                    "frequencies": frequencies,
+                    "times": times,
+                    "spectrogramDb": spectrogram_db
+                }
+
+                data_json = json.dumps(data_dict)
+                print("Sending data...")
+                await clients['spectrogram_client'].send(data_json)
+                print("Data sent, clearing audio_buffer...")
+                audio_buffer = b""                                                                          
+                                                                                                                                                                                
+            '''
             data_dict = {
                     "frequencies": frequencies,
                     "times": times,
@@ -161,7 +225,8 @@ async def forward_to_frontend(data):
                             }
             data_json = json.dumps(data_dict)
             await clients['spectrogram_client'].send(data_json)
-            print("Sending data to spectrogram_client")
+            print("Sending data to spectrogram_client")'
+            '''
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
             if 'spectrogram_client' in clients:
@@ -189,6 +254,7 @@ async def main():
 
     consumer_task = asyncio.create_task(consume_recording_config())
 
+    print(recording_config)
     server = await websockets.serve(
         handle_connection,
         "localhost",
