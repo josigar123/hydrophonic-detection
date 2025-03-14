@@ -47,8 +47,8 @@ async def consume_recording_config():
     consumer = AIOKafkaConsumer(
         'recording-parameters',
         bootstrap_servers='10.0.0.24:9092',
-        auto_offset_reset='latest',
-        enable_auto_commit=True,
+        auto_offset_reset='earliest',
+        enable_auto_commit=False,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
 
@@ -63,8 +63,6 @@ async def consume_recording_config():
             print(f"Error processing configuration message: {e}")
     finally:
         await consumer.stop()
-
-
 
 # A simple data generation, only with default parameters
 spectrogram_data_generator = SpectrogramDataGenerator()
@@ -175,10 +173,6 @@ async def forward_to_frontend(data):
 
 async def main():
 
-    print("Consuming configuration")
-    await consume_recording_config()
-
-    print("Creating task")
     consumer_task = asyncio.create_task(consume_recording_config())
 
     print("Serving WebSockets")
