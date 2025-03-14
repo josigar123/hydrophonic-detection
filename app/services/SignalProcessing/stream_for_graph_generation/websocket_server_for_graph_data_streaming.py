@@ -45,22 +45,22 @@ async def consume_recording_config():
     global recording_config
 
     consumer = AIOKafkaConsumer(
-        'recording-configurations',
-        bootstrap_servers='10.0.0.10:9092',
+        'recording-parameters',
+        bootstrap_servers='10.0.0.24:9092',
         auto_offset_reset='latest',
         enable_auto_commit=True,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
 
     await consumer.start()
-    try:
-        async for message in consumer:
-            try:
-                config_data = message.value
-                print(f"Received new configuration: {config_data}")
-                recording_config = config_data
-            except Exception as e:
-                print(f"Error processing configuration message: {e}")
+    try:   
+        message = await consumer.getone()
+        try:
+            config_data = message.value
+            print(f"Received new configuration: {config_data}")
+            recording_config = config_data
+        except Exception as e:
+            print(f"Error processing configuration message: {e}")
     finally:
         await consumer.stop()
 
@@ -175,10 +175,13 @@ async def forward_to_frontend(data):
 
 async def main():
 
+    print("Consuming configuration")
     await consume_recording_config()
 
+    print("Creating task")
     consumer_task = asyncio.create_task(consume_recording_config())
 
+    print("Serving WebSockets")
     server = await websockets.serve(
         handle_connection,
         "localhost",

@@ -45,8 +45,8 @@ async def main():
         broker_info = json.load(file)
 
     broker_ip = broker_info["ip"]
-    broker_port = broker_info["brokerPort"]
-    broker_topic = broker_info["topicName"]
+    broker_port = broker_info["port"]
+    broker_topic = "audio-stream"
 
     socket_client = WebSocketClient("ws://localhost:8766?client_name=audio_consumer")
 
