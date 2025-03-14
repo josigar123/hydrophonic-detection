@@ -3,7 +3,7 @@ from kafka.admin import KafkaAdminClient, NewTopic
 def create_topic(broker_info, topic_name):
 
     admin_client = KafkaAdminClient(
-        bootstrap_servers=f"{broker_info["ip"]}:{broker_info["port"]}"
+        bootstrap_servers=f"{broker_info['ip']}:{broker_info['port']}"
     )
 
     existing_topics = admin_client.list_topics()

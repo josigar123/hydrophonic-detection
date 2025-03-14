@@ -3,7 +3,6 @@ from audio_producer import produce_audio, get_device_index
 from topic_creator import create_topic
 import json
 
-
 '''
 
 This file will first read the recording config and push this to the brokers topic,
