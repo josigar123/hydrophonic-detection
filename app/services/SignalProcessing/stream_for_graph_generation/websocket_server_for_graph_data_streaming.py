@@ -4,6 +4,7 @@ import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
 from urllib.parse import parse_qs, urlparse
 import json
+import os
 
 '''
 
@@ -39,6 +40,7 @@ recording_config = {}          # This dict holds the most recent recording confi
             "recordingChunkSize": 1024
         }
 
+    I recv the message from the broker and write it to a local json file for easy reading
 '''
 async def consume_recording_config():
     """Async function to consume configuration messages from Kafka before WebSocket server starts."""
@@ -58,6 +60,18 @@ async def consume_recording_config():
         try:
             config_data = message.value
             print(f"Received new configuration: {config_data}")
+
+            # Create the target directory two levels up
+            target_directory = os.path.join(os.path.dirname(__file__), "../../../configs")
+            os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
+
+            # Define the file path within the 'configs' directory
+            file_path = os.path.join(target_directory, 'recording_parameters.json')
+
+            with open(file_path, 'w') as json_file:
+                json.dump(config_data, json_file, indent=4)
+                print(f"Configuration saved to {file_path}")
+
             recording_config = config_data
         except Exception as e:
             print(f"Error processing configuration message: {e}")
@@ -82,7 +96,6 @@ async def handle_connection(websocket, path):
             async for message in websocket:
 
                 try:
-                    print(f"Recording parameters: {recording_config}")
                     await forward_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
