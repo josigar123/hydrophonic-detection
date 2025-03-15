@@ -46,21 +46,21 @@ async def consume_recording_config():
     """Async function to consume configuration messages from Kafka before WebSocket server starts."""
     global recording_config
 
-    topic = 'recording-parameters'
-    consumer = AIOKafkaConsumer(
-        topic,
-        bootstrap_servers='10.0.0.24:9092',
-        auto_offset_reset='latest',
-        enable_auto_commit=False,
-        value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-    )
-
-    await consumer.start()
     try:
-        message = await consumer.getone()
+        topic = 'recording-parameters'
+        bootstrap_servers = '10.0.0.24:9092'
+        consumer = AIOKafkaConsumer(
+            topic,
+            bootstrap_servers=bootstrap_servers,
+            auto_offset_reset='earliest',
+            enable_auto_commit=False,
+            value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+        )
+
+        await consumer.start()
         try:
+            message = await consumer.getone()
             config_data = message.value
-            print(f"Received new configuration: {config_data}")
 
             # Create the target directory two levels up
             target_directory = os.path.join(os.path.dirname(__file__), "../../../configs")
@@ -74,10 +74,13 @@ async def consume_recording_config():
                 print(f"Configuration saved to {file_path}")
 
             recording_config = config_data
-        except Exception as e:
-            print(f"Error processing configuration message: {e}")
-    finally:
-        await consumer.stop()
+            return recording_config
+        finally:
+            await consumer.stop()
+    except Exception as e:
+        print(f"Error consuming configuration: {e}")
+        raise
+        
 
 # A simple data generation, only with default parameters
 spectrogram_data_generator = SpectrogramDataGenerator()
@@ -252,18 +255,26 @@ async def forward_to_frontend(data):
 
 async def main():
 
-    consumer_task = asyncio.create_task(consume_recording_config())
+    try:
+        print("Loading configuration from Kafka...")
+        await consume_recording_config()
 
-    print(recording_config)
-    server = await websockets.serve(
-        handle_connection,
-        "localhost",
-        8766,
-        ping_interval=30,
-        ping_timeout=10
-    )
+        if not recording_config:
+            raise RuntimeError("Failed to load configuration from Kafka")
+        
+        print(f"Configuration loaded: {recording_config}")
 
-    print("WebSocket server running on ws://localhost:8766")
-    await asyncio.gather(consumer_task, server.wait_closed())
+        async with websockets.serve(
+            handle_connection, 
+            "localhost",
+            8766,
+            ping_interval=30,
+            ping_timeout=10
+        ) as server:
+            print("WebSocket server running on ws://localhost:8766")
+            await server.wait_closed()
+    except Exception as e:
+        print(f"Error during startup: {e}")
+        raise
 
 asyncio.run(main())

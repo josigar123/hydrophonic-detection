@@ -25,11 +25,16 @@ if __name__ == "__main__":
 
     # Create topics
     # Parameters are retained for 1hr
-    create_topic(broker_info, RECORDING_PARAMETERS_TOPIC, {"retention.ms": "3600000"})
+
+    recording_parameters_config = {
+        "retention.ms": "86400000", # Retaing config for 24 hrs
+        "cleanup.policy": "compact"
+    }
+    create_topic(broker_info, RECORDING_PARAMETERS_TOPIC, recording_parameters_config)
     create_topic(broker_info, AUDIO_STREAM_TOPIC)
 
     # Produce the config to the topic before all else
-    produce_audio_config(broker_info, "recording-parameters", recording_parameters)
+    produce_audio_config(broker_info, "recording-parameters", recording_parameters, key="config")
 
     # Fetch index of the device to listen to
     device_index = get_device_index()
