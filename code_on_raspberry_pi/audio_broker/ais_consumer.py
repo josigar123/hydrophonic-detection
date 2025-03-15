@@ -3,7 +3,7 @@ import asyncio
 import json
 from datetime import datetime
 from aiokafka import AIOKafkaConsumer
-from dbhandler import MongoDBHandler 
+from mongodb_handler import MongoDBHandler 
 
 with open("mongodb_config.json", "r") as file:
     mongo_config = json.load(file)
@@ -26,26 +26,6 @@ Second: for each message received from the broker, have a ws connection where th
 MUST SUPPLY client_name query param when connecting to websocket
 
 '''
-
-def validate_ais_data(data):
-    required_fields = ["mmsi", "timestamp", "message_type"]
-    for field in required_fields:
-        if field not in data:
-            return False
-    return True
-
-
-async def process_ais_message(msg_value):
-    try:
-        data = json.loads(msg_value)
-        if not validate_ais_data(data):
-            print(f"Invalid AIS data format: {data}")
-            return None
-        data["processed time"] = datetime.now()
-
-        return data
-    except Exception as e:
-        print(f"Failed to decode JSON data")
 
 class WebSocketClient:
 
@@ -98,8 +78,6 @@ async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient
     try:
         async for msg in consumer:
             try:
-                ais_data = json.loads(msg.value)
-                db_handler.store_ais_data(ais_data)
                 print(f"Consumed message, offset: {msg.offset}")
 
                 success = await socket_client.send(msg.value)

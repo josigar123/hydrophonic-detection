@@ -1,8 +1,8 @@
 {
-    "connection_string": "mongodb://localhost:27017",
-    "database": "ais_data",
+    "connection_string": "mongodb://root:password@localhost:27017",
+    "database": "hydrophone_data",
     "collections": {
-        "messages": "ais_messages",
+        "messages": "ais_logs",
         "ships": "ships",
         "recordings": "recordings",
         "detections": "detections"
