@@ -106,7 +106,7 @@ class AudioEventRecorder:
     
     def save_detection(self, event_id, event_data):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"/tmp/event_{event_id}_{timestamp}.wav"
+        filename = f"/tmp/{event_id}_{timestamp}.wav"
 
         with wave.open(filename, "wb") as wav_file:
             wav_file.setnchannels(self.channels)
@@ -119,7 +119,7 @@ class AudioEventRecorder:
         end_time = datetime.now()
         duration = (end_time - event_data["start_time"]).total_seconds()
 
-        relevant_ais_data = []
+        relevant_ais_data = [] 
         for ais_entry in self.ais_buffer[event_data["ais_start_index"]:]:
             if event_data["start_time"] <= ais_entry.get("timestamp", datetime.now()) <= end_time:
                 relevant_ais_data.append(ais_entry)
@@ -131,13 +131,13 @@ class AudioEventRecorder:
             print(f"Error storing relevant AIS-data in MongoDB {e}")
 
         try:
-            storage_info = upload_file(filename)
+            storage_info = upload_file(filename, self.current_session_id, event_id)
             print(f"File uploaded to MinIO: {storage_info}")
         except Exception as e:
             print(f"Error uploading to MinIO: {e}")
             storage_info = {"error": str(e)}
 
-        associated_ais_data = self.db_handler.get_ais_log_id_in_timerange(event_data["start_time"], end_time)
+        associated_ais_logs = self.db_handler.get_ais_log_id_in_timerange(event_data["start_time"], end_time)
 
         detection_metadata = {
             "detection_id": event_id,
@@ -149,7 +149,7 @@ class AudioEventRecorder:
             "filename": os.path.basename(filename),
             "file_size_bytes": len(event_data['buffer']) + 44,
             "storage_location": storage_info,
-            "associated_ais_data": associated_ais_data,
+            "associated_ais_logs": associated_ais_logs,
             "num_ais_entries": len(relevant_ais_data),
             "recording_id": self.current_session_id
         }
@@ -204,28 +204,39 @@ async def consume_ais_data(recorder):
 
 async def listen_for_events(recorder):
     consumer = AIOKafkaConsumer(
-        "detection-events",
+        "narrowband-detection",
+        "broadband-detection",
         bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['brokerPort']}",
         auto_offset_reset="latest",
         value_deserializer=lambda m: json.loads(m.decode("utf-8"))
     )
 
     await consumer.start()
-    try:
-        print("Started listening for events from detection-events")
-        async for msg in consumer:
-            event_data = msg.value
-            event_id = event_data.get("event_id", str(uuid.uuid4()))
-            threshold_reached = event_data.get("threshold_reached", False)
 
-            if threshold_reached:
-                if event_id not in recorder.active_events:
-                    recorder.start_event_detection(event_id, event_data)
-                    print(f"Started recording for threshold event: {event_id}")
-            else:
-                if event_id in recorder.active_events:
-                    recorder.stop_event_detection(event_id)
-                    print(f"Stopped recording for threshold event: {event_id}")
+    topic_states = {
+        "narrowband-detection": False,
+        "broadband-detection": False
+    }
+    
+    current_event_id = None
+    try:
+        print("Started listening for events from narrowband and broadband")
+        async for msg in consumer:
+            topic = msg.topic
+            threshold_reached = msg.value
+
+            topic_states[topic] = threshold_reached
+            both_threshold_reached = all(topic_states.values())   
+
+            if both_threshold_reached and current_event_id is None:
+                current_event_id = str(uuid.uuid4())
+                recorder.start_event_detection(current_event_id)
+                print(f"Started recording for threshold event: {current_event_id}")
+
+            elif not both_threshold_reached and current_event_id is not None:
+                recorder.stop_event_detection(current_event_id)
+                print(f"Stopped recording for threshold event: {current_event_id}")
+                current_event_id = None
     finally:
         await consumer.stop()
 

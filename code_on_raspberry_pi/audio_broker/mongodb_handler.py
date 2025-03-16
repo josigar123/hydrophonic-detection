@@ -152,8 +152,7 @@ class MongoDBHandler:
         except Exception as e:
             print(f"Error finding AIS logs in timerange {e}")
             return []
-        
-
+            
         
     def get_detections_for_recording(self, recording_id):
         return list(self.detections_collection.find({"recording_id": recording_id}))

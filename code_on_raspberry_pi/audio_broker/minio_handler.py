@@ -5,24 +5,28 @@ import os
 
 
 
-def upload_file(file_path, session_id=None):
+def upload_file(file_path, session_id=None, detection_id=None):
     client  = Minio("localhost:9000",
                 access_key="admin",
                 secret_key="password",
                 secure=False)
     
     tags = Tags.new_object_tags()
+    tags["upload_time"] = datetime.datetime.now().isoformat()
+
     if session_id:
         tags["session_id"] = session_id
-    tags["upload_time"] = datetime.datetime.now().isoformat()
+
+    if detection_id:
+        tags["detection_id"] = detection_id
+    
 
     
     file_name = os.path.basename(file_path)
     bucket_name = "audio"
-    object_name = "audio_storage" + file_name
+    object_name = file_name
 
-    found = client.bucket_exists(bucket_name)
-    if not found:
+    if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
         print(f"Created bucket {bucket_name}")
 
@@ -39,8 +43,3 @@ def upload_file(file_path, session_id=None):
         "object": object_name,
         "tags": dict(tags.items())
     }
-
-if __name__ == "__main__":
-
-    file_path = "/tmp/test1.txt"  
-    upload_file(file_path)

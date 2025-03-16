@@ -25,7 +25,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
       # Topics that are created on startup
-      KAFKA_CREATE_TOPICS: "audio-stream:1:1,recording-configurations:1:1:compact,detection-events:1:1,ais-data:1:1"
+      KAFKA_CREATE_TOPICS: "audio-stream:1:1,recording-configurations:1:1:compact,narrowband-detection:1:1,broadband-detection:1:1,ais-data:1:1"
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
