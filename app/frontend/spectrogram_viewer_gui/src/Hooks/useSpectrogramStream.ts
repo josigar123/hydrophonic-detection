@@ -1,5 +1,16 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
+export interface SpectrogramParameters {
+  tperseg: number;
+  frequencyFilter: number;
+  horizontalFilterLength: number;
+  window: string;
+}
+
+export interface messageToSend {
+  spectrogramConfig: SpectrogramParameters;
+}
+
 export function useSpectrogramStream(url: string, autoConnect = false) {
   const [spectrogramData, setSpectrogramData] = useState({
     frequencies: [],
@@ -11,68 +22,75 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   const socketRef = useRef<WebSocket | null>(null);
   const shouldConnectRef = useRef(autoConnect);
 
-  const connect = useCallback(() => {
-    if (
-      socketRef.current &&
-      (socketRef.current.readyState === WebSocket.OPEN ||
-        socketRef.current.readyState === WebSocket.CONNECTING)
-    ) {
-      return;
-    }
+  const connect = useCallback(
+    (initialMessage?: messageToSend) => {
+      if (
+        socketRef.current &&
+        (socketRef.current.readyState === WebSocket.OPEN ||
+          socketRef.current.readyState === WebSocket.CONNECTING)
+      ) {
+        return;
+      }
 
-    setError(null);
+      setError(null);
 
-    try {
-      const socket = new WebSocket(url);
-      socketRef.current = socket;
+      try {
+        const socket = new WebSocket(url);
+        socketRef.current = socket;
 
-      socket.onopen = () => {
-        console.log('Connected to websocket:', url);
-        setIsConnected(true);
-        setError(null);
-      };
+        socket.onopen = () => {
+          console.log('Connected to websocket:', url);
+          setIsConnected(true);
+          setError(null);
 
-      socket.onmessage = (event) => {
-        try {
-          console.log('Data recieved: ', event.data);
-          const data = JSON.parse(event.data);
-          setSpectrogramData({
-            frequencies: data.frequencies || [],
-            times: data.times || [],
-            spectrogramDb: data.spectrogramDb || [],
-          });
-        } catch (error) {
-          console.error('Error processing spectrogram data:', error);
-          setError('Failed to process spectrogram data');
-        }
-      };
+          if (initialMessage) {
+            const messageString = JSON.stringify(initialMessage);
+            socket.send(messageString);
+          }
+        };
 
-      socket.onclose = (event) => {
-        console.log(
-          `Disconnected from ${url}. Code: ${event.code}, Reason: ${event.reason}`
-        );
-        setIsConnected(false);
-        socketRef.current = null;
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            setSpectrogramData({
+              frequencies: data.frequencies || [],
+              times: data.times || [],
+              spectrogramDb: data.spectrogramDb || [],
+            });
+          } catch (error) {
+            console.error('Error processing spectrogram data:', error);
+            setError('Failed to process spectrogram data');
+          }
+        };
 
-        if (shouldConnectRef.current) {
-          console.log('Attempting to reconnect in 3 seconds...');
-          setTimeout(() => {
-            if (shouldConnectRef.current) {
-              connect();
-            }
-          }, 3000);
-        }
-      };
+        socket.onclose = (event) => {
+          console.log(
+            `Disconnected from ${url}. Code: ${event.code}, Reason: ${event.reason}`
+          );
+          setIsConnected(false);
+          socketRef.current = null;
 
-      socket.onerror = (event) => {
-        console.error('WebSocket error:', event);
-        setError('WebSocket connection error');
-      };
-    } catch (error) {
-      console.error('Error creating WebSocket:', error);
-      setError('Failed to create WebSocket connection');
-    }
-  }, [url]);
+          if (shouldConnectRef.current) {
+            console.log('Attempting to reconnect in 3 seconds...');
+            setTimeout(() => {
+              if (shouldConnectRef.current) {
+                connect();
+              }
+            }, 3000);
+          }
+        };
+
+        socket.onerror = (event) => {
+          console.error('WebSocket error:', event);
+          setError('WebSocket connection error');
+        };
+      } catch (error) {
+        console.error('Error creating WebSocket:', error);
+        setError('Failed to create WebSocket connection');
+      }
+    },
+    [url]
+  );
 
   const disconnect = useCallback(() => {
     shouldConnectRef.current = false;

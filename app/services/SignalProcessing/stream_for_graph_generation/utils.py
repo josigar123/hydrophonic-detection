@@ -10,7 +10,6 @@ def medfilt_vertcal_norm(spec,vertical_medfilt_size):
         sxx_med[:,i] = signal.medfilt(spec[:,i],kernel_size=vertical_medfilt_size)
 
     #Normaliserer sxx
-
     sxx_norm = spec/sxx_med
 
     return sxx_norm

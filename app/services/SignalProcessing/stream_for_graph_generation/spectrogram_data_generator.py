@@ -44,6 +44,8 @@ class SpectrogramDataGenerator:
         return frequencies.tolist(), times.tolist(), sx_db.tolist()
 
     # hfilt_length determines the minimum length of the audio signal to be supplied to the function
+    # Maybe create an in-memory wav file inside here before passing to signal.spectrogram for simplicity, adds a
+    # bit of overhead, but it can be afforded
     def create_spectrogram_data(self, pcm_data: bytes, sample_rate: float, channels: int, tperseg: float, freq_filt: int, hfilt_length: int, window: str, bit_depth: int = 16):
         """Plot spectrogram of signal x.
 
@@ -72,16 +74,34 @@ class SpectrogramDataGenerator:
         else:
             raise ValueError(f"Unsupported bit depth: {bit_depth}")
 
-        samples = samples.reshape(-1, channels)
-        # Convert multi-channels audio to mono
-        mono_signal = np.mean(samples, axis=1)
+        # Check if the PCM data is stereo (multi-channel) or mono
+        if channels > 1:
+        # Reshape PCM data to separate channels
+            try:
+                samples = samples.reshape(-1, channels)
+            except ValueError as e:
+                raise ValueError(f"Error reshaping PCM data. Expected {channels} channels, but got data size {samples.shape[0]}") from e
+            # Convert to mono by averaging channels
+            mono_signal = np.mean(samples, axis=1)
+        else:
+            # PCM data is already mono, no need to reshape
+            mono_signal = samples
 
+        print("LENGTHOF SAMPLES: ", str(len(samples)))
+        print("LENGTH OF MONO SAMPLES: ", str(len(mono_signal)))
+        
         # Calculate spectrogram
         nperseg=int(tperseg*sample_rate)
-        f, t, sx = signal.spectrogram(mono_signal, sample_rate, window, nperseg=nperseg, detrend=False)
+        f, t, sx = signal.spectrogram(mono_signal, sample_rate, window=window, nperseg=nperseg, detrend=False)
         sx_norm = medfilt_vertcal_norm(sx,freq_filt)
         sx_db = 10*np.log10(sx_norm)   # Convert to dB
         sx_db, f, t = spec_hfilt2(sx_db,f,t,window_length=hfilt_length)
+
+        print("nperseg:", nperseg)
+        print("noverlap:", nperseg // 2)
+        print("Spectrogram shape:", sx.shape)
+        print("Time bins length:", len(t))
+        print("Shape of sx_db: ", sx_db.shape)
 
         return f.tolist(), t.tolist(), sx_db.tolist()
             

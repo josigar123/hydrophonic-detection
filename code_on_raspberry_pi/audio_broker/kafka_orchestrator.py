@@ -23,9 +23,6 @@ if __name__ == "__main__":
     with open(RECORDING_PARAMETERS_FILE, "r") as file:
         recording_parameters = json.load(file)
 
-    # Create topics
-    # Parameters are retained for 1hr
-
     recording_parameters_config = {
         "retention.ms": "86400000", # Retaing config for 24 hrs
         "cleanup.policy": "compact"

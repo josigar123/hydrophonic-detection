@@ -56,7 +56,7 @@ def produce_audio(broker_info: dict, audio_topic: str,  recording_parameters: di
         channels=int(recording_parameters["channels"]),
         blocksize=int(recording_parameters["recordingChunkSize"]),
         device=device_index,
-        dtype=np.int16,
+        dtype=np.int16, # HARDCODED 16-bit PCM data
         callback=audio_callback
     ): 
         print("Press Ctrl+C to stop recording...")

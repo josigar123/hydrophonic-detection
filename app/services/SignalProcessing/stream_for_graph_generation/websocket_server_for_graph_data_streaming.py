@@ -52,7 +52,7 @@ async def consume_recording_config():
         consumer = AIOKafkaConsumer(
             topic,
             bootstrap_servers=bootstrap_servers,
-            auto_offset_reset='earliest',
+            auto_offset_reset='latest',
             enable_auto_commit=False,
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
         )
@@ -61,7 +61,7 @@ async def consume_recording_config():
         try:
             message = await consumer.getone()
             config_data = message.value
-
+            
             # Create the target directory two levels up
             target_directory = os.path.join(os.path.dirname(__file__), "../../../configs")
             os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
@@ -72,9 +72,8 @@ async def consume_recording_config():
             with open(file_path, 'w') as json_file:
                 json.dump(config_data, json_file, indent=4)
                 print(f"Configuration saved to {file_path}")
-
-            recording_config = config_data
-            return recording_config
+            recording_config =config_data
+            return config_data
         finally:
             await consumer.stop()
     except Exception as e:
@@ -171,6 +170,7 @@ def calculate_required_samples(hfilt_length: int, sample_rate: int):
     return int(hfilt_length * sample_rate)
 
 def calculate_bytes_per_sample(bit_depth: int, channels: int):
+    '''Functin could be generalized, but we want to ensure a valid bit depth'''
     if bit_depth == 16:
         return 2 * channels  # 16-bit is 2 bytes per channel
     elif bit_depth == 32:
@@ -180,6 +180,9 @@ def calculate_bytes_per_sample(bit_depth: int, channels: int):
 
 
 async def forward_to_frontend(data):
+
+    global audio_buffer
+
     if 'spectrogram_client' in clients:
         try:
             # Config has been set when spectrogram_client connected
@@ -187,8 +190,8 @@ async def forward_to_frontend(data):
 
             if spectrogram_config:
                 tperseg = spectrogram_config.get("tperseg")
-                freq_filter = spectrogram_config.get("freq_filter")
-                hfilt_length = spectrogram_config.get("hfilt_length")
+                freq_filter = spectrogram_config.get("frequencyFilter")
+                hfilt_length = spectrogram_config.get("horizontalFilterLength")
                 window = spectrogram_config.get("window")
             #frequencies, times, spectrogram_db = spectrogram_data_generator.process_audio_chunk(data, recording_config["sampleRate"], bit_depth=recording_config["bitDepth"], channels=recording_config["channels"])
 
@@ -197,8 +200,7 @@ async def forward_to_frontend(data):
             bytes_per_sample = calculate_bytes_per_sample(recording_config["bitDepth"], recording_config["channels"])
             required_buffer_size = required_samples * bytes_per_sample
 
-
-            audio_buffer += data
+            audio_buffer += data # concat recvd audio, build buffer
 
             print(f"Current audio_buffer length: {len(audio_buffer)}")
             print(f"Required buffer size to send: {required_buffer_size}")
@@ -206,30 +208,20 @@ async def forward_to_frontend(data):
             if len(audio_buffer) >= required_buffer_size:
                 
                 print("Buffer filled, generating and sending data...")
-                frequencies, times, spectrogram_db = spectrogram_data_generator.create_spectrogram_data(audio_buffer,recording_config["sampleRate"], recording_config["channels"], tperseg, freq_filter, hfilt_length, window, recording_config["bitDepth"])
+                '''Adjusting the audio buffer so the amount of audio processed is always the same relative to required_buffer_size'''
+                adjusted_audio_buffer, audio_buffer = audio_buffer[:required_buffer_size], audio_buffer[required_buffer_size:]
+                frequencies, times, spectrogram_db = spectrogram_data_generator.create_spectrogram_data(adjusted_audio_buffer, recording_config["sampleRate"], recording_config["channels"], tperseg, freq_filter, hfilt_length, window, recording_config["bitDepth"])
 
                 data_dict = {
                     "frequencies": frequencies,
                     "times": times,
                     "spectrogramDb": spectrogram_db
                 }
-
+               
                 data_json = json.dumps(data_dict)
                 print("Sending data...")
                 await clients['spectrogram_client'].send(data_json)
-                print("Data sent, clearing audio_buffer...")
-                audio_buffer = b""                                                                          
-                                                                                                                                                                                
-            '''
-            data_dict = {
-                    "frequencies": frequencies,
-                    "times": times,
-                    "spectrogramDb": spectrogram_db # SpectrogramDb Is a matrix
-                            }
-            data_json = json.dumps(data_dict)
-            await clients['spectrogram_client'].send(data_json)
-            print("Sending data to spectrogram_client")'
-            '''
+                print("Data sent...")                                                                                                                                                                            
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
             if 'spectrogram_client' in clients:
@@ -241,7 +233,6 @@ async def forward_to_frontend(data):
         
     if 'waveform_client' in clients:
         try:
-            
             await clients['waveform_client'].send(data)
             print("Sending data to waveform_client")
         except websockets.exceptions.ConnectionClosed:
@@ -257,7 +248,7 @@ async def main():
 
     try:
         print("Loading configuration from Kafka...")
-        await consume_recording_config()
+        recording_config = await consume_recording_config()
 
         if not recording_config:
             raise RuntimeError("Failed to load configuration from Kafka")
