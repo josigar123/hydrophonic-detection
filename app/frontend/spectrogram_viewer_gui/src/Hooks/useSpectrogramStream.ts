@@ -15,10 +15,15 @@ export interface DemonSpectrogramParameters {
   window: string;
 }
 
+export interface NarrowbandDetectionThresholdParameterDb {
+  threshold: number;
+}
+
 export interface InitialDemonAndSpectrogramConfigurations {
   config: {
     spectrogramConfig: SpectrogramParameters;
     demonSpectrogramConfig: DemonSpectrogramParameters;
+    narrowbandDetectionThresholdDb: NarrowbandDetectionThresholdParameterDb;
   };
 }
 

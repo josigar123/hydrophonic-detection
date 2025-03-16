@@ -5,6 +5,7 @@ import {
   SpectrogramParameters,
   InitialDemonAndSpectrogramConfigurations,
   DemonSpectrogramParameters,
+  NarrowbandDetectionThresholdParameterDb,
 } from '../Hooks/useSpectrogramStream';
 import { Button } from '@heroui/button';
 
@@ -25,10 +26,15 @@ const demonDummyData: DemonSpectrogramParameters = {
   window: 'hamming',
 };
 
+const narrowbandDummyData: NarrowbandDetectionThresholdParameterDb = {
+  threshold: 9,
+};
+
 const cnfg: InitialDemonAndSpectrogramConfigurations = {
   config: {
     spectrogramConfig: dummyData,
     demonSpectrogramConfig: demonDummyData,
+    narrowbandDetectionThresholdDb: narrowbandDummyData,
   },
 };
 

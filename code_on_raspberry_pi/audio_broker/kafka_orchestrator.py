@@ -15,6 +15,8 @@ RECORDING_PARAMETERS_FILE = "recording_parameters.json"
 
 RECORDING_PARAMETERS_TOPIC = "recording-parameters"
 AUDIO_STREAM_TOPIC = "audio-stream"
+NARROWBAND_DETECTION_TOPIC = "narrowband-detection"
+BROADBAND_DETECTION_TOPIC = "broadband-detection"
 
 if __name__ == "__main__":
     with open(BROKER_INFO_FILE, "r") as file:
@@ -29,6 +31,8 @@ if __name__ == "__main__":
     }
     create_topic(broker_info, RECORDING_PARAMETERS_TOPIC, recording_parameters_config)
     create_topic(broker_info, AUDIO_STREAM_TOPIC)
+    create_topic(broker_info, NARROWBAND_DETECTION_TOPIC)
+    create_topic(broker_info, BROADBAND_DETECTION_TOPIC)
 
     # Produce the config to the topic before all else
     produce_audio_config(broker_info, "recording-parameters", recording_parameters, key="config")
