@@ -1,5 +1,6 @@
 import asyncio
 from aiokafka import AIOKafkaConsumer
+import numpy as np
 import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
 from urllib.parse import parse_qs, urlparse
@@ -18,10 +19,11 @@ that is being sent back to the frontend
 
 The frontend client will recieve the following JSON object:
 
+There will ALWAYS only be one time bin and one column in spectrogramDb in our implementation
 {
     "frequencies": [1,2,3,46],
-    "times": [2,3,5,6],
-    "spectrogamDb": [[1,2,6,2]],
+    "times": [1],
+    "spectrogamDb": [1,2,6,2],
 }
 
 '''
@@ -212,10 +214,11 @@ async def forward_to_frontend(data):
                 adjusted_audio_buffer, audio_buffer = audio_buffer[:required_buffer_size], audio_buffer[required_buffer_size:]
                 frequencies, times, spectrogram_db = spectrogram_data_generator.create_spectrogram_data(adjusted_audio_buffer, recording_config["sampleRate"], recording_config["channels"], tperseg, freq_filter, hfilt_length, window, recording_config["bitDepth"])
 
+                '''We flatten the spectrogram_db matrix since it will we a matrix with only one column'''
                 data_dict = {
                     "frequencies": frequencies,
                     "times": times,
-                    "spectrogramDb": spectrogram_db
+                    "spectrogramDb": np.ravel(spectrogram_db).tolist()
                 }
                
                 data_json = json.dumps(data_dict)

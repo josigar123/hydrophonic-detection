@@ -19,7 +19,7 @@ const dummyData: SpectrogramParameters = {
 interface SpectrogramDataType {
   frequencies: number[];
   times: number[];
-  spectrogramDb: number[][];
+  spectrogramDb: number[];
 }
 
 const msg: messageToSend = {
