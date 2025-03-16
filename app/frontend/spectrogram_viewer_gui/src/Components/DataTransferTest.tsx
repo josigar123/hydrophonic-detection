@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import {
   useSpectrogramStream,
   SpectrogramParameters,
-  messageToSend,
+  InitialDemonAndSpectrogramConfigurations,
+  DemonSpectrogramParameters,
 } from '../Hooks/useSpectrogramStream';
 import { Button } from '@heroui/button';
 
@@ -16,32 +17,66 @@ const dummyData: SpectrogramParameters = {
   window: 'hamming',
 };
 
+const demonDummyData: DemonSpectrogramParameters = {
+  demonSampleFrequency: 200,
+  tperseg: 2,
+  frequencyFilter: 9,
+  horizontalFilterLength: 20,
+  window: 'hamming',
+};
+
+const cnfg: InitialDemonAndSpectrogramConfigurations = {
+  config: {
+    spectrogramConfig: dummyData,
+    demonSpectrogramConfig: demonDummyData,
+  },
+};
+
 interface SpectrogramDataType {
   frequencies: number[];
   times: number[];
   spectrogramDb: number[];
 }
 
-const msg: messageToSend = {
-  spectrogramConfig: dummyData,
-};
+interface DemonSpectrogramDataType {
+  demonFrequencies: number[];
+  demonTimes: number[];
+  demonSpectrogramDb: number[];
+}
 
 const DataTransferTest = () => {
   const [spectrogramParameters, setSPectrogramParameters] =
     useState<SpectrogramParameters | null>(null);
 
-  const { spectrogramData, isConnected, error, connect, disconnect } =
-    useSpectrogramStream(websocketUrl, false);
+  const {
+    spectrogramData,
+    demonSpectrogramData,
+    isConnected,
+    error,
+    connect,
+    disconnect,
+  } = useSpectrogramStream(websocketUrl, false);
 
   useEffect(() => {
     const { frequencies, times, spectrogramDb }: SpectrogramDataType =
       spectrogramData;
     console.log('Recieved spectrogram data:');
-    console.log('Intensities: ', spectrogramDb);
+    console.log('SPECTROGRAM Intensities: ', spectrogramDb);
   }, [spectrogramData]);
+
+  useEffect(() => {
+    const {
+      demonFrequencies,
+      demonTimes,
+      demonSpectrogramDb,
+    }: DemonSpectrogramDataType = demonSpectrogramData;
+    console.log('Recieved DEMON spectrogram data:');
+    console.log('DEMON Intensities: ', demonSpectrogramDb);
+  }, [demonSpectrogramData]);
   return (
     <>
-      <Button onPress={() => connect(msg)}>Connect</Button>
+      <Button onPress={() => connect(cnfg)}>Connect</Button>
+      <Button onPress={disconnect}>Disconnect</Button>
     </>
   );
 };

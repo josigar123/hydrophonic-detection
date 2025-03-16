@@ -7,8 +7,19 @@ export interface SpectrogramParameters {
   window: string;
 }
 
-export interface messageToSend {
-  spectrogramConfig: SpectrogramParameters;
+export interface DemonSpectrogramParameters {
+  demonSampleFrequency: number;
+  tperseg: number;
+  frequencyFilter: number;
+  horizontalFilterLength: number;
+  window: string;
+}
+
+export interface InitialDemonAndSpectrogramConfigurations {
+  config: {
+    spectrogramConfig: SpectrogramParameters;
+    demonSpectrogramConfig: DemonSpectrogramParameters;
+  };
 }
 
 export function useSpectrogramStream(url: string, autoConnect = false) {
@@ -17,13 +28,20 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
     times: [],
     spectrogramDb: [],
   });
+
+  const [demonSpectrogramData, setDemonSpectrogramData] = useState({
+    demonFrequencies: [],
+    demonTimes: [],
+    demonSpectrogramDb: [],
+  });
+
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const shouldConnectRef = useRef(autoConnect);
 
   const connect = useCallback(
-    (initialMessage?: messageToSend) => {
+    (initialMessage?: InitialDemonAndSpectrogramConfigurations) => {
       if (
         socketRef.current &&
         (socketRef.current.readyState === WebSocket.OPEN ||
@@ -52,14 +70,28 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
         socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            setSpectrogramData({
-              frequencies: data.frequencies || [],
-              times: data.times || [],
-              spectrogramDb: data.spectrogramDb || [],
-            });
+
+            if (data.spectrogramDb) {
+              setSpectrogramData({
+                frequencies: data.frequencies || [],
+                times: data.times || [],
+                spectrogramDb: data.spectrogramDb || [],
+              });
+            }
+
+            if (data.demonSpectrogramDb) {
+              setDemonSpectrogramData({
+                demonFrequencies: data.demonFrequencies || [],
+                demonTimes: data.demonTimes || [],
+                demonSpectrogramDb: data.demonSpectrogramDb || [],
+              });
+            }
           } catch (error) {
-            console.error('Error processing spectrogram data:', error);
-            setError('Failed to process spectrogram data');
+            console.error(
+              'Error parsing message in useSpectrogramStream:',
+              error
+            );
+            setError('Error parsing message in useSpectrogramStream');
           }
         };
 
@@ -119,6 +151,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
 
   return {
     spectrogramData,
+    demonSpectrogramData,
     isConnected,
     error,
     connect,

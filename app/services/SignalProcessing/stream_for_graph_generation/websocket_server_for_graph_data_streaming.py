@@ -112,15 +112,22 @@ async def handle_connection(websocket, path):
                     print(f"Error processing message {e}")
         
         '''
-            NOTE: When spectrogram client first connects, expect a JSON object containing parameters for generating the AIS data
-
-            Expect an object on this form:
-
-            "spectrogramConfig": {
-                "tperseg": int,
-                "freq_filter": int (odd),
-                "hfilt_length": int,
-                "window": string
+            Expect an object on this form, expect values in ALL fields:
+            "config":
+            {
+                "spectrogramConfig": {
+                    "tperseg": int,
+                    "freq_filter": int (odd),
+                    "hfilt_length": int,
+                    "window": string
+                },
+                "demonSpectrogramConfig":{
+                    "demonSampleFrequency": int,
+                    "tperseg": int,
+                    "frequencyFilter": int (odd),
+                    "horizontalFilterLength": int,
+                    "window": string
+                }
             }
         '''
         if client_name == "spectrogram_client":
@@ -128,15 +135,16 @@ async def handle_connection(websocket, path):
                 try:
 
                     data = json.loads(message)
-                    if "spectrogramConfig" in data:
-                        spectrogram_client_config[client_name]  = data["spectrogramConfig"]
+                    if "config" in data:
+                        spectrogram_client_config[client_name] = data["config"]
                         print(f"Updated spectrogram configuration: {spectrogram_client_config[client_name]}")
                     else:
                         print(f"Received unknow message from {client_name}: {data}")
+
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
 
-        if client_name not in clients.keys:
+        if client_name not in clients.keys():
             async for message in websocket:
                 try:
                     print(f"Received message from {client_name}: {message[:100]}...")
@@ -165,14 +173,12 @@ async def forward_ais_to_frontend(data):
     else:
         print("map_client not connected")
 
-audio_buffer = b"" # A byte array to accumulate audio
-
 # This will return the number of samples required to fill hfilt_length seconds of sound 
 def calculate_required_samples(hfilt_length: int, sample_rate: int):
     return int(hfilt_length * sample_rate)
 
 def calculate_bytes_per_sample(bit_depth: int, channels: int):
-    '''Functin could be generalized, but we want to ensure a valid bit depth'''
+    '''Function could be generalized, but we want to ensure a valid bit depth'''
     if bit_depth == 16:
         return 2 * channels  # 16-bit is 2 bytes per channel
     elif bit_depth == 32:
@@ -180,39 +186,69 @@ def calculate_bytes_per_sample(bit_depth: int, channels: int):
     else:
         raise ValueError(f"Unsupported bit depth: {bit_depth}")
 
-
+spectrogram_audio_buffer = b"" # A byte array to accumulate audio for the spectrogram
+demon_spectrogram_audio_buffer = b"" # A byte array to accumulate audio for the demon spectrogram
 async def forward_to_frontend(data):
 
-    global audio_buffer
+    global spectrogram_audio_buffer
+    global demon_spectrogram_audio_buffer
 
     if 'spectrogram_client' in clients:
         try:
             # Config has been set when spectrogram_client connected
-            spectrogram_config = spectrogram_client_config.get("spectrogram_client")
-
+            spectrogram_config = spectrogram_client_config["spectrogram_client"]["spectrogramConfig"]
+            demon_spectrogram_config = spectrogram_client_config["spectrogram_client"]["demonSpectrogramConfig"]
             if spectrogram_config:
                 tperseg = spectrogram_config.get("tperseg")
                 freq_filter = spectrogram_config.get("frequencyFilter")
                 hfilt_length = spectrogram_config.get("horizontalFilterLength")
                 window = spectrogram_config.get("window")
-            #frequencies, times, spectrogram_db = spectrogram_data_generator.process_audio_chunk(data, recording_config["sampleRate"], bit_depth=recording_config["bitDepth"], channels=recording_config["channels"])
+
+                '''
+                print(f"Spectrogram Config:")
+                print(f"  tperseg: {tperseg}")
+                print(f"  frequencyFilter: {freq_filter}")
+                print(f"  horizontalFilterLength: {hfilt_length}")
+                print(f"  window: {window}")
+                '''
+            else:
+                print("Spectrogram config is not available")
+            
+            if demon_spectrogram_config:
+                demon_sample_frequency = demon_spectrogram_config.get("demonSampleFrequency") # A unique sample freq for DEMON specs
+                demon_tperseg = demon_spectrogram_config.get("tperseg")
+                demon_freq_filter = demon_spectrogram_config.get("frequencyFilter")
+                demon_hfilt_length = demon_spectrogram_config.get("horizontalFilterLength")
+                demon_window = demon_spectrogram_config.get("window")
+                '''
+                print(f"Demon Spectrogram Config:")
+                print(f"  demonSampleFrequency: {demon_sample_frequency}")
+                print(f"  tperseg: {demon_tperseg}")
+                print(f"  frequencyFilter: {demon_freq_filter}")
+                print(f"  horizontalFilterLength: {demon_hfilt_length}")
+                print(f"  window: {demon_window}")
+                '''
+            else:
+                print("Demon spectrogram config is not available")
 
             # TODO: Rewrite so that these values are only calculated once, not very expensive operations anyway
             required_samples = calculate_required_samples(hfilt_length, recording_config["sampleRate"])
             bytes_per_sample = calculate_bytes_per_sample(recording_config["bitDepth"], recording_config["channels"])
             required_buffer_size = required_samples * bytes_per_sample
 
-            audio_buffer += data # concat recvd audio, build buffer
+            demon_required_samples = calculate_required_samples(demon_hfilt_length, recording_config["sampleRate"])
+            demon_required_buffer_size = demon_required_samples * bytes_per_sample
+            
+            '''concat recvd audio, build buffer'''
+            spectrogram_audio_buffer += data
+            demon_spectrogram_audio_buffer += data
 
-            print(f"Current audio_buffer length: {len(audio_buffer)}")
-            print(f"Required buffer size to send: {required_buffer_size}")
-
-            if len(audio_buffer) >= required_buffer_size:
+            if len(spectrogram_audio_buffer) >= required_buffer_size:
                 
-                print("Buffer filled, generating and sending data...")
+                print("Spectrogram buffer filled, generating and sending data...")
                 '''Adjusting the audio buffer so the amount of audio processed is always the same relative to required_buffer_size'''
-                adjusted_audio_buffer, audio_buffer = audio_buffer[:required_buffer_size], audio_buffer[required_buffer_size:]
-                frequencies, times, spectrogram_db = spectrogram_data_generator.create_spectrogram_data(adjusted_audio_buffer, recording_config["sampleRate"], recording_config["channels"], tperseg, freq_filter, hfilt_length, window, recording_config["bitDepth"])
+                adjusted_spectrogram_audio_buffer, spectrogram_audio_buffer = spectrogram_audio_buffer[:required_buffer_size], spectrogram_audio_buffer[required_buffer_size:]
+                frequencies, times, spectrogram_db = spectrogram_data_generator.create_spectrogram_data(adjusted_spectrogram_audio_buffer, recording_config["sampleRate"], recording_config["channels"], tperseg, freq_filter, hfilt_length, window, recording_config["bitDepth"])
 
                 '''We flatten the spectrogram_db matrix since it will we a matrix with only one column'''
                 data_dict = {
@@ -220,11 +256,32 @@ async def forward_to_frontend(data):
                     "times": times,
                     "spectrogramDb": np.ravel(spectrogram_db).tolist()
                 }
-               
+                print(f"SPECTROGRAM INTENSITIES: {data_dict['spectrogramDb']}")
                 data_json = json.dumps(data_dict)
-                print("Sending data...")
+                print("Sending spectrogram data...")
                 await clients['spectrogram_client'].send(data_json)
-                print("Data sent...")                                                                                                                                                                            
+                print("Spectrogram data sent...")  
+
+            if len(demon_spectrogram_audio_buffer) >= demon_required_buffer_size:
+
+                print("Demon spectrogram buffer filled, generating and sending data...")
+                '''Adjusting the audio buffer so the amount of audio processed is always the same relative to required_buffer_size'''
+                adjusted_demon_spectrogram_audio_buffer, demon_spectrogram_audio_buffer = demon_spectrogram_audio_buffer[:demon_required_buffer_size], demon_spectrogram_audio_buffer[demon_required_buffer_size:]
+                demon_frequencies, demon_times, demon_spectrogram_db = spectrogram_data_generator.create_demon_spectrogram_data(adjusted_demon_spectrogram_audio_buffer, recording_config["sampleRate"], demon_sample_frequency, recording_config["channels"], demon_tperseg, demon_freq_filter, demon_hfilt_length, demon_window, recording_config["bitDepth"])
+
+                '''We flatten the demon_spectrogram_db matrix since it will we a matrix with only one column'''
+                demon_data_dict = {
+                    "demonFrequencies": demon_frequencies,
+                    "demonTimes": demon_times,
+                    "demonSpectrogramDb": np.ravel(demon_spectrogram_db).tolist()
+                }
+                
+                print(f"DEMON INTENSITIES: {demon_data_dict['demonSpectrogramDb']}")
+
+                demon_data_json = json.dumps(demon_data_dict)
+                print("Sending demon spectrogram data...")
+                await clients['spectrogram_client'].send(demon_data_json)
+                print("Demon spectrogram data sent...")                                                                                                                                                                 
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
             if 'spectrogram_client' in clients:

@@ -1,6 +1,7 @@
 from scipy import signal
 import numpy as np
-from utils import spec_hfilt2, medfilt_vertcal_norm
+from scipy.signal import hilbert
+from utils import average_filter, spec_hfilt2, medfilt_vertcal_norm
 
 '''
 
@@ -10,39 +11,10 @@ by the wav-chunks recieved from the PI
 '''
 class SpectrogramDataGenerator:
     
-    window_type: str
-    n_segment: int
-    color_scale_min: int
-    max_displayed_frequency: int
-    
     # Constructor with default values
     def __init__(self):
-        self.window_type = "hann"
-        self.n_segment= 256
-        self.color_scale_min = -40
-        self.max_displayed_frequency = 1000
+        pass
     
-    def process_audio_chunk(self, pcm_data: bytes, sample_rate: int, bit_depth: int = 16, channels: int = 1):
-
-        if bit_depth == 16:
-            samples = np.frombuffer(pcm_data, dtype=np.int16)
-        else:
-            raise ValueError(f"Unsupported bit depth: {bit_depth}")
-
-        if channels > 1:
-            samples = samples.reshape(-1, channels)
-
-            # First channel
-            samples = samples[:, 0]
-
-        # Removes DC offset and noramlize
-        samples = samples - np.mean(samples)
-
-        frequencies, times, spectrogram = signal.spectrogram(samples, sample_rate, window=self.window_type, nperseg=self.n_segment, detrend=False)
-        sx_db = 10 * np.log10(spectrogram/spectrogram.max())
-
-        return frequencies.tolist(), times.tolist(), sx_db.tolist()
-
     # hfilt_length determines the minimum length of the audio signal to be supplied to the function
     # Maybe create an in-memory wav file inside here before passing to signal.spectrogram for simplicity, adds a
     # bit of overhead, but it can be afforded
@@ -87,9 +59,6 @@ class SpectrogramDataGenerator:
             # PCM data is already mono, no need to reshape
             mono_signal = samples
 
-        print("LENGTHOF SAMPLES: ", str(len(samples)))
-        print("LENGTH OF MONO SAMPLES: ", str(len(mono_signal)))
-        
         # Calculate spectrogram
         nperseg=int(tperseg*sample_rate)
         f, t, sx = signal.spectrogram(mono_signal, sample_rate, window=window, nperseg=nperseg, detrend=False)
@@ -97,11 +66,59 @@ class SpectrogramDataGenerator:
         sx_db = 10*np.log10(sx_norm)   # Convert to dB
         sx_db, f, t = spec_hfilt2(sx_db,f,t,window_length=hfilt_length)
 
-        print("nperseg:", nperseg)
-        print("noverlap:", nperseg // 2)
-        print("Spectrogram shape:", sx.shape)
-        print("Time bins length:", len(t))
-        print("Shape of sx_db: ", sx_db.shape)
-
         return f.tolist(), t.tolist(), sx_db.tolist()
+    
+    def create_demon_spectrogram_data(self, pcm_data: bytes, sample_rate: float, demon_sample_frequency: int, channels: int, tperseg: float, freq_filt: int, hfilt_length: int, window: str, bit_depth: int = 16):
+        print(f"Length of PCM data: {len(pcm_data)}")
+        
+        if bit_depth == 16:
+            samples = np.frombuffer(pcm_data, dtype=np.int16)
+            print(f"Samples shape after conversion: {samples.shape}")
+        else:
+            raise ValueError(f"Unsupported bit depth: {bit_depth}")
+
+        # Check if the PCM data is stereo (multi-channel) or mono
+        if channels > 1:
+            try:
+                samples = samples.reshape(-1, channels)
+                print(f"Reshaped PCM data into {channels} channels.")
+            except ValueError as e:
+                raise ValueError(f"Error reshaping PCM data. Expected {channels} channels, but got data size {samples.shape[0]}") from e
+            # Convert to mono by averaging channels
+            mono_signal = np.mean(samples, axis=1)
+            print(f"Converted to mono by averaging channels. Mono signal length: {len(mono_signal)}")
+        else:
+            # PCM data is already mono, no need to reshape
+            mono_signal = samples
+            print(f"PCM data is already mono. Signal length: {len(mono_signal)}")
+
+        # RMS data of Hilbert transform
+        kernal_size = int(sample_rate/demon_sample_frequency) 
+        analytic_signal = np.abs(hilbert(mono_signal))**2
+        rms_values = average_filter(analytic_signal, kernal_size)
+        print(f"RMS values computed. Length: {len(rms_values)}")
+
+        # Frequency data calculation
+        nperseg = demon_sample_frequency * int(tperseg)  # Number of samples in time axis to use for each vertical spectrogram column
+        print(f"nperseg calculated: {nperseg}")
+
+        # Generate spectrogram
+        fd_rms, td_rms, sxx_rms = signal.spectrogram(rms_values, demon_sample_frequency,
+                                                    nperseg=nperseg,
+                                                    noverlap=5 * nperseg // 6,
+                                                    window=window)
+        print(f"Spectrogram computed. Frequency bins: {len(fd_rms)}, Time bins: {len(td_rms)}")
+        print(f"Spectrogram shape: {sxx_rms.shape}")
+
+        # Normalize sxx
+        sxx_rms_norm = medfilt_vertcal_norm(spec=sxx_rms, vertical_medfilt_size=freq_filt)
+        print(f"Spectrogram normalization completed. Shape: {sxx_rms_norm.shape}")
+
+        # Apply frequency and time-domain filters
+        sxx_db, fd_rms, td_rms = spec_hfilt2(10 * np.log10(sxx_rms_norm), fd_rms, td_rms, window_length=hfilt_length)
+        print(f"After filtering: Length of sxx_db: {len(sxx_db)}")
+
+        # Return results as lists
+        print(f"Returning values: fd_rms={fd_rms.tolist()}, td_rms={td_rms.tolist()}, sxx_db={sxx_db.tolist()}")
+        return fd_rms.tolist(), td_rms.tolist(), sxx_db.tolist()
             
