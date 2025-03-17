@@ -5,8 +5,8 @@ import wave
 from datetime import datetime
 import uuid
 from aiokafka import AIOKafkaConsumer
-from mongodb_handler import MongoDBHandler
-from minio_handler import upload_file
+from app.services.Database.mongodb_handler import MongoDBHandler
+from app.services.Database.minio_handler import upload_file
 
 
 class AudioEventRecorder:
@@ -223,7 +223,7 @@ async def listen_for_events(recorder):
         print("Started listening for events from narrowband and broadband")
         async for msg in consumer:
             topic = msg.topic
-            threshold_reached = msg.value
+            threshold_reached = bool(int(msg.value))
 
             topic_states[topic] = threshold_reached
             both_threshold_reached = all(topic_states.values())   
