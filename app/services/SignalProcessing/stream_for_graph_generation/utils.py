@@ -61,6 +61,6 @@ def average_filter(signal, window_size):
     return np.mean(signal[:num_samples * window_size].reshape(-1, window_size), axis=1)
 
 # Take a spectrogram matrix containing intensities and a threshold in dB
-# Prøv me default på 9
-def narrowband_detection(spectrogramDb, threshold):
-    return True in (spectrogramDb > threshold)
+# Prøv med default på 9
+def narrowband_detection(spectrogram_db: np.ndarray, threshold: int) -> bool:
+    return np.any(spectrogram_db > threshold)

@@ -14,7 +14,7 @@ const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const dummyData: SpectrogramParameters = {
   tperseg: 2,
   frequencyFilter: 11,
-  horizontalFilterLength: 30,
+  horizontalFilterLength: 15,
   window: 'hamming',
 };
 

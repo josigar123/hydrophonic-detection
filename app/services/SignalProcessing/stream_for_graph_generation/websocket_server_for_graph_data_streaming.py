@@ -1,11 +1,13 @@
 import asyncio
-from aiokafka import AIOKafkaConsumer
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 import numpy as np
 import websockets
 from spectrogram_data_generator import SpectrogramDataGenerator
 from urllib.parse import parse_qs, urlparse
 import json
 import os
+from utils import narrowband_detection
+from kafka import KafkaProducer
 
 '''
 
@@ -44,16 +46,18 @@ recording_config = {}          # This dict holds the most recent recording confi
 
     I recv the message from the broker and write it to a local json file for easy reading
 '''
+
+BOOTSTRAP_SERVERS = '10.0.0.24:9092'
+
 async def consume_recording_config():
     """Async function to consume configuration messages from Kafka before WebSocket server starts."""
     global recording_config
 
     try:
         topic = 'recording-parameters'
-        bootstrap_servers = '10.0.0.24:9092'
         consumer = AIOKafkaConsumer(
             topic,
-            bootstrap_servers=bootstrap_servers,
+            bootstrap_servers=BOOTSTRAP_SERVERS,
             auto_offset_reset='latest',
             enable_auto_commit=False,
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
@@ -82,6 +86,25 @@ async def consume_recording_config():
         print(f"Error consuming configuration: {e}")
         raise
         
+
+'''Function will produce a narrowband detection on the intensities passed and write it to the appropriate kafka topic'''
+async def produce_narrowband_detection_result(spectrogram_db: list[float], threshold: float) -> bool:
+    
+    topic = 'narrowband-detection'
+    bootstrap_servers = '10.0.0.24:9092'
+    producer = AIOKafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS,
+                value_serializer = lambda v: (1 if v else 0).to_bytes(1, byteorder='big'))
+
+    await producer.start()
+    try:
+        is_detection = narrowband_detection(spectrogram_db, threshold)
+        await producer.send(topic, value=is_detection)
+        await producer.flush()
+        print(f"A value of '{is_detection}' was sent to the kafka topic: '{topic}'")
+    finally:
+        await producer.stop()
+
+    return is_detection
 
 # A simple data generation, only with default parameters
 spectrogram_data_generator = SpectrogramDataGenerator()
@@ -206,14 +229,6 @@ async def forward_to_frontend(data):
                 freq_filter = spectrogram_config.get("frequencyFilter")
                 hfilt_length = spectrogram_config.get("horizontalFilterLength")
                 window = spectrogram_config.get("window")
-
-                '''
-                print(f"Spectrogram Config:")
-                print(f"  tperseg: {tperseg}")
-                print(f"  frequencyFilter: {freq_filter}")
-                print(f"  horizontalFilterLength: {hfilt_length}")
-                print(f"  window: {window}")
-                '''
             else:
                 print("Spectrogram config is not available")
             
@@ -223,14 +238,6 @@ async def forward_to_frontend(data):
                 demon_freq_filter = demon_spectrogram_config.get("frequencyFilter")
                 demon_hfilt_length = demon_spectrogram_config.get("horizontalFilterLength")
                 demon_window = demon_spectrogram_config.get("window")
-                '''
-                print(f"Demon Spectrogram Config:")
-                print(f"  demonSampleFrequency: {demon_sample_frequency}")
-                print(f"  tperseg: {demon_tperseg}")
-                print(f"  frequencyFilter: {demon_freq_filter}")
-                print(f"  horizontalFilterLength: {demon_hfilt_length}")
-                print(f"  window: {demon_window}")
-                '''
             else:
                 print("Demon spectrogram config is not available")
 
@@ -251,6 +258,7 @@ async def forward_to_frontend(data):
             spectrogram_audio_buffer += data
             demon_spectrogram_audio_buffer += data
 
+            '''Enough audio data for spectrogram data gen, also performs narrowband detection'''
             if len(spectrogram_audio_buffer) >= required_buffer_size:
                 
                 print("Spectrogram buffer filled, generating and sending data...")
@@ -259,17 +267,24 @@ async def forward_to_frontend(data):
                 frequencies, times, spectrogram_db = spectrogram_data_generator.create_spectrogram_data(adjusted_spectrogram_audio_buffer, recording_config["sampleRate"], recording_config["channels"], tperseg, freq_filter, hfilt_length, window, recording_config["bitDepth"])
 
                 '''We flatten the spectrogram_db matrix since it will we a matrix with only one column'''
+                spectrogram_db_flattened = np.ravel(spectrogram_db)
                 data_dict = {
                     "frequencies": frequencies,
                     "times": times,
-                    "spectrogramDb": np.ravel(spectrogram_db).tolist()
+                    "spectrogramDb": spectrogram_db_flattened.tolist()
                 }
-                print(f"SPECTROGRAM INTENSITIES: {data_dict['spectrogramDb']}")
+
+                print("Performing narrowband detection...")
+                '''Function expects an np.ndarray for efficient vectorized numpy calculations'''
+                is_detection = await produce_narrowband_detection_result(spectrogram_db_flattened, narrowband_threshold)
+
+                if is_detection: print("NARROWBAND DETECTION IN THE SPECTROGRAM DATA")
                 data_json = json.dumps(data_dict)
                 print("Sending spectrogram data...")
                 await clients['spectrogram_client'].send(data_json)
                 print("Spectrogram data sent...")  
 
+            '''Enough audio data for demon spectrogram data gen'''
             if len(demon_spectrogram_audio_buffer) >= demon_required_buffer_size:
 
                 print("Demon spectrogram buffer filled, generating and sending data...")
