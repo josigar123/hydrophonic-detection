@@ -60,6 +60,13 @@ def average_filter(signal, window_size):
     num_samples = len(signal) // window_size  # Determine new length
     return np.mean(signal[:num_samples * window_size].reshape(-1, window_size), axis=1)
 
+def moving_average_padded(signal, window_size=5):
+    pad_size = window_size // 2
+    padded_signal = np.pad(signal, pad_size, mode='edge')  # Repeat edge values
+    kernel = np.ones(window_size) / window_size
+    smoothed = np.convolve(padded_signal, kernel, mode='valid')  # Only keep valid parts
+    return smoothed
+
 # Take a spectrogram matrix containing intensities and a threshold in dB
 # Prøv med default på 9
 def narrowband_detection(spectrogram_db: np.ndarray, threshold: int) -> bool:
