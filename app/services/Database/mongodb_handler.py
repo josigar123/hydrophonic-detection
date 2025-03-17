@@ -3,6 +3,7 @@ from datetime import datetime
 import uuid
 
 
+
 class MongoDBHandler:
     def __init__(self, connection_string, db_name="hydrophone_data"):
         self.client = MongoClient(connection_string)
