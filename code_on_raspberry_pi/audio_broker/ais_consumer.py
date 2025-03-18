@@ -3,16 +3,8 @@ import asyncio
 import json
 from datetime import datetime
 from aiokafka import AIOKafkaConsumer
-from mongodb_handler import MongoDBHandler 
-
-with open("mongodb_config.json", "r") as file:
-    mongo_config = json.load(file)
 
 
-db_handler = MongoDBHandler(
-    connection_string=mongo_config["connection_string"],
-    db_name=mongo_config["database"]
-)
 '''
 
 This file subscribes to an ais-stream topic on a kafka broker

@@ -5,9 +5,9 @@ import wave
 from datetime import datetime
 import uuid
 from aiokafka import AIOKafkaConsumer
+from datetime import timedelta
 from app.services.Database.mongodb_handler import MongoDBHandler
 from app.services.Database.minio_handler import upload_file
-
 
 class AudioEventRecorder:
     def __init__(self, config_file="recording_parameters.json", mongodb_config="mongodb_config.json"):
@@ -116,12 +116,18 @@ class AudioEventRecorder:
         
         print(f"WAV file created: {filename}")
 
+        TIME_BUFFER_BEFORE = 15
+        TIME_BUFFER_AFTER = 15
+
         end_time = datetime.now()
+        buffer_start_time = event_data["start_time"] - timedelta(seconds=TIME_BUFFER_BEFORE)
+        buffer_end_time = end_time + timedelta(seconds=TIME_BUFFER_AFTER)
+
         duration = (end_time - event_data["start_time"]).total_seconds()
 
         relevant_ais_data = [] 
         for ais_entry in self.ais_buffer[event_data["ais_start_index"]:]:
-            if event_data["start_time"] <= ais_entry.get("timestamp", datetime.now()) <= end_time:
+            if buffer_start_time <= ais_entry.get("timestamp", datetime.now()) <= buffer_end_time:
                 relevant_ais_data.append(ais_entry)
 
         try:
