@@ -8,6 +8,7 @@ import {
 } from '../Hooks/useSpectrogramStream';
 import {
   AxisScrollStrategies,
+  AxisTickStrategies,
   ChartXY,
   ColorCSS,
   emptyLine,
@@ -17,18 +18,19 @@ import {
   LUT,
   PalettedFill,
   Themes,
-} from '@arction/lcjs';
+} from '@lightningchart/lcjs';
 import { Button } from '@heroui/button';
 import recordingConfig from '../../../../configs/recording_parameters.json';
+import lightningchartLicense from '../lightningchartLicense.json';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 
 const sampleRate = recordingConfig['sampleRate'];
 
 const dummyData: SpectrogramParameters = {
-  tperseg: 2,
+  tperseg: 0.1,
   frequencyFilter: 11,
-  horizontalFilterLength: 5,
+  horizontalFilterLength: 2,
   window: 'hamming',
 };
 
@@ -57,9 +59,10 @@ const resolution = 1 + (sampleRate * dummyData.tperseg) / 2;
 
 /*heatmapMinTimeStepMs is the minimum time step to be displayed*/
 // Smaller values mean more RAM ang GPU usage
-const heatmapMinTimeStepMs = 500; //(0.5 * 1000) / sampleRate;
+const heatmapMinTimeStepMs = 500; //(10 * 1000) / sampleRate;
+const viewMs = 1000 * 60 * 20; // This defines the time windown that will be shown at all along x-axis
 
-const ScrollingHeatmapTest = () => {
+const ScrollingSpectrogram = () => {
   const chartRef = useRef<ChartXY | null>(null);
   const heatmapSeriesRef =
     useRef<HeatmapScrollingGridSeriesIntensityValues | null>(null);
@@ -74,36 +77,35 @@ const ScrollingHeatmapTest = () => {
     const container = document.getElementById(id) as HTMLDivElement;
     if (!container) return;
 
-    const lc = lightningChart({
-      license: 'KEY',
+    // Creating the XY chart for plotting the heatmap
+    const chart = lightningChart({
+      license: lightningchartLicense['license'],
       licenseInformation: {
         appTitle: 'LightningChart JS Trial',
         company: 'LightningChart Ltd.',
       },
-    });
+    })
+      .ChartXY({
+        defaultAxisX: { type: 'linear-highPrecision' },
+        theme: Themes.darkGold,
+        container,
+      })
+      .setTitle('Spectrogram');
 
-    const chart = lc.ChartXY({
-      defaultAxisX: { type: 'linear' },
-      theme: Themes.darkGold,
-      container,
-    });
-
-    chart.setTitle('Spectrogram');
-
-    const viewMs = 1000 * 10; // This defines the time windown that will be shown at all along x-axis
     chart.axisX
       .setScrollStrategy(AxisScrollStrategies.progressive)
       .setDefaultInterval((state) => ({
         end: state.dataMax,
         start: (state.dataMax ?? 0) - viewMs,
         stopAxisAfter: false,
-      }));
+      }))
+      .setTickStrategy(AxisTickStrategies.DateTime);
 
     chart.axisY
-      .setTitle('Frequency [Hz]')
+      .setTitle('Frequency')
+      .setUnits('Hz')
       .setInterval({ start: 0, end: resolution });
 
-    // LUT for mimicking matplotlib's 'inferno' colour map
     const lut = new LUT({
       percentageValues: true, // Use percentage for value/color mapping
       interpolate: true, // Smooth interpolation between colors
@@ -134,7 +136,7 @@ const ScrollingHeatmapTest = () => {
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)
       .setDataCleaning({
-        minDataPointCount: 100,
+        minDataPointCount: 1000,
       });
 
     chart
@@ -151,7 +153,6 @@ const ScrollingHeatmapTest = () => {
     return () => {
       heatmapSeriesRef.current?.dispose();
       chartRef.current?.dispose();
-      lc.dispose();
       heatmapSeriesRef.current = null;
       chartRef.current = null;
     };
@@ -164,6 +165,7 @@ const ScrollingHeatmapTest = () => {
         heatmapSeriesRef.current?.setStart({ x: timestamp, y: 0 });
       }
 
+      // Keep timestamp in milliseconds (don't convert to seconds)
       const iSample = Math.round(
         (timestamp - tFirstSampleRef.current) / heatmapMinTimeStepMs
       );
@@ -185,18 +187,18 @@ const ScrollingHeatmapTest = () => {
     )
       return;
 
+    // Use timestamp in milliseconds to better match the example code
+    const currentTimeStamp = Date.now();
+
     if (!prevTimeStampRef.current) {
-      prevTimeStampRef.current = Date.now();
+      prevTimeStampRef.current = currentTimeStamp;
+      return; // Skip first data point to establish time reference
     }
 
-    const currentTimeStamp = Date.now();
-    const timestampDifference = currentTimeStamp - prevTimeStampRef.current;
-    const timeStampInSeconds = timestampDifference / 1000;
     const sample = spectrogramData.spectrogramDb;
+    handleIncomingData(currentTimeStamp, sample);
 
     prevTimeStampRef.current = currentTimeStamp;
-
-    handleIncomingData(timeStampInSeconds, sample);
   }, [handleIncomingData, isConnected, spectrogramData]);
 
   return (
@@ -208,4 +210,4 @@ const ScrollingHeatmapTest = () => {
   );
 };
 
-export default ScrollingHeatmapTest;
+export default ScrollingSpectrogram;
