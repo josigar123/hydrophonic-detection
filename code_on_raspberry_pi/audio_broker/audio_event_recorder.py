@@ -6,8 +6,17 @@ from datetime import datetime
 import uuid
 from aiokafka import AIOKafkaConsumer
 from datetime import timedelta
-from app.services.Database.mongodb_handler import MongoDBHandler
-from app.services.Database.minio_handler import upload_file
+import sys
+# Get the absolute path to the project root
+current_dir = os.path.dirname(os.path.abspath(__file__))  # audio_broker directory
+project_root = os.path.dirname(os.path.dirname(current_dir))  # hydrophonic-detection directory
+
+# Import the modules directly using their absolute file paths
+sys.path.insert(0, os.path.join(project_root, "app", "services", "Database"))
+
+# Now import the modules directly
+from mongodb_handler import MongoDBHandler
+from minio_handler import upload_file
 
 class AudioEventRecorder:
     def __init__(self, config_file="recording_parameters.json", mongodb_config="mongodb_config.json"):
@@ -19,6 +28,9 @@ class AudioEventRecorder:
 
         with open("broker_info.json", "r") as file:
             self.broker_info = json.load(file)
+
+        with open("aiscatcher_config.json", "r") as file:
+            self.broker_info_ais = json.load(file)
 
         self.db_handler = MongoDBHandler(self.mongodb_config["connection_string"])
 
@@ -179,14 +191,14 @@ class AudioEventRecorder:
 
 async def consume_audio(recorder):
     consumer = AIOKafkaConsumer(
-        recorder.broker_info["topicName"],
-        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['brokerPort']}",
+        "audio-stream",
+        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
         auto_offset_reset="latest"
     )
 
     await consumer.start()
     try:
-        print(f"Started consuming audio from {recorder.broker_info['topicName']}")
+        print(f"Started consuming audio from audio-stream")
         async for msg in consumer:
             recorder.add_audio_chunk(msg.value)
     finally:
@@ -194,8 +206,8 @@ async def consume_audio(recorder):
 
 async def consume_ais_data(recorder):
     consumer = AIOKafkaConsumer(
-        "ais-data",
-        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['brokerPort']}",
+        "ais-log",
+        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
         auto_offset_reset="latest",
         value_deserializer=lambda m: json.loads(m.decode("utf-8"))
     )
@@ -212,7 +224,7 @@ async def listen_for_events(recorder):
     consumer = AIOKafkaConsumer(
         "narrowband-detection",
         "broadband-detection",
-        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['brokerPort']}",
+        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
         auto_offset_reset="latest",
         value_deserializer=lambda m: json.loads(m.decode("utf-8"))
     )

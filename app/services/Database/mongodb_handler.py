@@ -179,3 +179,4 @@ class MongoDBHandler:
     def close(self):
         if self.client:
             self.client.close()
+
