@@ -1,78 +1,133 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
+export interface SpectrogramParameters {
+  tperseg: number;
+  frequencyFilter: number;
+  horizontalFilterLength: number;
+  window: string;
+}
+
+export interface DemonSpectrogramParameters {
+  demonSampleFrequency: number;
+  tperseg: number;
+  frequencyFilter: number;
+  horizontalFilterLength: number;
+  window: string;
+}
+
+export interface NarrowbandDetectionThresholdParameterDb {
+  threshold: number;
+}
+
+export interface InitialDemonAndSpectrogramConfigurations {
+  config: {
+    spectrogramConfig: SpectrogramParameters;
+    demonSpectrogramConfig: DemonSpectrogramParameters;
+    narrowbandDetectionThresholdDb: NarrowbandDetectionThresholdParameterDb;
+  };
+}
+
 export function useSpectrogramStream(url: string, autoConnect = false) {
   const [spectrogramData, setSpectrogramData] = useState({
     frequencies: [],
     times: [],
     spectrogramDb: [],
   });
+
+  const [demonSpectrogramData, setDemonSpectrogramData] = useState({
+    demonFrequencies: [],
+    demonTimes: [],
+    demonSpectrogramDb: [],
+  });
+
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const shouldConnectRef = useRef(autoConnect);
 
-  const connect = useCallback(() => {
-    if (
-      socketRef.current &&
-      (socketRef.current.readyState === WebSocket.OPEN ||
-        socketRef.current.readyState === WebSocket.CONNECTING)
-    ) {
-      return;
-    }
+  const connect = useCallback(
+    (initialMessage?: InitialDemonAndSpectrogramConfigurations) => {
+      if (
+        socketRef.current &&
+        (socketRef.current.readyState === WebSocket.OPEN ||
+          socketRef.current.readyState === WebSocket.CONNECTING)
+      ) {
+        return;
+      }
 
-    setError(null);
+      setError(null);
 
-    try {
-      const socket = new WebSocket(url);
-      socketRef.current = socket;
+      try {
+        const socket = new WebSocket(url);
+        socketRef.current = socket;
 
-      socket.onopen = () => {
-        console.log('Connected to websocket:', url);
-        setIsConnected(true);
-        setError(null);
-      };
+        socket.onopen = () => {
+          console.log('Connected to websocket:', url);
+          setIsConnected(true);
+          setError(null);
 
-      socket.onmessage = (event) => {
-        try {
-          console.log('Data recieved: ', event.data);
-          const data = JSON.parse(event.data);
-          setSpectrogramData({
-            frequencies: data.frequencies || [],
-            times: data.times || [],
-            spectrogramDb: data.spectrogramDb || [],
-          });
-        } catch (error) {
-          console.error('Error processing spectrogram data:', error);
-          setError('Failed to process spectrogram data');
-        }
-      };
+          if (initialMessage) {
+            const messageString = JSON.stringify(initialMessage);
+            socket.send(messageString);
+          }
+        };
 
-      socket.onclose = (event) => {
-        console.log(
-          `Disconnected from ${url}. Code: ${event.code}, Reason: ${event.reason}`
-        );
-        setIsConnected(false);
-        socketRef.current = null;
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
 
-        if (shouldConnectRef.current) {
-          console.log('Attempting to reconnect in 3 seconds...');
-          setTimeout(() => {
-            if (shouldConnectRef.current) {
-              connect();
+            if (data.spectrogramDb) {
+              setSpectrogramData({
+                frequencies: data.frequencies || [],
+                times: data.times || [],
+                spectrogramDb: data.spectrogramDb || [],
+              });
             }
-          }, 3000);
-        }
-      };
 
-      socket.onerror = (event) => {
-        console.error('WebSocket error:', event);
-        setError('WebSocket connection error');
-      };
-    } catch (error) {
-      console.error('Error creating WebSocket:', error);
-      setError('Failed to create WebSocket connection');
-    }
-  }, [url]);
+            if (data.demonSpectrogramDb) {
+              setDemonSpectrogramData({
+                demonFrequencies: data.demonFrequencies || [],
+                demonTimes: data.demonTimes || [],
+                demonSpectrogramDb: data.demonSpectrogramDb || [],
+              });
+            }
+          } catch (error) {
+            console.error(
+              'Error parsing message in useSpectrogramStream:',
+              error
+            );
+            setError('Error parsing message in useSpectrogramStream');
+          }
+        };
+
+        socket.onclose = (event) => {
+          console.log(
+            `Disconnected from ${url}. Code: ${event.code}, Reason: ${event.reason}`
+          );
+          setIsConnected(false);
+          socketRef.current = null;
+
+          if (shouldConnectRef.current) {
+            console.log('Attempting to reconnect in 3 seconds...');
+            setTimeout(() => {
+              if (shouldConnectRef.current) {
+                connect();
+              }
+            }, 3000);
+          }
+        };
+
+        socket.onerror = (event) => {
+          console.error('WebSocket error:', event);
+          setError('WebSocket connection error');
+        };
+      } catch (error) {
+        console.error('Error creating WebSocket:', error);
+        setError('Failed to create WebSocket connection');
+      }
+    },
+    [url]
+  );
 
   const disconnect = useCallback(() => {
     shouldConnectRef.current = false;
@@ -101,6 +156,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
 
   return {
     spectrogramData,
+    demonSpectrogramData,
     isConnected,
     error,
     connect,

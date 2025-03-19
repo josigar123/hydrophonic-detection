@@ -1,0 +1,4 @@
+{
+    "connection_string": "mongodb+srv://username:password@metadata.2dmou.mongodb.net/?retryWrites=true&w=majority&appName=metadata",
+    "database": "metadata"
+}
