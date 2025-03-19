@@ -384,7 +384,7 @@ def BroadBand_from_data(Sx, Fs:int ,hilbert_win: int, window_size:float ,trigger
         plt.show()  # Show the plot
     return Trigger_time
 
-def BB_data(Sx, Fs, hilbert_win, window_size, Threshold):
+def BB_data(Sx, Fs, hilbert_win, window_size):
     # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
     # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
     envelope = moving_average_padded(np.square(np.abs(hilbert(Sx))),hilbert_win)
@@ -398,8 +398,25 @@ def BB_data(Sx, Fs, hilbert_win, window_size, Threshold):
     signal_med = moving_average_padded(DS_Sx, kernel_size)  # Apply median filter for further noise removal
 
     BB_sig = 10*np.log10(signal_med)
-    t = np.linspace(0,len(BB_sig)/Fs,len(BB_sig))
+    t = np.linspace(0,len(BB_sig)/DS_Fs,len(BB_sig))
     return BB_sig, t
+
+def BB_trigger(sx,fs,Trigger_val,window_size):
+    """
+    INPUT:
+        sx: 1D array of float - signal in time domain
+        fs: samplerate of sx
+        Trigger_val: desired trigger threshold in dB
+        window_size: Seconds of window to analyse
+
+    OUTPUT:
+        Bool: True if last (window_size) seconds surpasses threshold
+
+    """
+    min_val = np.min(sx)
+    last_win = sx[-window_size*fs:]
+
+    return True in (last_win > min_val+Trigger_val)
 
 def DEMON_from_file(input_file, Fs, Fds,freq_filt ,fmax=100, s_max=10, window="hamming"):
     #DEMON 2
