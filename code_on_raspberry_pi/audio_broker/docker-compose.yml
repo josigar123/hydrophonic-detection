@@ -25,7 +25,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
       # Topics that are created on startup
-      KAFKA_CREATE_TOPICS: "audio-stream:1:1,recording-configurations:1:1:compact"
+      KAFKA_CREATE_TOPICS: "audio-stream:1:1,recording-configurations:1:1:compact,narrowband-detection:1:1,broadband-detection:1:1,ais-data:1:1"
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
@@ -166,3 +166,51 @@ services:
       KAFKA_REST_BOOTSTRAP_SERVERS: "broker:29092"
       KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    ports:
+    - "9000:9000"
+    - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+  
+  mongodb:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "9002:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_URL: mongodb://root:password@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+
+  aiscatcher:
+    image: ghcr.io/jvde-github/ais-catcher:edge
+    privileged: true
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    ports:
+      - "8100:8100"
+      - "8110:8110"
+    command: "-v -N 8110 -S 8110 -F -f /data/ais_data.nmea"
+    volumes:
+      - ./data:/data
+
+volumes: 
+  minio_data:

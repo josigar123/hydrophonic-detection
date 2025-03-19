@@ -1,0 +1,6 @@
+{
+    "access_key": "your-aws-access-key",
+    "secret_key": "your-aws-secret-key",
+    "bucket_name": "your-s3-bucket-name",
+    "endpoint": "https://s3.amazonaws.com"
+}
