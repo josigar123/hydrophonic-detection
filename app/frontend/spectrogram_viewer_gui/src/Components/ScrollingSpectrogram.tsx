@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useCallback } from 'react';
+import { useEffect, useId, useRef, useCallback, useState } from 'react';
 import {
   DemonSpectrogramParameters,
   InitialDemonAndSpectrogramConfigurations,
@@ -17,7 +17,9 @@ import {
   lightningChart,
   LUT,
   PalettedFill,
+  regularColorSteps,
   Themes,
+  ColorPalettes,
 } from '@lightningchart/lcjs';
 import { Button } from '@heroui/button';
 import recordingConfig from '../../../../configs/recording_parameters.json';
@@ -30,7 +32,7 @@ const sampleRate = recordingConfig['sampleRate'];
 const dummyData: SpectrogramParameters = {
   tperseg: 0.1,
   frequencyFilter: 11,
-  horizontalFilterLength: 2,
+  horizontalFilterLength: 1,
   window: 'hamming',
 };
 
@@ -56,11 +58,12 @@ const cnfg: InitialDemonAndSpectrogramConfigurations = {
 
 // Represents the number of frequency bins (values to fill along the y-axis)
 const resolution = 1 + (sampleRate * dummyData.tperseg) / 2;
+const nyquistFrequency = sampleRate / 2;
 
 /*heatmapMinTimeStepMs is the minimum time step to be displayed*/
 // Smaller values mean more RAM ang GPU usage
 const heatmapMinTimeStepMs = 500; //(10 * 1000) / sampleRate;
-const viewMs = 1000 * 60 * 20; // This defines the time windown that will be shown at all along x-axis
+const viewMs = 1000 * 60 * 5; // This defines the time windown that will be shown at all along x-axis
 
 const ScrollingSpectrogram = () => {
   const chartRef = useRef<ChartXY | null>(null);
@@ -92,6 +95,9 @@ const ScrollingSpectrogram = () => {
       })
       .setTitle('Spectrogram');
 
+    const minFreq = 0; // We are not interested in frequencies lt 0
+    const maxFreq = nyquistFrequency; // Nyquist frequency as a default max for simplicity
+
     chart.axisX
       .setScrollStrategy(AxisScrollStrategies.progressive)
       .setDefaultInterval((state) => ({
@@ -104,25 +110,37 @@ const ScrollingSpectrogram = () => {
     chart.axisY
       .setTitle('Frequency')
       .setUnits('Hz')
-      .setInterval({ start: 0, end: resolution });
+      .setInterval({ start: minFreq, end: maxFreq });
 
+    // const lut = new LUT({
+    //   percentageValues: true, // Use percentage for value/color mapping
+    //   interpolate: true, // Smooth interpolation between colors
+    //   units: 'dB',
+    //   steps: [
+    //     { value: 0.0, color: ColorCSS('#000004') }, // Dark purple (low intensity)
+    //     { value: 0.1, color: ColorCSS('#1d114f') }, // Darker blue
+    //     { value: 0.2, color: ColorCSS('#6a2075') }, // Purple
+    //     { value: 0.3, color: ColorCSS('#9e3d6f') }, // Pinkish purple
+    //     { value: 0.4, color: ColorCSS('#d85e37') }, // Orange-red
+    //     { value: 0.5, color: ColorCSS('#f9a62a') }, // Yellow-orange
+    //     { value: 0.6, color: ColorCSS('#fdcc2b') }, // Light yellow
+    //     { value: 0.7, color: ColorCSS('#f8d62c') }, // Bright yellow
+    //     { value: 0.8, color: ColorCSS('#f1e16d') }, // Pale yellow
+    //     { value: 0.9, color: ColorCSS('#f6f5d2') }, // Very light yellow
+    //     { value: 1.0, color: ColorCSS('#fcfdbf') }, // Almost white (high intensity)
+    //   ],
+    // });
+
+    const theme = chart.getTheme();
+    if (!theme.examples) return;
     const lut = new LUT({
-      percentageValues: true, // Use percentage for value/color mapping
-      interpolate: true, // Smooth interpolation between colors
+      steps: regularColorSteps(
+        -60,
+        0,
+        Themes.darkGold.examples.intensityColorPalette
+      ),
       units: 'dB',
-      steps: [
-        { value: 0.0, color: ColorCSS('#000004') }, // Dark purple (low intensity)
-        { value: 0.1, color: ColorCSS('#1d114f') }, // Darker blue
-        { value: 0.2, color: ColorCSS('#6a2075') }, // Purple
-        { value: 0.3, color: ColorCSS('#9e3d6f') }, // Pinkish purple
-        { value: 0.4, color: ColorCSS('#d85e37') }, // Orange-red
-        { value: 0.5, color: ColorCSS('#f9a62a') }, // Yellow-orange
-        { value: 0.6, color: ColorCSS('#fdcc2b') }, // Light yellow
-        { value: 0.7, color: ColorCSS('#f8d62c') }, // Bright yellow
-        { value: 0.8, color: ColorCSS('#f1e16d') }, // Pale yellow
-        { value: 0.9, color: ColorCSS('#f6f5d2') }, // Very light yellow
-        { value: 1.0, color: ColorCSS('#fcfdbf') }, // Almost white (high intensity)
-      ],
+      interpolate: true,
     });
 
     const palettedFill = new PalettedFill({ lut, lookUpProperty: 'value' });
@@ -132,7 +150,10 @@ const ScrollingSpectrogram = () => {
         scrollDimension: 'columns',
         resolution: resolution,
       })
-      .setStep({ x: heatmapMinTimeStepMs, y: 1 })
+      .setStep({
+        x: heatmapMinTimeStepMs,
+        y: (maxFreq - minFreq) / (resolution - 1), // Assumes uniformly distributed frequency bins
+      })
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)
       .setDataCleaning({
@@ -159,10 +180,12 @@ const ScrollingSpectrogram = () => {
   }, [id]);
 
   const handleIncomingData = useCallback(
-    (timestamp: number, sample: number[]) => {
+    (timestamp: number, sample: number[], frequencies: number[]) => {
       if (tFirstSampleRef.current === null) {
         tFirstSampleRef.current = timestamp;
-        heatmapSeriesRef.current?.setStart({ x: timestamp, y: 0 });
+
+        const minFreq = frequencies[0] || 0;
+        heatmapSeriesRef.current?.setStart({ x: timestamp, y: minFreq });
       }
 
       // Keep timestamp in milliseconds (don't convert to seconds)
@@ -196,7 +219,8 @@ const ScrollingSpectrogram = () => {
     }
 
     const sample = spectrogramData.spectrogramDb;
-    handleIncomingData(currentTimeStamp, sample);
+    const frequencies = spectrogramData.frequencies;
+    handleIncomingData(currentTimeStamp, sample, frequencies);
 
     prevTimeStampRef.current = currentTimeStamp;
   }, [handleIncomingData, isConnected, spectrogramData]);

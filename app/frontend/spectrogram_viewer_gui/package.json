@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@arction/lcjs": "^5.2.1",
     "@heroui/accordion": "^2.2.8",
     "@heroui/button": "^2.2.10",
     "@heroui/dropdown": "^2.3.10",
@@ -31,8 +30,6 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
-    "scichart": "^3.5.727",
-    "scichart-react": "^0.1.9",
     "smoothie": "^1.36.1"
   },
   "devDependencies": {
