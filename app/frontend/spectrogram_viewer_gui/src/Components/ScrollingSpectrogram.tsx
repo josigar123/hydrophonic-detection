@@ -1,16 +1,8 @@
-import { useEffect, useId, useRef, useCallback, useState } from 'react';
-import {
-  DemonSpectrogramParameters,
-  InitialDemonAndSpectrogramConfigurations,
-  NarrowbandDetectionThresholdParameterDb,
-  SpectrogramParameters,
-  useSpectrogramStream,
-} from '../Hooks/useSpectrogramStream';
+import { useEffect, useId, useRef, useCallback } from 'react';
 import {
   AxisScrollStrategies,
   AxisTickStrategies,
   ChartXY,
-  ColorCSS,
   emptyLine,
   HeatmapScrollingGridSeriesIntensityValues,
   LegendBoxBuilders,
@@ -19,60 +11,37 @@ import {
   PalettedFill,
   regularColorSteps,
   Themes,
-  ColorPalettes,
 } from '@lightningchart/lcjs';
-import { Button } from '@heroui/button';
-import recordingConfig from '../../../../configs/recording_parameters.json';
 import lightningchartLicense from '../lightningchartLicense.json';
 
-const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
+interface SpectrogramData {
+  frequencies: number[];
+  times: number[];
+  spectrogramDb: number[];
+}
 
-const sampleRate = recordingConfig['sampleRate'];
+interface SpectrogramProps {
+  spectrogramData: SpectrogramData; // Contains all necessary spectrogram data
+  windowInMin: number; // how much data the window will hold in time
+  resolution: number; // Number of frequency bins
+  heatmapMinTimeStepMs: number /*heatmapMinTimeStepMs is the minimum time step to be displayed*/;
+  maxFrequency: number;
+  minimumFrequency: number;
+}
 
-const dummyData: SpectrogramParameters = {
-  tperseg: 0.1,
-  frequencyFilter: 11,
-  horizontalFilterLength: 1,
-  window: 'hamming',
-};
-
-const demonDummyData: DemonSpectrogramParameters = {
-  demonSampleFrequency: 200,
-  tperseg: 2,
-  frequencyFilter: 9,
-  horizontalFilterLength: 20,
-  window: 'hamming',
-};
-
-const narrowbandDummyData: NarrowbandDetectionThresholdParameterDb = {
-  threshold: 9,
-};
-
-const cnfg: InitialDemonAndSpectrogramConfigurations = {
-  config: {
-    spectrogramConfig: dummyData,
-    demonSpectrogramConfig: demonDummyData,
-    narrowbandDetectionThresholdDb: narrowbandDummyData,
-  },
-};
-
-// Represents the number of frequency bins (values to fill along the y-axis)
-const resolution = 1 + (sampleRate * dummyData.tperseg) / 2;
-const nyquistFrequency = sampleRate / 2;
-
-/*heatmapMinTimeStepMs is the minimum time step to be displayed*/
-// Smaller values mean more RAM ang GPU usage
-const heatmapMinTimeStepMs = 500; //(10 * 1000) / sampleRate;
-const viewMs = 1000 * 60 * 5; // This defines the time windown that will be shown at all along x-axis
-
-const ScrollingSpectrogram = () => {
+const ScrollingSpectrogram = ({
+  spectrogramData,
+  windowInMin,
+  resolution,
+  heatmapMinTimeStepMs,
+  maxFrequency,
+  minimumFrequency,
+}: SpectrogramProps) => {
   const chartRef = useRef<ChartXY | null>(null);
   const heatmapSeriesRef =
     useRef<HeatmapScrollingGridSeriesIntensityValues | null>(null);
   const tFirstSampleRef = useRef<number | null>(null);
   const id = useId();
-  const { spectrogramData, isConnected, connect, disconnect } =
-    useSpectrogramStream(websocketUrl, false);
 
   const prevTimeStampRef = useRef<number | null>(null);
 
@@ -95,8 +64,7 @@ const ScrollingSpectrogram = () => {
       })
       .setTitle('Spectrogram');
 
-    const minFreq = 0; // We are not interested in frequencies lt 0
-    const maxFreq = nyquistFrequency; // Nyquist frequency as a default max for simplicity
+    const viewMs = 1000 * 60 * windowInMin; // This defines the time windown that will be shown at all along x-axis
 
     chart.axisX
       .setScrollStrategy(AxisScrollStrategies.progressive)
@@ -110,7 +78,7 @@ const ScrollingSpectrogram = () => {
     chart.axisY
       .setTitle('Frequency')
       .setUnits('Hz')
-      .setInterval({ start: minFreq, end: maxFreq });
+      .setInterval({ start: minimumFrequency, end: maxFrequency });
 
     // const lut = new LUT({
     //   percentageValues: true, // Use percentage for value/color mapping
@@ -152,7 +120,7 @@ const ScrollingSpectrogram = () => {
       })
       .setStep({
         x: heatmapMinTimeStepMs,
-        y: (maxFreq - minFreq) / (resolution - 1), // Assumes uniformly distributed frequency bins
+        y: (maxFrequency - minimumFrequency) / (resolution - 1), // Assumes uniformly distributed frequency bins
       })
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)
@@ -177,7 +145,14 @@ const ScrollingSpectrogram = () => {
       heatmapSeriesRef.current = null;
       chartRef.current = null;
     };
-  }, [id]);
+  }, [
+    heatmapMinTimeStepMs,
+    id,
+    maxFrequency,
+    minimumFrequency,
+    resolution,
+    windowInMin,
+  ]);
 
   const handleIncomingData = useCallback(
     (timestamp: number, sample: number[], frequencies: number[]) => {
@@ -198,16 +173,11 @@ const ScrollingSpectrogram = () => {
         values: [sample],
       });
     },
-    []
+    [heatmapMinTimeStepMs]
   );
 
   useEffect(() => {
-    if (
-      !spectrogramData ||
-      !isConnected ||
-      !heatmapSeriesRef.current ||
-      !chartRef.current
-    )
+    if (!spectrogramData || !heatmapSeriesRef.current || !chartRef.current)
       return;
 
     // Use timestamp in milliseconds to better match the example code
@@ -223,12 +193,10 @@ const ScrollingSpectrogram = () => {
     handleIncomingData(currentTimeStamp, sample, frequencies);
 
     prevTimeStampRef.current = currentTimeStamp;
-  }, [handleIncomingData, isConnected, spectrogramData]);
+  }, [handleIncomingData, spectrogramData]);
 
   return (
     <>
-      <Button onPress={() => connect(cnfg)}>CONNECT</Button>
-      <Button onPress={disconnect}>DISCONNECT</Button>
       <div id={id} style={{ width: '100%', height: '100%' }}></div>
     </>
   );

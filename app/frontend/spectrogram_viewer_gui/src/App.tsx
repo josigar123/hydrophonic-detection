@@ -1,22 +1,43 @@
 import './App.css';
 import MainPage from './Pages/MainPage';
 import { useState } from 'react';
-import { SpectrogramContext } from './Contexts/SpectrogramContext';
-import placeholderImage from '/assets/spectrograms/41.png';
+import {
+  ConfigurationContext,
+  Configuration,
+} from './Contexts/ConfigurataionContext';
 import 'leaflet/dist/leaflet.css';
 
 function App() {
-  const [spectrogramUrl, setSpectrogramUrl] = useState(placeholderImage);
-  const [wavUri, setWavUri] = useState('');
+  const [config, setConfig] = useState<Configuration | null>(null);
+
+  const setConfiguration = (newConfig: Partial<Configuration>) => {
+    setConfig(
+      (prev) =>
+        ({
+          ...prev,
+          ...newConfig,
+        }) as Configuration
+    );
+  };
+
+  const isConfigValid =
+    config !== null &&
+    Object.values(config).every(
+      (field) => field !== undefined && field !== null
+    );
 
   return (
-    <SpectrogramContext.Provider
-      value={{ spectrogramUrl, setSpectrogramUrl, wavUri, setWavUri }}
+    <ConfigurationContext.Provider
+      value={{
+        config: config ?? ({} as Configuration),
+        setConfiguration,
+        isConfigValid,
+      }}
     >
       <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
         <MainPage />
       </div>
-    </SpectrogramContext.Provider>
+    </ConfigurationContext.Provider>
   );
 }
 
