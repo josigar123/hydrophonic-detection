@@ -8,10 +8,10 @@ import {
 } from '@heroui/dropdown';
 import { useContext, useEffect, useState } from 'react';
 import { ConfigurationContext } from '../Contexts/ConfigurataionContext';
-import { SpectrogramConfiguration } from '../Interfaces/Configuration';
+import { DemonSpectrogramConfiguration } from '../Interfaces/Configuration';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
 
-const SpectrogramParameterField = () => {
+const DemonSpectrogramParameterField = () => {
   const context = useContext(ConfigurationContext);
 
   const useConfiguration = () => {
@@ -25,27 +25,30 @@ const SpectrogramParameterField = () => {
 
   const { config, setConfig } = useConfiguration();
 
-  const [localParams, setLocalParams] = useState<SpectrogramConfiguration>({
-    tperseg: 0,
-    frequencyFilter: 0,
-    horizontalFilterLength: 0,
-    windowInMin: 0,
-    minFrequency: 0,
-    maxFrequency: 0,
-    minDb: 0,
-    maxDb: 0,
-    window: '',
-  });
+  const [localParams, setLocalParams] = useState<DemonSpectrogramConfiguration>(
+    {
+      demonSampleFrequency: 0,
+      tperseg: 0,
+      frequencyFilter: 0,
+      horizontalFilterLength: 0,
+      windowInMin: 0,
+      minFrequency: 0,
+      maxFrequency: 0,
+      minDb: 0,
+      maxDb: 0,
+      window: '',
+    }
+  );
 
   // Sync local state with context on mount
   useEffect(() => {
-    if (config?.spectrogramConfiguration) {
+    if (config?.demonSpectrogramConfiguration) {
       setLocalParams((prev) => ({
         ...prev,
-        ...config.spectrogramConfiguration,
+        ...config.demonSpectrogramConfiguration,
       }));
     }
-  }, [config?.spectrogramConfiguration]);
+  }, [config?.demonSpectrogramConfiguration]);
 
   const handleDropdownChange = (window: string) => {
     setLocalParams((prevParams) => ({
@@ -55,15 +58,15 @@ const SpectrogramParameterField = () => {
 
     setConfig((prevConfig) => ({
       ...prevConfig,
-      spectrogramConfiguration: {
-        ...(prevConfig.spectrogramConfiguration ?? {}),
+      demonSpectrogramConfiguration: {
+        ...(prevConfig.demonSpectrogramConfiguration ?? {}),
         window,
       },
     }));
   };
 
   const handleInputChange = (
-    field: keyof SpectrogramConfiguration,
+    field: keyof DemonSpectrogramConfiguration,
     value: string
   ) => {
     const parsedValue = isNaN(Number(value)) ? value : Number(value);
@@ -74,8 +77,8 @@ const SpectrogramParameterField = () => {
 
     setConfig((prevConfig) => ({
       ...prevConfig,
-      spectrogramConfiguration: {
-        ...(prevConfig.spectrogramConfiguration ?? {}),
+      demonSpectrogramConfiguration: {
+        ...(prevConfig.demonSpectrogramConfiguration ?? {}),
         [field]: parsedValue,
       },
     }));
@@ -107,21 +110,30 @@ const SpectrogramParameterField = () => {
       {/* Input Fields */}
       <Input
         labelPlacement="inside"
-        label="tperseg"
+        label="DEMON sample frequency"
+        className="flex-1 min-w-0 h-12"
+        value={localParams?.demonSampleFrequency.toString() || ''}
+        onChange={(e) =>
+          handleInputChange('demonSampleFrequency', e.target.value)
+        }
+      />
+      <Input
+        labelPlacement="inside"
+        label="Time per segment"
         className="flex-1 min-w-0 h-12"
         value={localParams?.tperseg.toString() || ''}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
       />
       <Input
         labelPlacement="inside"
-        label="freqFilt"
+        label="Frequency filter"
         className="flex-1 min-w-0 h-12"
         value={localParams?.frequencyFilter.toString() || ''}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
       />
       <Input
         labelPlacement="inside"
-        label="hfiltLength"
+        label="Horizontal filter"
         className="flex-1 min-w-0 h-12"
         value={localParams?.horizontalFilterLength.toString() || ''}
         onChange={(e) =>
@@ -130,35 +142,35 @@ const SpectrogramParameterField = () => {
       />
       <Input
         labelPlacement="inside"
-        label="windowInMin"
+        label="Window in mins"
         className="flex-1 min-w-0 h-12"
         value={localParams?.windowInMin.toString() || ''}
         onChange={(e) => handleInputChange('windowInMin', e.target.value)}
       ></Input>
       <Input
         labelPlacement="inside"
-        label="maxFrequency"
+        label="Max frequency"
         className="flex-1 min-w-0 h-12"
         value={localParams?.maxFrequency.toString() || ''}
         onChange={(e) => handleInputChange('maxFrequency', e.target.value)}
       ></Input>
       <Input
         labelPlacement="inside"
-        label="minFrequency"
+        label="Min frequency"
         className="flex-1 min-w-0 h-12"
         value={localParams?.minFrequency.toString() || ''}
         onChange={(e) => handleInputChange('minFrequency', e.target.value)}
       ></Input>
       <Input
         labelPlacement="inside"
-        label="maxDb"
+        label="max Db"
         className="flex-1 min-w-0 h-12"
         value={localParams?.maxDb.toString() || ''}
         onChange={(e) => handleInputChange('maxDb', e.target.value)}
       ></Input>
       <Input
         labelPlacement="inside"
-        label="minDb"
+        label="min Db"
         className="flex-1 min-w-0 h-12"
         value={localParams?.minDb.toString() || ''}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
@@ -167,4 +179,4 @@ const SpectrogramParameterField = () => {
   );
 };
 
-export default SpectrogramParameterField;
+export default DemonSpectrogramParameterField;

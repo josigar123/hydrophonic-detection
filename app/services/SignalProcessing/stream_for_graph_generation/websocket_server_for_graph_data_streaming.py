@@ -7,7 +7,6 @@ from urllib.parse import parse_qs, urlparse
 import json
 import os
 from utils import narrowband_detection
-from kafka import KafkaProducer
 
 '''
 

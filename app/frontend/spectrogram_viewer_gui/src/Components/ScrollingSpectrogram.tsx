@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState, useId } from 'react';
 import {
   AxisScrollStrategies,
   AxisTickStrategies,
@@ -13,20 +13,17 @@ import {
   Themes,
 } from '@lightningchart/lcjs';
 import lightningchartLicense from '../lightningchartLicense.json';
-
-interface SpectrogramData {
-  frequencies: number[];
-  times: number[];
-  spectrogramDb: number[];
-}
+import { SpectrogramPayload } from '../Interfaces/SpectrogramPayload';
 
 interface SpectrogramProps {
-  spectrogramData: SpectrogramData; // Contains all necessary spectrogram data
+  spectrogramData: SpectrogramPayload; // Contains all necessary spectrogram data
   windowInMin: number; // how much data the window will hold in time
   resolution: number; // Number of frequency bins
-  heatmapMinTimeStepMs: number /*heatmapMinTimeStepMs is the minimum time step to be displayed*/;
+  heatmapMinTimeStepMs: number; //heatmapMinTimeStepMs is the minimum time step to be displayed
   maxFrequency: number;
-  minimumFrequency: number;
+  minFrequency: number;
+  maxDb: number;
+  minDb: number;
 }
 
 const ScrollingSpectrogram = ({
@@ -35,20 +32,51 @@ const ScrollingSpectrogram = ({
   resolution,
   heatmapMinTimeStepMs,
   maxFrequency,
-  minimumFrequency,
+  minFrequency,
+  maxDb,
+  minDb,
 }: SpectrogramProps) => {
   const chartRef = useRef<ChartXY | null>(null);
   const heatmapSeriesRef =
     useRef<HeatmapScrollingGridSeriesIntensityValues | null>(null);
+
   const tFirstSampleRef = useRef<number | null>(null);
   const id = useId();
+
+  const [containerReady, setContainerReady] = useState(false);
 
   const prevTimeStampRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const container = document.getElementById(id) as HTMLDivElement;
+    const container = document.getElementById(id);
     if (!container) return;
 
+    // Check if container has dimensions
+    const { width, height } = container.getBoundingClientRect();
+    if (width > 0 && height > 0) {
+      setContainerReady(true);
+    } else {
+      // Use ResizeObserver to detect when dimensions become available
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0) {
+            setContainerReady(true);
+            resizeObserver.disconnect();
+          }
+        }
+      });
+
+      resizeObserver.observe(container);
+      return () => resizeObserver.disconnect();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (!containerReady) return;
+
+    const container = document.getElementById(id) as HTMLDivElement;
+    if (!container) return;
     // Creating the XY chart for plotting the heatmap
     const chart = lightningChart({
       license: lightningchartLicense['license'],
@@ -78,33 +106,14 @@ const ScrollingSpectrogram = ({
     chart.axisY
       .setTitle('Frequency')
       .setUnits('Hz')
-      .setInterval({ start: minimumFrequency, end: maxFrequency });
-
-    // const lut = new LUT({
-    //   percentageValues: true, // Use percentage for value/color mapping
-    //   interpolate: true, // Smooth interpolation between colors
-    //   units: 'dB',
-    //   steps: [
-    //     { value: 0.0, color: ColorCSS('#000004') }, // Dark purple (low intensity)
-    //     { value: 0.1, color: ColorCSS('#1d114f') }, // Darker blue
-    //     { value: 0.2, color: ColorCSS('#6a2075') }, // Purple
-    //     { value: 0.3, color: ColorCSS('#9e3d6f') }, // Pinkish purple
-    //     { value: 0.4, color: ColorCSS('#d85e37') }, // Orange-red
-    //     { value: 0.5, color: ColorCSS('#f9a62a') }, // Yellow-orange
-    //     { value: 0.6, color: ColorCSS('#fdcc2b') }, // Light yellow
-    //     { value: 0.7, color: ColorCSS('#f8d62c') }, // Bright yellow
-    //     { value: 0.8, color: ColorCSS('#f1e16d') }, // Pale yellow
-    //     { value: 0.9, color: ColorCSS('#f6f5d2') }, // Very light yellow
-    //     { value: 1.0, color: ColorCSS('#fcfdbf') }, // Almost white (high intensity)
-    //   ],
-    // });
+      .setInterval({ start: minFrequency, end: maxFrequency });
 
     const theme = chart.getTheme();
     if (!theme.examples) return;
     const lut = new LUT({
       steps: regularColorSteps(
-        -60,
-        0,
+        minDb,
+        maxDb,
         Themes.darkGold.examples.intensityColorPalette
       ),
       units: 'dB',
@@ -120,7 +129,7 @@ const ScrollingSpectrogram = ({
       })
       .setStep({
         x: heatmapMinTimeStepMs,
-        y: (maxFrequency - minimumFrequency) / (resolution - 1), // Assumes uniformly distributed frequency bins
+        y: (maxFrequency - minFrequency) / (resolution - 1), // Assumes uniformly distributed frequency bins
       })
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)
@@ -146,10 +155,13 @@ const ScrollingSpectrogram = ({
       chartRef.current = null;
     };
   }, [
+    containerReady,
     heatmapMinTimeStepMs,
     id,
+    maxDb,
     maxFrequency,
-    minimumFrequency,
+    minDb,
+    minFrequency,
     resolution,
     windowInMin,
   ]);
@@ -197,7 +209,10 @@ const ScrollingSpectrogram = ({
 
   return (
     <>
-      <div id={id} style={{ width: '100%', height: '100%' }}></div>
+      <div
+        id={id}
+        style={{ width: '100%', height: '100%', minHeight: '500px' }}
+      ></div>
     </>
   );
 };

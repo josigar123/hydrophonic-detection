@@ -1,33 +1,29 @@
-import { createContext } from 'react';
-
-export interface SpectrogramConfiguration {
-  tperseg: number;
-  frequencyFilter: number;
-  horizontalFilterLength: number;
-  window: string;
-}
-
-export interface DemonSpectrogramConfiguration {
-  demonSampleFrequency: number;
-  tperseg: number;
-  frequencyFilter: number;
-  horizontalFilterLength: number;
-  window: string;
-}
-
-export interface Configuration {
-  spectrogramConfiguration: SpectrogramConfiguration;
-  demonSpectrogramConfiguration: DemonSpectrogramConfiguration;
-  narrowbandThreshold: number;
-  broadbandDetectionThreshold: number;
-}
+import { createContext, Dispatch, SetStateAction } from 'react';
+import { Configuration } from '../Interfaces/Configuration';
 
 interface ConfigurationContextType {
   config: Configuration;
-  setConfiguration: (newConfig: Partial<Configuration>) => void;
-  isConfigValid: boolean;
+  setConfig: Dispatch<SetStateAction<Configuration>>;
+  isConfigValid: (config: Configuration) => boolean;
 }
 
 export const ConfigurationContext = createContext<
   ConfigurationContextType | undefined
 >(undefined);
+
+// Function for validating that input fields are not null, undefined non-zero and non-empty strings
+export const isConfigValid = (config: Configuration): boolean => {
+  if (!config) return false;
+
+  const validateField = (field: unknown): boolean => {
+    if (field === undefined || field === null) return false;
+    if (typeof field === 'string' && field.trim() === '') return false;
+    if (typeof field === 'number' && field === 0) return false;
+    if (typeof field === 'object' && !Array.isArray(field)) {
+      return Object.values(field).every(validateField);
+    }
+    return true;
+  };
+
+  return Object.values(config).every(validateField);
+};

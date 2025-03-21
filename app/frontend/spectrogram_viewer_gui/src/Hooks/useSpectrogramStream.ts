@@ -1,44 +1,31 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { Configuration } from '../Interfaces/Configuration';
+import {
+  SpectrogramPayload,
+  DemonSpectrogramPayload,
+} from '../Interfaces/SpectrogramPayload';
 
-export interface SpectrogramParameters {
-  tperseg: number;
-  frequencyFilter: number;
-  horizontalFilterLength: number;
-  window: string;
-}
+/*
 
-export interface DemonSpectrogramParameters {
-  demonSampleFrequency: number;
-  tperseg: number;
-  frequencyFilter: number;
-  horizontalFilterLength: number;
-  window: string;
-}
+A hook for fetching all spectrogramdata, both for a standards spectrogram and a DEMON spectrogram
+Supply, with the connect() function, an initial configuration, following the interface  found in 'Configurations.ts'
+in the Interfaces directory
 
-export interface NarrowbandDetectionThresholdParameterDb {
-  threshold: number;
-}
-
-export interface InitialDemonAndSpectrogramConfigurations {
-  config: {
-    spectrogramConfig: SpectrogramParameters;
-    demonSpectrogramConfig: DemonSpectrogramParameters;
-    narrowbandDetectionThresholdDb: NarrowbandDetectionThresholdParameterDb;
-  };
-}
+*/
 
 export function useSpectrogramStream(url: string, autoConnect = false) {
-  const [spectrogramData, setSpectrogramData] = useState({
+  const [spectrogramData, setSpectrogramData] = useState<SpectrogramPayload>({
     frequencies: [],
     times: [],
     spectrogramDb: [],
   });
 
-  const [demonSpectrogramData, setDemonSpectrogramData] = useState({
-    demonFrequencies: [],
-    demonTimes: [],
-    demonSpectrogramDb: [],
-  });
+  const [demonSpectrogramData, setDemonSpectrogramData] =
+    useState<DemonSpectrogramPayload>({
+      demonFrequencies: [],
+      demonTimes: [],
+      demonSpectrogramDb: [],
+    });
 
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +33,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   const shouldConnectRef = useRef(autoConnect);
 
   const connect = useCallback(
-    (initialMessage?: InitialDemonAndSpectrogramConfigurations) => {
+    (configuration?: Configuration) => {
       if (
         socketRef.current &&
         (socketRef.current.readyState === WebSocket.OPEN ||
@@ -54,6 +41,9 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
       ) {
         return;
       }
+
+      console.log('in useSpectrogramStream::connect config is set to: ');
+      console.log('Configuration:\n', JSON.stringify(configuration, null, 2));
 
       setError(null);
 
@@ -66,8 +56,8 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
           setIsConnected(true);
           setError(null);
 
-          if (initialMessage) {
-            const messageString = JSON.stringify(initialMessage);
+          if (configuration) {
+            const messageString = JSON.stringify(configuration);
             socket.send(messageString);
           }
         };
@@ -77,6 +67,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
             const data = JSON.parse(event.data);
 
             if (data.spectrogramDb) {
+              console.log('RECVD spectrogram data: ', data.spectrogramDb);
               setSpectrogramData({
                 frequencies: data.frequencies || [],
                 times: data.times || [],
@@ -85,6 +76,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
             }
 
             if (data.demonSpectrogramDb) {
+              console.log('RECVD spectrogram data: ', data.demonSpectrogramDb);
               setDemonSpectrogramData({
                 demonFrequencies: data.demonFrequencies || [],
                 demonTimes: data.demonTimes || [],

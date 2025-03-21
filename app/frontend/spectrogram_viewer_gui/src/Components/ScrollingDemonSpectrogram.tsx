@@ -1,48 +1,82 @@
+import { useEffect, useRef, useCallback, useState, useId } from 'react';
 import {
   AxisScrollStrategies,
   AxisTickStrategies,
   ChartXY,
-  ColorCSS,
   emptyLine,
   HeatmapScrollingGridSeriesIntensityValues,
   LegendBoxBuilders,
   lightningChart,
   LUT,
   PalettedFill,
+  regularColorSteps,
   Themes,
 } from '@lightningchart/lcjs';
-import { useCallback, useEffect, useId, useRef } from 'react';
 import lightningchartLicense from '../lightningchartLicense.json';
+import { DemonSpectrogramPayload } from '../Interfaces/SpectrogramPayload';
 
-interface ScrollingDemonSpectrogamProps {
-  demonData: number[];
-  sampleRate: number;
-  tperseg: number;
-  xAxisViewInMinutes: number;
-  heatmapMinTimeStepMs: number;
+interface DemonSpectrogramProps {
+  demonSpectrogramData: DemonSpectrogramPayload; // Contains all necessary spectrogram data
+  windowInMin: number; // how much data the window will hold in time
+  resolution: number; // Number of frequency bins
+  heatmapMinTimeStepMs: number; //heatmapMinTimeStepMs is the minimum time step to be displayed
+  maxFrequency: number;
+  minFrequency: number;
+  maxDb: number;
+  minDb: number;
 }
 
 const ScrollingDemonSpectrogram = ({
-  demonData,
-  sampleRate,
-  tperseg,
-  xAxisViewInMinutes,
+  demonSpectrogramData,
+  windowInMin,
+  resolution,
   heatmapMinTimeStepMs,
-}: ScrollingDemonSpectrogamProps) => {
+  maxFrequency,
+  minFrequency,
+  maxDb,
+  minDb,
+}: DemonSpectrogramProps) => {
   const chartRef = useRef<ChartXY | null>(null);
   const heatmapSeriesRef =
     useRef<HeatmapScrollingGridSeriesIntensityValues | null>(null);
+
   const tFirstSampleRef = useRef<number | null>(null);
   const id = useId();
+
+  const [containerReady, setContainerReady] = useState(false);
 
   const prevTimeStampRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const container = document.getElementById(id) as HTMLDivElement;
+    const container = document.getElementById(id);
     if (!container) return;
 
-    const viewMs = xAxisViewInMinutes * 1000 * 60;
-    const resolution = 1 + (sampleRate * tperseg) / 2;
+    // Check if container has dimensions
+    const { width, height } = container.getBoundingClientRect();
+    if (width > 0 && height > 0) {
+      setContainerReady(true);
+    } else {
+      // Use ResizeObserver to detect when dimensions become available
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0) {
+            setContainerReady(true);
+            resizeObserver.disconnect();
+          }
+        }
+      });
+
+      resizeObserver.observe(container);
+      return () => resizeObserver.disconnect();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (!containerReady) return;
+
+    const container = document.getElementById(id) as HTMLDivElement;
+    if (!container) return;
     // Creating the XY chart for plotting the heatmap
     const chart = lightningChart({
       license: lightningchartLicense['license'],
@@ -58,6 +92,8 @@ const ScrollingDemonSpectrogram = ({
       })
       .setTitle('DEMON Spectrogram');
 
+    const viewMs = 1000 * 60 * windowInMin; // This defines the time windown that will be shown at all along x-axis
+
     chart.axisX
       .setScrollStrategy(AxisScrollStrategies.progressive)
       .setDefaultInterval((state) => ({
@@ -70,25 +106,18 @@ const ScrollingDemonSpectrogram = ({
     chart.axisY
       .setTitle('Frequency')
       .setUnits('Hz')
-      .setInterval({ start: 0, end: resolution });
+      .setInterval({ start: minFrequency, end: maxFrequency });
 
+    const theme = chart.getTheme();
+    if (!theme.examples) return;
     const lut = new LUT({
-      percentageValues: true, // Use percentage for value/color mapping
-      interpolate: true, // Smooth interpolation between colors
+      steps: regularColorSteps(
+        minDb,
+        maxDb,
+        Themes.darkGold.examples.intensityColorPalette
+      ),
       units: 'dB',
-      steps: [
-        { value: 0.0, color: ColorCSS('#000004') }, // Dark purple (low intensity)
-        { value: 0.1, color: ColorCSS('#1d114f') }, // Darker blue
-        { value: 0.2, color: ColorCSS('#6a2075') }, // Purple
-        { value: 0.3, color: ColorCSS('#9e3d6f') }, // Pinkish purple
-        { value: 0.4, color: ColorCSS('#d85e37') }, // Orange-red
-        { value: 0.5, color: ColorCSS('#f9a62a') }, // Yellow-orange
-        { value: 0.6, color: ColorCSS('#fdcc2b') }, // Light yellow
-        { value: 0.7, color: ColorCSS('#f8d62c') }, // Bright yellow
-        { value: 0.8, color: ColorCSS('#f1e16d') }, // Pale yellow
-        { value: 0.9, color: ColorCSS('#f6f5d2') }, // Very light yellow
-        { value: 1.0, color: ColorCSS('#fcfdbf') }, // Almost white (high intensity)
-      ],
+      interpolate: true,
     });
 
     const palettedFill = new PalettedFill({ lut, lookUpProperty: 'value' });
@@ -98,7 +127,10 @@ const ScrollingDemonSpectrogram = ({
         scrollDimension: 'columns',
         resolution: resolution,
       })
-      .setStep({ x: heatmapMinTimeStepMs, y: 1 })
+      .setStep({
+        x: heatmapMinTimeStepMs,
+        y: (maxFrequency - minFrequency) / (resolution - 1), // Assumes uniformly distributed frequency bins
+      })
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)
       .setDataCleaning({
@@ -122,13 +154,25 @@ const ScrollingDemonSpectrogram = ({
       heatmapSeriesRef.current = null;
       chartRef.current = null;
     };
-  }, [heatmapMinTimeStepMs, id, sampleRate, tperseg, xAxisViewInMinutes]);
+  }, [
+    containerReady,
+    heatmapMinTimeStepMs,
+    id,
+    maxDb,
+    maxFrequency,
+    minDb,
+    minFrequency,
+    resolution,
+    windowInMin,
+  ]);
 
   const handleIncomingData = useCallback(
-    (timestamp: number, sample: number[]) => {
+    (timestamp: number, sample: number[], frequencies: number[]) => {
       if (tFirstSampleRef.current === null) {
         tFirstSampleRef.current = timestamp;
-        heatmapSeriesRef.current?.setStart({ x: timestamp, y: 0 });
+
+        const minFreq = frequencies[0] || 0;
+        heatmapSeriesRef.current?.setStart({ x: timestamp, y: minFreq });
       }
 
       // Keep timestamp in milliseconds (don't convert to seconds)
@@ -145,7 +189,8 @@ const ScrollingDemonSpectrogram = ({
   );
 
   useEffect(() => {
-    if (!demonData || !heatmapSeriesRef.current || !chartRef.current) return;
+    if (!demonSpectrogramData || !heatmapSeriesRef.current || !chartRef.current)
+      return;
 
     // Use timestamp in milliseconds to better match the example code
     const currentTimeStamp = Date.now();
@@ -155,15 +200,19 @@ const ScrollingDemonSpectrogram = ({
       return; // Skip first data point to establish time reference
     }
 
-    const sample = demonData;
-    handleIncomingData(currentTimeStamp, sample);
+    const sample = demonSpectrogramData.demonSpectrogramDb;
+    const frequencies = demonSpectrogramData.demonFrequencies;
+    handleIncomingData(currentTimeStamp, sample, frequencies);
 
     prevTimeStampRef.current = currentTimeStamp;
-  }, [demonData, handleIncomingData]);
+  }, [handleIncomingData, demonSpectrogramData]);
 
   return (
     <>
-      <div id={id} style={{ width: '100%', height: '100%' }}></div>
+      <div
+        id={id}
+        style={{ width: '100%', height: '100%', minHeight: '500px' }}
+      ></div>
     </>
   );
 };

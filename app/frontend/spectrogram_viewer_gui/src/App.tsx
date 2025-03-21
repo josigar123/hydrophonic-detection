@@ -3,34 +3,37 @@ import MainPage from './Pages/MainPage';
 import { useState } from 'react';
 import {
   ConfigurationContext,
-  Configuration,
+  isConfigValid,
 } from './Contexts/ConfigurataionContext';
 import 'leaflet/dist/leaflet.css';
+import { Configuration } from './Interfaces/Configuration';
+
+const defaultConfig: Configuration = {
+  spectrogramConfiguration: {
+    tperseg: 0,
+    frequencyFilter: 0,
+    horizontalFilterLength: 0,
+    window: '',
+  },
+  demonSpectrogramConfiguration: {
+    demonSampleFrequency: 0,
+    tperseg: 0,
+    frequencyFilter: 0,
+    horizontalFilterLength: 0,
+    window: '',
+  },
+  narrowbandThreshold: 0,
+  broadbandDetectionThreshold: 0,
+};
 
 function App() {
-  const [config, setConfig] = useState<Configuration | null>(null);
-
-  const setConfiguration = (newConfig: Partial<Configuration>) => {
-    setConfig(
-      (prev) =>
-        ({
-          ...prev,
-          ...newConfig,
-        }) as Configuration
-    );
-  };
-
-  const isConfigValid =
-    config !== null &&
-    Object.values(config).every(
-      (field) => field !== undefined && field !== null
-    );
+  const [config, setConfig] = useState<Configuration>(defaultConfig);
 
   return (
     <ConfigurationContext.Provider
       value={{
-        config: config ?? ({} as Configuration),
-        setConfiguration,
+        config,
+        setConfig,
         isConfigValid,
       }}
     >
