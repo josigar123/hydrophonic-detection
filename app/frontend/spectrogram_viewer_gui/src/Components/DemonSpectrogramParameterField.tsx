@@ -118,6 +118,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="DEMON sample frequency"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.demonSampleFrequency.toString() || ''}
         onChange={(e) =>
           handleInputChange('demonSampleFrequency', e.target.value)
@@ -127,6 +128,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="Time per segment"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.tperseg.toString() || ''}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
       />
@@ -134,6 +136,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="Frequency filter"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.frequencyFilter.toString() || ''}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
       />
@@ -141,6 +144,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="Horizontal filter"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.horizontalFilterLength.toString() || ''}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)
@@ -150,6 +154,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="Window in mins"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.windowInMin.toString() || ''}
         onChange={(e) => handleInputChange('windowInMin', e.target.value)}
       ></Input>
@@ -157,6 +162,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="Max frequency"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.maxFrequency.toString() || ''}
         onChange={(e) => handleInputChange('maxFrequency', e.target.value)}
       ></Input>
@@ -164,6 +170,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="Min frequency"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.minFrequency.toString() || ''}
         onChange={(e) => handleInputChange('minFrequency', e.target.value)}
       ></Input>
@@ -178,6 +185,7 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="min Db"
         className="flex-1 min-w-0 h-12"
+        isRequired
         value={localParams?.minDb.toString() || ''}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
       ></Input>
