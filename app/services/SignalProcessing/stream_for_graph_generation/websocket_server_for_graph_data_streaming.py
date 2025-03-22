@@ -222,7 +222,8 @@ async def forward_to_frontend(data):
             # Config has been set when spectrogram_client connected
             spectrogram_config = spectrogram_client_config["spectrogram_client"]["spectrogramConfig"]
             demon_spectrogram_config = spectrogram_client_config["spectrogram_client"]["demonSpectrogramConfig"]
-            narrowband_detection_threshold = spectrogram_client_config["spectrogram_client"]["narrowbandDetectionThresholdDb"]
+            narrowband_threshold = spectrogram_client_config["spectrogram_client"]["narrowbandThreshold"]
+            broadband_threshold = spectrogram_client_config["spectrogram_client"]["broadbandThreshold"]
 
             if spectrogram_config:
                 tperseg = spectrogram_config.get("tperseg")
@@ -241,10 +242,11 @@ async def forward_to_frontend(data):
             else:
                 print("Demon spectrogram config is not available")
 
-            if narrowband_detection_threshold:
-                narrowband_threshold = narrowband_detection_threshold.get("threshold")
-            else:
-                print("Narrowband Threshold is not available")
+            if not narrowband_threshold:
+                print("Narrowband threshold is not available")
+
+            if not broadband_threshold:
+                print("Broadband threshold is not available") 
 
             # TODO: Rewrite so that these values are only calculated once, not very expensive operations anyway
             required_samples = calculate_required_samples(hfilt_length, recording_config["sampleRate"])
