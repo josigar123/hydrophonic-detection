@@ -69,8 +69,6 @@ class SpectrogramDataGenerator:
         return f.tolist(), t.tolist(), sx_db.tolist()
     
     def create_demon_spectrogram_data(self, pcm_data: bytes, sample_rate: float, demon_sample_frequency: int, channels: int, tperseg: float, freq_filt: int, hfilt_length: int, window: str, bit_depth: int = 16):
-        print(f"Length of PCM data: {len(pcm_data)}")
-        
         if bit_depth == 16:
             samples = np.frombuffer(pcm_data, dtype=np.int16)
             print(f"Samples shape after conversion: {samples.shape}")

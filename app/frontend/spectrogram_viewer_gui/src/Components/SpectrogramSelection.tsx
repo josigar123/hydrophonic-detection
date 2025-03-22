@@ -110,16 +110,24 @@ const SpectrogramSelection = () => {
                 {spectrogramPayload ? (
                   <ScrollingSpectrogram
                     spectrogramData={spectrogramPayload as SpectrogramPayload}
-                    windowInMin={config.spectrogramConfiguration.windowInMin}
+                    windowInMin={
+                      config.config.spectrogramConfiguration.windowInMin
+                    }
                     resolution={
                       1 +
-                      (sampleRate * config.spectrogramConfiguration.tperseg) / 2
+                      (sampleRate *
+                        config.config.spectrogramConfiguration.tperseg) /
+                        2
                     }
                     heatmapMinTimeStepMs={500}
-                    maxFrequency={config.spectrogramConfiguration.maxFrequency}
-                    minFrequency={config.spectrogramConfiguration.minFrequency}
-                    maxDb={config.spectrogramConfiguration.maxDb}
-                    minDb={config.spectrogramConfiguration.minDb}
+                    maxFrequency={
+                      config.config.spectrogramConfiguration.maxFrequency
+                    }
+                    minFrequency={
+                      config.config.spectrogramConfiguration.minFrequency
+                    }
+                    maxDb={config.config.spectrogramConfiguration.maxDb}
+                    minDb={config.config.spectrogramConfiguration.minDb}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -166,23 +174,23 @@ const SpectrogramSelection = () => {
                       demonSpectrogramPayload as DemonSpectrogramPayload
                     }
                     windowInMin={
-                      config.demonSpectrogramConfiguration.windowInMin
+                      config.config.demonSpectrogramConfiguration.windowInMin
                     }
                     resolution={
                       1 +
                       (sampleRate *
-                        config.demonSpectrogramConfiguration.tperseg) /
+                        config.config.demonSpectrogramConfiguration.tperseg) /
                         2
                     }
                     heatmapMinTimeStepMs={500}
                     maxFrequency={
-                      config.demonSpectrogramConfiguration.maxFrequency
+                      config.config.demonSpectrogramConfiguration.maxFrequency
                     }
                     minFrequency={
-                      config.demonSpectrogramConfiguration.minFrequency
+                      config.config.demonSpectrogramConfiguration.minFrequency
                     }
-                    maxDb={config.demonSpectrogramConfiguration.maxDb}
-                    minDb={config.demonSpectrogramConfiguration.minDb}
+                    maxDb={config.config.demonSpectrogramConfiguration.maxDb}
+                    minDb={config.config.demonSpectrogramConfiguration.minDb}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">

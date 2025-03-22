@@ -39,13 +39,13 @@ const SpectrogramParameterField = () => {
 
   // Sync local state with context on mount
   useEffect(() => {
-    if (config?.spectrogramConfiguration) {
+    if (config?.config.spectrogramConfiguration) {
       setLocalParams((prev) => ({
         ...prev,
-        ...config.spectrogramConfiguration,
+        ...config.config.spectrogramConfiguration,
       }));
     }
-  }, [config?.spectrogramConfiguration]);
+  }, [config?.config.spectrogramConfiguration]);
 
   const handleDropdownChange = (window: string) => {
     setLocalParams((prevParams) => ({
@@ -55,9 +55,12 @@ const SpectrogramParameterField = () => {
 
     setConfig((prevConfig) => ({
       ...prevConfig,
-      spectrogramConfiguration: {
-        ...(prevConfig.spectrogramConfiguration ?? {}),
-        window,
+      config: {
+        ...prevConfig.config,
+        spectrogramConfiguration: {
+          ...prevConfig.config.spectrogramConfiguration,
+          window,
+        },
       },
     }));
   };
@@ -74,9 +77,12 @@ const SpectrogramParameterField = () => {
 
     setConfig((prevConfig) => ({
       ...prevConfig,
-      spectrogramConfiguration: {
-        ...(prevConfig.spectrogramConfiguration ?? {}),
-        [field]: parsedValue,
+      config: {
+        ...prevConfig.config,
+        spectrogramConfiguration: {
+          ...prevConfig.config.spectrogramConfiguration,
+          [field]: parsedValue,
+        },
       },
     }));
   };

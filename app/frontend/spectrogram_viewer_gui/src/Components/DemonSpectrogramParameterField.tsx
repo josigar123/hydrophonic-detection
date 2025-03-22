@@ -42,13 +42,13 @@ const DemonSpectrogramParameterField = () => {
 
   // Sync local state with context on mount
   useEffect(() => {
-    if (config?.demonSpectrogramConfiguration) {
+    if (config?.config.demonSpectrogramConfiguration) {
       setLocalParams((prev) => ({
         ...prev,
-        ...config.demonSpectrogramConfiguration,
+        ...config.config.demonSpectrogramConfiguration,
       }));
     }
-  }, [config?.demonSpectrogramConfiguration]);
+  }, [config?.config.demonSpectrogramConfiguration]);
 
   const handleDropdownChange = (window: string) => {
     setLocalParams((prevParams) => ({
@@ -58,9 +58,12 @@ const DemonSpectrogramParameterField = () => {
 
     setConfig((prevConfig) => ({
       ...prevConfig,
-      demonSpectrogramConfiguration: {
-        ...(prevConfig.demonSpectrogramConfiguration ?? {}),
-        window,
+      config: {
+        ...prevConfig.config,
+        demonSpectrogramConfiguration: {
+          ...prevConfig.config.demonSpectrogramConfiguration,
+          window,
+        },
       },
     }));
   };
@@ -77,9 +80,12 @@ const DemonSpectrogramParameterField = () => {
 
     setConfig((prevConfig) => ({
       ...prevConfig,
-      demonSpectrogramConfiguration: {
-        ...(prevConfig.demonSpectrogramConfiguration ?? {}),
-        [field]: parsedValue,
+      config: {
+        ...prevConfig.config,
+        demonSpectrogramConfiguration: {
+          ...prevConfig.config.demonSpectrogramConfiguration,
+          [field]: parsedValue,
+        },
       },
     }));
   };

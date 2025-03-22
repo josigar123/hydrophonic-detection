@@ -67,7 +67,15 @@ def moving_average_padded(signal, window_size=5):
     smoothed = np.convolve(padded_signal, kernel, mode='valid')  # Only keep valid parts
     return smoothed
 
-# Take a spectrogram matrix containing intensities and a threshold in dB
-# Prøv med default på 9
-def narrowband_detection(spectrogram_db: np.ndarray, threshold: int) -> bool:
-    return np.any(spectrogram_db > threshold)
+# This will return the number of samples required to fill hfilt_length seconds of sound 
+def calculate_required_samples(hfilt_length: int, sample_rate: int):
+    return int(hfilt_length * sample_rate)
+
+def calculate_bytes_per_sample(bit_depth: int, channels: int):
+    '''Function could be generalized, but we want to ensure a valid bit depth'''
+    if bit_depth == 16:
+        return 2 * channels  # 16-bit is 2 bytes per channel
+    elif bit_depth == 32:
+        return 4 * channels  # 32-bit is 4 bytes per channel
+    else:
+        raise ValueError(f"Unsupported bit depth: {bit_depth}")

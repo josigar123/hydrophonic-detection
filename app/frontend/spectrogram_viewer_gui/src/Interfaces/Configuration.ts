@@ -24,8 +24,10 @@ export interface DemonSpectrogramConfiguration {
 }
 
 export interface Configuration {
-  spectrogramConfiguration: SpectrogramConfiguration;
-  demonSpectrogramConfiguration: DemonSpectrogramConfiguration;
-  narrowbandThreshold: number;
-  broadbandDetectionThreshold: number;
+  config: {
+    spectrogramConfiguration: SpectrogramConfiguration;
+    demonSpectrogramConfiguration: DemonSpectrogramConfiguration;
+    narrowbandThreshold: number;
+    broadbandThreshold: number;
+  };
 }
