@@ -13,7 +13,7 @@ const MainPage = () => {
         <MapComponent />
       </div>
       <div className="overflow-auto p-4 rounded h-full">
-        <WaveformSelection numChannels={2} />
+        <WaveformSelection numChannels={1} />
       </div>
       <div className="overflow-auto p-4 rounded h-full">
         <AisDataTable />

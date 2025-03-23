@@ -148,6 +148,7 @@ async def handle_connection(websocket, path):
                 try:
                     await forward_audio_to_frontend(message)
                     await forward_signal_processed_data_to_frontend(message)
+                    await forward_demon_data_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
                     
@@ -164,8 +165,6 @@ async def handle_connection(websocket, path):
 
                     data = json.loads(message)
                     '''Set the recvd config sent onconnect'''
-                    print("RECVD SPEC CONFIG BEFORE ANY MODIFICATION:")
-                    print(data)
                     if "config" in data:
                         spectrogram_client_config[client_name] = data["config"]
 
@@ -184,8 +183,8 @@ async def handle_connection(websocket, path):
 
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
-
-        if client_name not in clients.keys():
+            
+        if client_name in clients.keys():
             async for message in websocket:
                 try:
                     print(f"Received message from {client_name}: {message[:100]}...")
@@ -194,7 +193,6 @@ async def handle_connection(websocket, path):
     except websockets.exceptions.ConnectionClosed as e:
         print(f"Client '{client_name}' disconnected: {e}")
     finally:
-
         if client_name in clients and clients[client_name] == websocket:
             clients.pop(client_name, None)
             print(f"Removed {client_name} from active clients")
