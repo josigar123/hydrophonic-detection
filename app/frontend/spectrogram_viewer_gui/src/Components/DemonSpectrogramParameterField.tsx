@@ -17,7 +17,7 @@ const DemonSpectrogramParameterField = () => {
   const useConfiguration = () => {
     if (!context) {
       throw new Error(
-        'useConfiguration must be used within a ConfigurationProvider'
+        'useConfiguration must be used within a SpectrogramConfigurationProvider'
       );
     }
     return context;
