@@ -56,12 +56,10 @@ const SpectrogramParameterField = () => {
 
     setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
-      config: {
-        ...prevConfig,
-        spectrogramConfiguration: {
-          ...prevConfig.spectrogramConfiguration,
-          window,
-        },
+
+      spectrogramConfiguration: {
+        ...prevConfig.spectrogramConfiguration,
+        window,
       },
     }));
   };
@@ -78,12 +76,10 @@ const SpectrogramParameterField = () => {
 
     setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
-      config: {
-        ...prevConfig,
-        spectrogramConfiguration: {
-          ...prevConfig.spectrogramConfiguration,
-          [field]: parsedValue,
-        },
+
+      spectrogramConfiguration: {
+        ...prevConfig.spectrogramConfiguration,
+        [field]: parsedValue,
       },
     }));
   };

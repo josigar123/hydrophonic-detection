@@ -121,9 +121,9 @@ class SignalProcessingService:
             raise ValueError(f"Invalid PCM data size {len(samples)} for {self.num_channels} channels.")
 
         try:
-            samples = samples.reshape(-1, self.channels)
+            samples = samples.reshape(-1, self.num_channels)
         except ValueError as e:
-            raise ValueError(f"Error reshaping PCM data. Expected {self.channels} channels, but got data size {samples.shape[0]}") from e
+            raise ValueError(f"Error reshaping PCM data. Expected {self.num_channels} channels, but got data size {samples.shape[0]}") from e
         
         # Convert to mono by averaging channels
         mono_signal = np.mean(samples, axis=1).astype(np.int16)

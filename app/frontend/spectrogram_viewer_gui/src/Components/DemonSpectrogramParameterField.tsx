@@ -58,12 +58,10 @@ const DemonSpectrogramParameterField = () => {
 
     setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
-      config: {
-        ...prevConfig,
-        demonSpectrogramConfiguration: {
-          ...prevConfig.demonSpectrogramConfiguration,
-          window,
-        },
+
+      demonSpectrogramConfiguration: {
+        ...prevConfig.demonSpectrogramConfiguration,
+        window,
       },
     }));
   };
@@ -80,12 +78,10 @@ const DemonSpectrogramParameterField = () => {
 
     setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
-      config: {
-        ...prevConfig,
-        demonSpectrogramConfiguration: {
-          ...prevConfig.demonSpectrogramConfiguration,
-          [field]: parsedValue,
-        },
+
+      demonSpectrogramConfiguration: {
+        ...prevConfig.demonSpectrogramConfiguration,
+        [field]: parsedValue,
       },
     }));
   };
