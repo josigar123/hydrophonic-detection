@@ -4,7 +4,7 @@ import { Button } from '@heroui/button';
 import {
   SpectrogramPayload,
   DemonSpectrogramPayload,
-} from '../Interfaces/SpectrogramPayload';
+} from '../Interfaces/Payloads';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 

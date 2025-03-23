@@ -7,12 +7,12 @@ import {
   DropdownItem,
 } from '@heroui/dropdown';
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { ConfigurationContext } from '../Contexts/ConfigurataionContext';
 import { SpectrogramConfiguration } from '../Interfaces/Configuration';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
+import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
 const SpectrogramParameterField = () => {
-  const context = useContext(ConfigurationContext);
+  const context = useContext(SpectrogramConfigurationContext);
 
   const useConfiguration = () => {
     if (!context) {
@@ -23,7 +23,7 @@ const SpectrogramParameterField = () => {
     return context;
   };
 
-  const { config, setConfig } = useConfiguration();
+  const { spectrogramConfig, setSpectrogramConfig } = useConfiguration();
 
   const [localParams, setLocalParams] = useState<SpectrogramConfiguration>({
     tperseg: 0,
@@ -35,17 +35,18 @@ const SpectrogramParameterField = () => {
     minDb: 0,
     maxDb: 0,
     window: '',
+    narrowbandThreshold: 0,
   });
 
   // Sync local state with context on mount
   useEffect(() => {
-    if (config?.config.spectrogramConfiguration) {
+    if (spectrogramConfig.spectrogramConfiguration) {
       setLocalParams((prev) => ({
         ...prev,
-        ...config.config.spectrogramConfiguration,
+        ...spectrogramConfig.spectrogramConfiguration,
       }));
     }
-  }, [config?.config.spectrogramConfiguration]);
+  }, [spectrogramConfig.spectrogramConfiguration]);
 
   const handleDropdownChange = (window: string) => {
     setLocalParams((prevParams) => ({
@@ -53,12 +54,12 @@ const SpectrogramParameterField = () => {
       window,
     }));
 
-    setConfig((prevConfig) => ({
+    setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
       config: {
-        ...prevConfig.config,
+        ...prevConfig,
         spectrogramConfiguration: {
-          ...prevConfig.config.spectrogramConfiguration,
+          ...prevConfig.spectrogramConfiguration,
           window,
         },
       },
@@ -75,12 +76,12 @@ const SpectrogramParameterField = () => {
       [field]: parsedValue,
     }));
 
-    setConfig((prevConfig) => ({
+    setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
       config: {
-        ...prevConfig.config,
+        ...prevConfig,
         spectrogramConfiguration: {
-          ...prevConfig.config.spectrogramConfiguration,
+          ...prevConfig.spectrogramConfiguration,
           [field]: parsedValue,
         },
       },
@@ -187,6 +188,15 @@ const SpectrogramParameterField = () => {
         className="flex-1 min-w-0 h-12"
         value={localParams?.minDb.toString() || ''}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
+      ></Input>
+      <Input
+        labelPlacement="inside"
+        label="narrowbandThreshold"
+        className="flex-1 min-w-0 h-12"
+        value={localParams?.narrowbandThreshold.toString() || ''}
+        onChange={(e) =>
+          handleInputChange('narrowbandThreshold', e.target.value)
+        }
       ></Input>
     </div>
   );

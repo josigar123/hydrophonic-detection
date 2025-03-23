@@ -7,12 +7,12 @@ import {
   DropdownItem,
 } from '@heroui/dropdown';
 import { useContext, useEffect, useState } from 'react';
-import { ConfigurationContext } from '../Contexts/ConfigurataionContext';
 import { DemonSpectrogramConfiguration } from '../Interfaces/Configuration';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
+import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
 const DemonSpectrogramParameterField = () => {
-  const context = useContext(ConfigurationContext);
+  const context = useContext(SpectrogramConfigurationContext);
 
   const useConfiguration = () => {
     if (!context) {
@@ -23,7 +23,7 @@ const DemonSpectrogramParameterField = () => {
     return context;
   };
 
-  const { config, setConfig } = useConfiguration();
+  const { spectrogramConfig, setSpectrogramConfig } = useConfiguration();
 
   const [localParams, setLocalParams] = useState<DemonSpectrogramConfiguration>(
     {
@@ -42,13 +42,13 @@ const DemonSpectrogramParameterField = () => {
 
   // Sync local state with context on mount
   useEffect(() => {
-    if (config?.config.demonSpectrogramConfiguration) {
+    if (spectrogramConfig.demonSpectrogramConfiguration) {
       setLocalParams((prev) => ({
         ...prev,
-        ...config.config.demonSpectrogramConfiguration,
+        ...spectrogramConfig.demonSpectrogramConfiguration,
       }));
     }
-  }, [config?.config.demonSpectrogramConfiguration]);
+  }, [spectrogramConfig.demonSpectrogramConfiguration]);
 
   const handleDropdownChange = (window: string) => {
     setLocalParams((prevParams) => ({
@@ -56,12 +56,12 @@ const DemonSpectrogramParameterField = () => {
       window,
     }));
 
-    setConfig((prevConfig) => ({
+    setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
       config: {
-        ...prevConfig.config,
+        ...prevConfig,
         demonSpectrogramConfiguration: {
-          ...prevConfig.config.demonSpectrogramConfiguration,
+          ...prevConfig.demonSpectrogramConfiguration,
           window,
         },
       },
@@ -78,12 +78,12 @@ const DemonSpectrogramParameterField = () => {
       [field]: parsedValue,
     }));
 
-    setConfig((prevConfig) => ({
+    setSpectrogramConfig((prevConfig) => ({
       ...prevConfig,
       config: {
-        ...prevConfig.config,
+        ...prevConfig,
         demonSpectrogramConfiguration: {
-          ...prevConfig.config.demonSpectrogramConfiguration,
+          ...prevConfig.demonSpectrogramConfiguration,
           [field]: parsedValue,
         },
       },

@@ -13,7 +13,7 @@ import {
   Themes,
 } from '@lightningchart/lcjs';
 import lightningchartLicense from '../lightningchartLicense.json';
-import { SpectrogramPayload } from '../Interfaces/SpectrogramPayload';
+import { SpectrogramPayload } from '../Interfaces/Payloads';
 
 interface SpectrogramProps {
   spectrogramData: SpectrogramPayload; // Contains all necessary spectrogram data

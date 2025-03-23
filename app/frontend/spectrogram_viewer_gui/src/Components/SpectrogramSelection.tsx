@@ -4,36 +4,39 @@ import { Button } from '@heroui/button';
 import { Tabs, Tab } from '@heroui/tabs';
 import SpectrogramParameterField from './SpectrogramParameterField';
 import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
-import { ConfigurationContext } from '../Contexts/ConfigurataionContext';
 import { useContext, useEffect, useState } from 'react';
 import {
   DemonSpectrogramPayload,
   SpectrogramPayload,
-} from '../Interfaces/SpectrogramPayload';
+} from '../Interfaces/Payloads';
 import DemonSpectrogramParameterField from './DemonSpectrogramParameterField';
 import ScrollingDemonSpectrogram from './ScrollingDemonSpectrogram';
+import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
 
 const SpectrogramSelection = () => {
-  const context = useContext(ConfigurationContext);
+  const context = useContext(SpectrogramConfigurationContext);
+
   const [spectrogramPayload, setSpectrogramPayload] =
     useState<SpectrogramPayload | null>(null);
+
   const [demonSpectrogramPayload, setDemonSpectrogramPayload] =
     useState<DemonSpectrogramPayload | null>(null);
+
   const [chartContainerKey, setChartContainerKey] = useState(0);
 
   const useConfiguration = () => {
     if (!context) {
       throw new Error(
-        'useConfiguration must be used within a ConfigurationProvider'
+        'useConfiguration must be used within a SpectrogramConfigurationProvider'
       );
     }
     return context;
   };
 
-  const { config, isConfigValid } = useConfiguration();
+  const { spectrogramConfig } = useConfiguration();
   const {
     spectrogramData,
     demonSpectrogramData,
@@ -53,24 +56,18 @@ const SpectrogramSelection = () => {
   }, [demonSpectrogramData, isConnected]);
 
   useEffect(() => {
-    if (spectrogramPayload && isConnected) {
+    if (spectrogramPayload && demonSpectrogramPayload && isConnected) {
       setChartContainerKey((prev) => prev + 1);
     }
-  }, [spectrogramPayload, isConnected]);
-
-  useEffect(() => {
-    if (!config) return;
-    console.log('Config: ', config);
-  });
+  }, [spectrogramPayload, isConnected, demonSpectrogramPayload]);
 
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
       <div className="flex items-center gap-3 mb-4">
         <Button
-          onPress={() => connect(config)}
+          onPress={() => connect(spectrogramConfig)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-          disabled={!isConfigValid(config)}
         >
           Connect
         </Button>
@@ -111,23 +108,23 @@ const SpectrogramSelection = () => {
                   <ScrollingSpectrogram
                     spectrogramData={spectrogramPayload as SpectrogramPayload}
                     windowInMin={
-                      config.config.spectrogramConfiguration.windowInMin
+                      spectrogramConfig.spectrogramConfiguration.windowInMin
                     }
                     resolution={
                       1 +
                       (sampleRate *
-                        config.config.spectrogramConfiguration.tperseg) /
+                        spectrogramConfig.spectrogramConfiguration.tperseg) /
                         2
                     }
                     heatmapMinTimeStepMs={500}
                     maxFrequency={
-                      config.config.spectrogramConfiguration.maxFrequency
+                      spectrogramConfig.spectrogramConfiguration.maxFrequency
                     }
                     minFrequency={
-                      config.config.spectrogramConfiguration.minFrequency
+                      spectrogramConfig.spectrogramConfiguration.minFrequency
                     }
-                    maxDb={config.config.spectrogramConfiguration.maxDb}
-                    minDb={config.config.spectrogramConfiguration.minDb}
+                    maxDb={spectrogramConfig.spectrogramConfiguration.maxDb}
+                    minDb={spectrogramConfig.spectrogramConfiguration.minDb}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -174,23 +171,31 @@ const SpectrogramSelection = () => {
                       demonSpectrogramPayload as DemonSpectrogramPayload
                     }
                     windowInMin={
-                      config.config.demonSpectrogramConfiguration.windowInMin
+                      spectrogramConfig.demonSpectrogramConfiguration
+                        .windowInMin
                     }
                     resolution={
                       1 +
                       (sampleRate *
-                        config.config.demonSpectrogramConfiguration.tperseg) /
+                        spectrogramConfig.demonSpectrogramConfiguration
+                          .tperseg) /
                         2
                     }
                     heatmapMinTimeStepMs={500}
                     maxFrequency={
-                      config.config.demonSpectrogramConfiguration.maxFrequency
+                      spectrogramConfig.demonSpectrogramConfiguration
+                        .maxFrequency
                     }
                     minFrequency={
-                      config.config.demonSpectrogramConfiguration.minFrequency
+                      spectrogramConfig.demonSpectrogramConfiguration
+                        .minFrequency
                     }
-                    maxDb={config.config.demonSpectrogramConfiguration.maxDb}
-                    minDb={config.config.demonSpectrogramConfiguration.minDb}
+                    maxDb={
+                      spectrogramConfig.demonSpectrogramConfiguration.maxDb
+                    }
+                    minDb={
+                      spectrogramConfig.demonSpectrogramConfiguration.minDb
+                    }
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">

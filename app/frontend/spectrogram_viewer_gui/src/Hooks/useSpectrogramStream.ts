@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Configuration } from '../Interfaces/Configuration';
 import {
   SpectrogramPayload,
   DemonSpectrogramPayload,
-} from '../Interfaces/SpectrogramPayload';
+} from '../Interfaces/Payloads';
+import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 
 /*
 
@@ -33,7 +33,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   const shouldConnectRef = useRef(autoConnect);
 
   const connect = useCallback(
-    (configuration?: Configuration) => {
+    (configuration?: SpectrogramNarrowbandAndDemonConfiguration) => {
       if (
         socketRef.current &&
         (socketRef.current.readyState === WebSocket.OPEN ||
@@ -42,7 +42,6 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
         return;
       }
 
-      console.log('in useSpectrogramStream::connect config is set to: ');
       console.log('Configuration:\n', JSON.stringify(configuration, null, 2));
 
       setError(null);

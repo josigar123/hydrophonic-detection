@@ -8,6 +8,7 @@ export interface SpectrogramConfiguration {
   maxDb: number;
   minDb: number;
   window: string;
+  narrowbandThreshold: number;
 }
 
 export interface DemonSpectrogramConfiguration {
@@ -23,11 +24,14 @@ export interface DemonSpectrogramConfiguration {
   window: string;
 }
 
-export interface Configuration {
-  config: {
-    spectrogramConfiguration: SpectrogramConfiguration;
-    demonSpectrogramConfiguration: DemonSpectrogramConfiguration;
-    narrowbandThreshold: number;
-    broadbandThreshold: number;
-  };
+export interface BroadbandConfiguration {
+  broadbandThreshold: number;
+  windowSize: number;
+  hilbertWindow: number;
+  bufferLength: number;
+}
+
+export interface SpectrogramNarrowbandAndDemonConfiguration {
+  spectrogramConfiguration: SpectrogramConfiguration;
+  demonSpectrogramConfiguration: DemonSpectrogramConfiguration;
 }
