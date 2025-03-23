@@ -6,7 +6,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from '@heroui/dropdown';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { ConfigurationContext } from '../Contexts/ConfigurataionContext';
 import { SpectrogramConfiguration } from '../Interfaces/Configuration';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
@@ -87,6 +87,21 @@ const SpectrogramParameterField = () => {
     }));
   };
 
+  const isTpersegInvalid = useMemo(() => {
+    if (localParams.tperseg === 0) return true;
+
+    if (localParams.tperseg >= localParams.horizontalFilterLength) return true;
+  }, [localParams.horizontalFilterLength, localParams.tperseg]);
+
+  const validateFilterLength = (value: number) =>
+    value % 2 === 0 ? false : true;
+
+  const isFreqFiltInvalid = useMemo(() => {
+    if (localParams.frequencyFilter === 0) return true;
+
+    return validateFilterLength(localParams.frequencyFilter) ? false : true;
+  }, [localParams.frequencyFilter]);
+
   return (
     <div className="flex w-full gap-x-4 items-center">
       {/* Dropdown for Window Selection */}
@@ -115,7 +130,8 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="tperseg"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        errorMessage="Value must be less horizontal filter and non-zero"
+        isInvalid={isTpersegInvalid}
         value={localParams?.tperseg.toString() || ''}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
       />
@@ -123,19 +139,8 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="freqFilt"
         className="flex-1 min-w-0 h-12"
-        isRequired
-        onValueChange={(value) => {
-          // First check if it's a valid number
-          if (isNaN(Number(value))) {
-            return 'Must be a number';
-          }
-          // Then check if it's even
-          if (Number(value) % 2 !== 0) {
-            return 'Must be an even number';
-          }
-          // If both conditions pass, return true
-          return true;
-        }}
+        errorMessage="Value must be odd and non-zero"
+        isInvalid={isFreqFiltInvalid}
         value={localParams?.frequencyFilter.toString() || ''}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
       />
@@ -143,7 +148,6 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="hfiltLength"
         className="flex-1 min-w-0 h-12"
-        isRequired
         value={localParams?.horizontalFilterLength.toString() || ''}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)
@@ -153,7 +157,6 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="windowInMin"
         className="flex-1 min-w-0 h-12"
-        isRequired
         value={localParams?.windowInMin.toString() || ''}
         onChange={(e) => handleInputChange('windowInMin', e.target.value)}
       ></Input>
@@ -161,7 +164,6 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="maxFrequency"
         className="flex-1 min-w-0 h-12"
-        isRequired
         value={localParams?.maxFrequency.toString() || ''}
         onChange={(e) => handleInputChange('maxFrequency', e.target.value)}
       ></Input>
@@ -169,7 +171,6 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="minFrequency"
         className="flex-1 min-w-0 h-12"
-        isRequired
         value={localParams?.minFrequency.toString() || ''}
         onChange={(e) => handleInputChange('minFrequency', e.target.value)}
       ></Input>
@@ -177,7 +178,6 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="maxDb"
         className="flex-1 min-w-0 h-12"
-        isRequired
         value={localParams?.maxDb.toString() || ''}
         onChange={(e) => handleInputChange('maxDb', e.target.value)}
       ></Input>
@@ -185,7 +185,6 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="minDb"
         className="flex-1 min-w-0 h-12"
-        isRequired
         value={localParams?.minDb.toString() || ''}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
       ></Input>
