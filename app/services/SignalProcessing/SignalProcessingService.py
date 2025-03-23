@@ -1,7 +1,5 @@
-
 import numpy as np
 from scipy import signal
-from utils import medfilt_vertcal_norm, spec_hfilt2
 from utils import average_filter, spec_hfilt2, medfilt_vertcal_norm, moving_average_padded
 from scipy.signal import hilbert, resample_poly
 
@@ -64,8 +62,18 @@ class SignalProcessingService:
     def narrowband_detection(self, spectrogram_db: np.ndarray, threshold: int) -> bool:
         return np.any(spectrogram_db > threshold)
 
+    '''
+    
+        hilbert_win: en mengde samples samples til ett gjennomsnitt data punkt, får da et nytt antall samples: original_samples / hilber_win
+        window_size: antall sekunder som skal glattes ut, bestemmer minimum sekunder data som må samles?
+                     må være lik for broadband_trigger og
+        
+        
+    
+    '''
+
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
-    def broadband_data(self, pcm_data: bytes, hilbert_win, window_size):
+    def generate_broadband_data(self, pcm_data: bytes, hilbert_win, window_size):
 
         # Average the signal over all channels
         mono_signal = self.convert_n_channel_signal_to_mono(pcm_data)
@@ -87,9 +95,9 @@ class SignalProcessingService:
 
         return broadband_signal, t
 
-    def broadband_trigger(self, pcm_data: bytes, threshold, window_size):
+    def broadband_detection(self, filo_buffer: bytes, threshold: int, window_size: int):
         
-        mono_signal = self.convert_n_channel_signal_to_mono(pcm_data)
+        mono_signal = self.convert_n_channel_signal_to_mono(filo_buffer)
 
         min_val = np.min(mono_signal)
         last_win = mono_signal[-window_size*self.sample_rate:]
