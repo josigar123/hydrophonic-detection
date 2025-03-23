@@ -205,6 +205,7 @@ async def handle_connection(websocket, path):
                     await forward_audio_to_frontend(message)
                     await forward_signal_processed_data_to_frontend(message)
                     await forward_demon_data_to_frontend(message)
+                    await forward_broadband_data_to_frontend(message)
                 except Exception as e:
                     print(f"Error processing message: {e}")
                     
@@ -251,7 +252,7 @@ async def handle_connection(websocket, path):
 
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
-            
+
         if client_name in clients.keys():
             async for message in websocket:
                 try:
@@ -387,7 +388,7 @@ async def forward_broadband_data_to_frontend(data):
                     broadband_total_buffer = adjusted_broadband_total_buffer
 
                     '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
-                    is_detection = await produce_broadband_detection_result(adjusted_broadband_total_buffer, broadband_threshold,
+                    is_detection = await perform_broadband_detection(adjusted_broadband_total_buffer, broadband_threshold,
                                                                             window_size)
 
         except websockets.exceptions.ConnectionClosed:
@@ -398,6 +399,18 @@ async def forward_broadband_data_to_frontend(data):
             print(f"Error sending to broadband_client from 'forward_broadband_data_to_frontend': {e}")
     else:
         print('broadband_client not connected')                
+
+async def perform_broadband_detection(broadband_total_buffer: bytes, threshold: int, window_size: int):
+
+    try:
+        is_detection = await produce_broadband_detection_result(broadband_total_buffer, threshold, window_size)
+        if is_detection:
+            print("BROADBAND DETECTION IN THE BUFFER")
+        return is_detection
+    except Exception as e:
+        print(f"Error during broadband detection: {e}")
+    
+    return False
 
 async def forward_demon_data_to_frontend(data):
     global demon_spectrogram_audio_buffer
@@ -509,7 +522,8 @@ async def perform_narrowband_detection(spectrogram_db_flattened: np.ndarray, nar
         return is_detection
     except Exception as e:
         print(f"Error during narrowband detection: {e}")
-        return False
+    
+    return False
 
 async def main():
     global signal_processing_service
