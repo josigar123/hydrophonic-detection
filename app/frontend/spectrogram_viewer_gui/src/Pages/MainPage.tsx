@@ -13,12 +13,14 @@ const MainPage = () => {
       <div className="overflow-auto p-4 rounded h-full">
         <MapComponent />
       </div>
-      <div className="overflow-auto p-4 rounded h-full flex flex-col">
-        <div className="flex-1">
-          <BroadbandComponent />
-        </div>
-        <div className="flex-1 mb-2">
-          <WaveformSelection numChannels={2} />
+      <div className="overflow-auto p-4 rounded h-full">
+        <div className="flex h-full gap-2 lg:gap-4">
+          <div className="w-1/2">
+            <BroadbandComponent />
+          </div>
+          <div className="w-1/2">
+            <WaveformSelection numChannels={2} />
+          </div>
         </div>
       </div>
       <div className="overflow-auto p-4 rounded h-full">
