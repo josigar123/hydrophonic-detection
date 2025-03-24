@@ -6,96 +6,147 @@ import {
   DropdownMenu,
   DropdownItem,
 } from '@heroui/dropdown';
-import { useContext, useEffect, useMemo, useState } from 'react';
-import { SpectrogramConfiguration } from '../Interfaces/Configuration';
+import {
+  useContext,
+  useCallback,
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+} from 'react';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
 import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
 const SpectrogramParameterField = () => {
   const context = useContext(SpectrogramConfigurationContext);
 
-  const useConfiguration = () => {
-    if (!context) {
-      throw new Error(
-        'useConfiguration must be used within a SpectrogramConfigurationProvider'
-      );
-    }
-    return context;
-  };
+  if (!context) {
+    throw new Error(
+      'SpectrogramParameterField must be used within a SpectrogramConfigurationProvider'
+    );
+  }
 
-  const { spectrogramConfig, setSpectrogramConfig } = useConfiguration();
+  const { spectrogramConfig, setSpectrogramConfig } = context;
+  const config = spectrogramConfig.spectrogramConfiguration || {};
 
-  const [localParams, setLocalParams] = useState<SpectrogramConfiguration>({});
+  // Use local state only for input values
+  const [inputValues, setInputValues] = useState({
+    window: config.window || '',
+    tperseg: config.tperseg?.toString() || '',
+    frequencyFilter: config.frequencyFilter?.toString() || '',
+    horizontalFilterLength: config.horizontalFilterLength?.toString() || '',
+    windowInMin: config.windowInMin?.toString() || '',
+    maxFrequency: config.maxFrequency?.toString() || '',
+    minFrequency: config.minFrequency?.toString() || '',
+    maxDb: config.maxDb?.toString() || '',
+    minDb: config.minDb?.toString() || '',
+    narrowbandThreshold: config.narrowbandThreshold?.toString() || '',
+  });
 
-  // Sync local state with context on mount
-  useEffect(() => {
-    if (spectrogramConfig.spectrogramConfiguration) {
-      setLocalParams((prev) => ({
+  // Use a ref to track if we need to commit changes
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle input changes immediately for UI responsiveness
+  const handleInputChange = useCallback(
+    (field: keyof typeof inputValues, value: string) => {
+      // Update local state immediately for responsive UI
+      setInputValues((prev) => ({
         ...prev,
-        ...spectrogramConfig.spectrogramConfiguration,
+        [field]: value,
       }));
-    }
-  }, [spectrogramConfig.spectrogramConfiguration]);
 
-  const handleDropdownChange = (window: string) => {
-    setLocalParams((prevParams) => ({
-      ...prevParams,
-      window,
-    }));
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
 
-    setSpectrogramConfig((prevConfig) => ({
-      ...prevConfig,
+      updateTimeoutRef.current = setTimeout(() => {
+        setSpectrogramConfig((prevConfig) => {
+          const parsedValue = isNaN(Number(value)) ? value : Number(value);
+          return {
+            ...prevConfig,
+            spectrogramConfiguration: {
+              ...prevConfig.spectrogramConfiguration,
+              [field]: parsedValue,
+            },
+          };
+        });
+      }, 300); // 300ms debounce
+    },
+    [setSpectrogramConfig]
+  );
 
-      spectrogramConfiguration: {
-        ...prevConfig.spectrogramConfiguration,
+  // Handle blur to ensure value is committed when field loses focus
+  const handleBlur = useCallback(
+    (field: keyof typeof inputValues) => {
+      const value = inputValues[field];
+      const parsedValue = isNaN(Number(value)) ? value : Number(value);
+
+      setSpectrogramConfig((prevConfig) => ({
+        ...prevConfig,
+        spectrogramConfiguration: {
+          ...prevConfig.spectrogramConfiguration,
+          [field]: parsedValue,
+        },
+      }));
+
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = null;
+      }
+    },
+    [inputValues, setSpectrogramConfig]
+  );
+
+  // Handle dropdown selection
+  const handleDropdownChange = useCallback(
+    (window: string) => {
+      // Update local state
+      setInputValues((prev) => ({
+        ...prev,
         window,
-      },
-    }));
-  };
+      }));
 
-  const handleInputChange = (
-    field: keyof SpectrogramConfiguration,
-    value: string
-  ) => {
-    const parsedValue = isNaN(Number(value)) ? value : Number(value);
-    setLocalParams((prevParams) => ({
-      ...prevParams,
-      [field]: parsedValue,
-    }));
+      // Update context immediately for dropdown
+      setSpectrogramConfig((prevConfig) => ({
+        ...prevConfig,
+        spectrogramConfiguration: {
+          ...prevConfig.spectrogramConfiguration,
+          window,
+        },
+      }));
+    },
+    [setSpectrogramConfig]
+  );
 
-    setSpectrogramConfig((prevConfig) => ({
-      ...prevConfig,
-
-      spectrogramConfiguration: {
-        ...prevConfig.spectrogramConfiguration,
-        [field]: parsedValue,
-      },
-    }));
-  };
-
+  // Validation functions
   const isTpersegInvalid = useMemo(() => {
-    if (
-      localParams.tperseg === undefined ||
-      localParams.horizontalFilterLength === undefined
-    )
-      return true;
-    if (localParams.tperseg === 0) return true;
+    const tperseg = Number(inputValues.tperseg);
+    const horizontalFilterLength = Number(inputValues.horizontalFilterLength);
 
-    if (localParams.tperseg >= localParams.horizontalFilterLength) return true;
-  }, [localParams.horizontalFilterLength, localParams.tperseg]);
+    if (!inputValues.tperseg || tperseg === 0) return true;
+    if (tperseg >= horizontalFilterLength) return true;
+
+    return false;
+  }, [inputValues.tperseg, inputValues.horizontalFilterLength]);
 
   const validateFilterLength = (value: number) =>
     value % 2 === 0 ? false : true;
 
   const isFreqFiltInvalid = useMemo(() => {
-    if (
-      localParams.frequencyFilter === 0 ||
-      localParams.frequencyFilter === undefined
-    )
-      return true;
+    const frequencyFilter = Number(inputValues.frequencyFilter);
 
-    return validateFilterLength(localParams.frequencyFilter) ? false : true;
-  }, [localParams.frequencyFilter]);
+    if (!inputValues.frequencyFilter || frequencyFilter === 0) return true;
+    return !validateFilterLength(frequencyFilter);
+  }, [inputValues.frequencyFilter]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex w-full gap-x-4 items-center">
@@ -104,7 +155,7 @@ const SpectrogramParameterField = () => {
         <Dropdown>
           <DropdownTrigger variant="faded">
             <Button className="w-full h-12 hover:bg-gray-200 truncate">
-              {localParams?.window || 'Select window type'}
+              {inputValues.window || 'Select window type'}
             </Button>
           </DropdownTrigger>
           <DropdownMenu
@@ -127,8 +178,9 @@ const SpectrogramParameterField = () => {
         className="flex-1 min-w-0 h-12"
         errorMessage="Value must be less horizontal filter and non-zero"
         isInvalid={isTpersegInvalid}
-        value={(localParams?.tperseg ?? '').toString()}
+        value={inputValues.tperseg}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
+        onBlur={() => handleBlur('tperseg')}
       />
       <Input
         labelPlacement="inside"
@@ -136,62 +188,70 @@ const SpectrogramParameterField = () => {
         className="flex-1 min-w-0 h-12"
         errorMessage="Value must be odd and non-zero"
         isInvalid={isFreqFiltInvalid}
-        value={(localParams?.frequencyFilter ?? '').toString()}
+        value={inputValues.frequencyFilter}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
+        onBlur={() => handleBlur('frequencyFilter')}
       />
       <Input
         labelPlacement="inside"
-        label="hfiltLength"
+        label="hfilt"
         className="flex-1 min-w-0 h-12"
-        value={(localParams?.horizontalFilterLength ?? '').toString()}
+        value={inputValues.horizontalFilterLength}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)
         }
+        onBlur={() => handleBlur('horizontalFilterLength')}
       />
       <Input
         labelPlacement="inside"
-        label="windowInMin"
+        label="windowLen"
         className="flex-1 min-w-0 h-12"
-        value={(localParams?.windowInMin ?? '').toString()}
+        value={inputValues.windowInMin}
         onChange={(e) => handleInputChange('windowInMin', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('windowInMin')}
+      />
       <Input
         labelPlacement="inside"
-        label="maxFrequency"
+        label="maxFreq"
         className="flex-1 min-w-0 h-12"
-        value={(localParams?.maxFrequency ?? '').toString()}
+        value={inputValues.maxFrequency}
         onChange={(e) => handleInputChange('maxFrequency', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('maxFrequency')}
+      />
       <Input
         labelPlacement="inside"
-        label="minFrequency"
+        label="minFreq"
         className="flex-1 min-w-0 h-12"
-        value={(localParams?.minFrequency ?? '').toString()}
+        value={inputValues.minFrequency}
         onChange={(e) => handleInputChange('minFrequency', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('minFrequency')}
+      />
       <Input
         labelPlacement="inside"
         label="maxDb"
         className="flex-1 min-w-0 h-12"
-        value={(localParams?.maxDb ?? '').toString()}
+        value={inputValues.maxDb}
         onChange={(e) => handleInputChange('maxDb', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('maxDb')}
+      />
       <Input
         labelPlacement="inside"
         label="minDb"
         className="flex-1 min-w-0 h-12"
-        value={(localParams?.minDb ?? '').toString()}
+        value={inputValues.minDb}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('minDb')}
+      />
       <Input
         labelPlacement="inside"
         label="narrowbandThreshold"
         className="flex-1 min-w-0 h-12"
-        value={(localParams?.narrowbandThreshold ?? '').toString()}
+        value={inputValues.narrowbandThreshold}
         onChange={(e) =>
           handleInputChange('narrowbandThreshold', e.target.value)
         }
-      ></Input>
+        onBlur={() => handleBlur('narrowbandThreshold')}
+      />
     </div>
   );
 };
