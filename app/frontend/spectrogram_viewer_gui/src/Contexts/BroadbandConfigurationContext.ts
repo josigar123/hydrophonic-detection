@@ -10,9 +10,4 @@ export const BroadbandConfigurationContext = createContext<
   BroadbandConfigurationContextType | undefined
 >(undefined);
 
-export const defaultBroadbandConfig: BroadbandConfiguration = {
-  broadbandThreshold: 0,
-  windowSize: 0,
-  hilbertWindow: 0,
-  bufferLength: 0,
-};
+export const defaultBroadbandConfig: BroadbandConfiguration = {};

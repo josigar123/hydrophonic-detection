@@ -1,7 +1,10 @@
 import { Input } from '@heroui/input';
 import { useContext, useEffect, useState } from 'react';
 import { BroadbandConfiguration } from '../Interfaces/Configuration';
-import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
+import {
+  BroadbandConfigurationContext,
+  defaultBroadbandConfig,
+} from '../Contexts/BroadbandConfigurationContext';
 
 const BroadbandParameterField = () => {
   const context = useContext(BroadbandConfigurationContext);
@@ -17,12 +20,9 @@ const BroadbandParameterField = () => {
 
   const { broadbandConfiguration, setBroadbandConfig } = useConfiguration();
 
-  const [localParams, setLocalParams] = useState<BroadbandConfiguration>({
-    broadbandThreshold: 0,
-    windowSize: 0,
-    hilbertWindow: 0,
-    bufferLength: 0,
-  });
+  const [localParams, setLocalParams] = useState<BroadbandConfiguration>(
+    defaultBroadbandConfig
+  );
 
   useEffect(() => {
     if (broadbandConfiguration) {
@@ -56,7 +56,7 @@ const BroadbandParameterField = () => {
         labelPlacement="inside"
         label="broadbandThreshold"
         className="flex-1 min-w-0 h-12"
-        value={localParams?.broadbandThreshold.toString() || ''}
+        value={(localParams?.broadbandThreshold ?? '').toString()}
         onChange={(e) =>
           handleInputChange('broadbandThreshold', e.target.value)
         }
@@ -65,21 +65,21 @@ const BroadbandParameterField = () => {
         labelPlacement="inside"
         label="windowSize"
         className="flex-1 min-w-0 h-12"
-        value={localParams?.windowSize.toString() || ''}
+        value={(localParams?.windowSize ?? '').toString()}
         onChange={(e) => handleInputChange('windowSize', e.target.value)}
       />
       <Input
         labelPlacement="inside"
         label="hilbertWindow"
         className="flex-1 min-w-0 h-12"
-        value={localParams?.hilbertWindow.toString() || ''}
+        value={(localParams?.hilbertWindow ?? '').toString()}
         onChange={(e) => handleInputChange('hilbertWindow', e.target.value)}
       />
       <Input
         labelPlacement="inside"
         label="bufferLength"
         className="flex-1 min-w-0 h-12"
-        value={localParams?.bufferLength.toString() || ''}
+        value={(localParams?.bufferLength ?? '').toString()}
         onChange={(e) => handleInputChange('bufferLength', e.target.value)}
       />
     </div>
