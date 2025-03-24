@@ -16,10 +16,10 @@ const MainPage = () => {
       <div className="overflow-auto p-4 rounded h-full">
         <div className="flex h-full gap-2 lg:gap-4">
           <div className="w-1/2">
-            <BroadbandComponent />
+            <WaveformSelection numChannels={2} />
           </div>
           <div className="w-1/2">
-            <WaveformSelection numChannels={2} />
+            <BroadbandComponent />
           </div>
         </div>
       </div>

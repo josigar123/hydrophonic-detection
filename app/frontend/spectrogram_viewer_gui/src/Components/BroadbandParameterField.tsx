@@ -54,7 +54,7 @@ const BroadbandParameterField = () => {
     <div className="flex w-full gap-x-4 items-center">
       <Input
         labelPlacement="inside"
-        label="tperseg"
+        label="broadbandThreshold"
         className="flex-1 min-w-0 h-12"
         value={localParams?.broadbandThreshold.toString() || ''}
         onChange={(e) =>
