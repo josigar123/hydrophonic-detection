@@ -47,7 +47,7 @@ recording_config = {}          # This dict holds the most recent recording confi
     I recv the message from the broker and write it to a local json file for easy reading
 '''
 
-BOOTSTRAP_SERVERS = '10.0.0.24:9092'
+BOOTSTRAP_SERVERS = 'localhost:9092'
 
 async def consume_recording_config():
     """Async function to consume configuration messages from Kafka before WebSocket server starts."""
@@ -91,7 +91,6 @@ async def consume_recording_config():
 async def produce_narrowband_detection_result(spectrogram_db: list[float], threshold: float) -> bool:
     
     topic = 'narrowband-detection'
-    bootstrap_servers = '10.0.0.24:9092'
     producer = AIOKafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS,
                 value_serializer = lambda v: (1 if v else 0).to_bytes(1, byteorder='big'))
 

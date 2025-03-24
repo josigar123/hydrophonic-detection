@@ -1,8 +1,9 @@
-import websockets
 import asyncio
 import json
 from datetime import datetime
 from aiokafka import AIOKafkaConsumer
+from websocket_client import  WebSocketClient
+import multiprocessing
 
 
 '''
@@ -19,51 +20,41 @@ MUST SUPPLY client_name query param when connecting to websocket
 
 '''
 
-class WebSocketClient:
+def run_ais_consumer(broker_info):
+    asyncio.run(ais_consumer_loop(broker_info))
 
-    def __init__(self, url):
-        self.url = url
-        self.websocket = None
-    
-    async def connect(self):
-        seconds: int = 1
-        if self.websocket == None or  self.websocket.closed:
-            while True:
-                try:
-                    self.websocket = await websockets.connect(self.url)
-                    print(f"Successfully connected to WebSocket at {self.url}")
-                    return True
-                except Exception as e:
-                    if seconds >= 30:
-                        print(f"WebSocket connection could not be established, exiting...")
-                        return False
-                    print(f"WebSocket connection failed: {e}, retrying in {seconds}s...")
-                    await asyncio.sleep(seconds)
-                    seconds += 1
-    
-    async def send(self, data):
-        if self.websocket is None or self.websocket.closed:
-            success = await self.connect()
-            if not success:
-                return False
-        
+def consume_ais(broker_info: dict):
+    consumer_process = multiprocessing.Process(target=run_ais_consumer, args=(broker_info,))
+    consumer_process.start()
+    return consumer_process
+
+async def ais_consumer_loop(broker_info: dict):
+    broker_ip = broker_info["ip"]
+    broker_port = broker_info["port"]
+    broker_topic = "ais-log"
+    websocket_url = "ws://localhost:8766?client_name=ais_consumer"
+
+    socket_client = WebSocketClient(websocket_url)
+
+    while True:
         try:
-            await self.websocket.send(data)
-            return True
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection closed while sending data. Will reconnect on next attempt...")
-            self.websocket = None
-            return False
+            async_ais_consumer = AIOKafkaConsumer(
+                broker_topic,
+                bootstrap_servers=[f"{broker_ip}:{broker_port}"],
+                auto_offset_reset="latest",
+                enable_auto_commit=True
+            )
+            success = await socket_client.connect()
+            if not success:
+                print("Failed to connect to WebSocket, retrying in 5s...")
+                await asyncio.sleep(5)
+                continue
+            await process_ais_messages(async_ais_consumer, socket_client)
         except Exception as e:
-            print(f"Error sending data: {e}")
-            return False
-        
-    async def close(self):
-        if self.websocket:
-            await self.websocket.close()
-            self.websocket = None
+            print(f"Error in AIS consumer loop: {e}, restarting in 5s...")
+            await asyncio.sleep(5)
 
-async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient):
+async def process_ais_messages(consumer: AIOKafkaConsumer, socket_client: WebSocketClient):
     
     await consumer.start()
 
@@ -87,35 +78,9 @@ async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient
 
 async def main():
 
-    with open("broker_info_ais.json", "r") as file:
+    with open("broker_info.json", "r") as file:
         broker_info = json.load(file)
 
-    broker_ip = broker_info["ip"]
-    broker_port = broker_info["brokerPort"]
-    broker_topic = broker_info["topicName"]
-
-    socket_client = WebSocketClient("ws://localhost:8766?client_name=ais_consumer")
-
-    while True:
-        try:
-            async_ais_consumer = AIOKafkaConsumer(
-                broker_topic,
-                bootstrap_servers=[f"{broker_ip}:{broker_port}"],
-                auto_offset_reset='latest',
-                enable_auto_commit=True
-            )
-
-            success = await socket_client.connect()
-            if not success:
-                print("Failed to connect to WebSocket, retrying in 5s...")
-                await asyncio.sleep(5)
-                continue
-
-            await consume_ais(async_ais_consumer, socket_client)
-        except Exception as e:
-            print(f"Error in main loop: {e}, restarting in 5s...")
-        
-        await asyncio.sleep(5)
-
+    await ais_consumer_loop(broker_info)
 if __name__ == "__main__":
     asyncio.run(main())
