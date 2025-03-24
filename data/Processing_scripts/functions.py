@@ -212,10 +212,7 @@ def load_audiofile(input_file, fs:int, fc_low:float ,remove_offcet=True):
     fs : sample frequency
     """
     # Load audio data from the input file
-    data_org, sr = librosa.load(input_file)  # Load the file, returns the audio signal and its sampling rate
-
-    # Downsample the original audio data to the desired sampling frequency
-    data_offcet = resample_poly(data_org, 1, int(sr / fs))  # Resampling the signal to Fds
+    data_offcet, fs = librosa.load(input_file, sr=fs)  # Load the file, returns the audio signal and its sampling rate
 
     b,a = signal.butter(N=4,Wn=fc_low, btype="highpass",fs=fs)
     data_offcet = signal.filtfilt(b,a,data_offcet)   
@@ -384,7 +381,7 @@ def BroadBand_from_data(Sx, Fs:int ,hilbert_win: int, window_size:float ,trigger
         plt.show()  # Show the plot
     return Trigger_time
 
-def BB_data(Sx, Fs, hilbert_win, window_size, Threshold):
+def BB_data(Sx, Fs, hilbert_win, window_size):
     # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
     # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
     envelope = moving_average_padded(np.square(np.abs(hilbert(Sx))),hilbert_win)
@@ -398,7 +395,7 @@ def BB_data(Sx, Fs, hilbert_win, window_size, Threshold):
     signal_med = moving_average_padded(DS_Sx, kernel_size)  # Apply median filter for further noise removal
 
     BB_sig = 10*np.log10(signal_med)
-    t = np.linspace(0,len(BB_sig)/Fs,len(BB_sig))
+    t = np.linspace(0,len(BB_sig)/DS_Fs,len(BB_sig))
     return BB_sig, t
 
 def DEMON_from_file(input_file, Fs, Fds,freq_filt ,fmax=100, s_max=10, window="hamming"):
@@ -493,7 +490,12 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
             Spectrogram window
     
     RETURN:
-        Plots the DEMON specrtogram for a given time series
+        td: 1D array of float
+            time array for spectrogram
+        fd: 1D array of float
+            frequency array for spectrogram
+        sxx_db: 2D array of float
+            2D array of intencity for spectrogram (dB)
     """
     
     #RMS data of hilbert
