@@ -212,10 +212,7 @@ def load_audiofile(input_file, fs:int, fc_low:float ,remove_offcet=True):
     fs : sample frequency
     """
     # Load audio data from the input file
-    data_org, sr = librosa.load(input_file)  # Load the file, returns the audio signal and its sampling rate
-
-    # Downsample the original audio data to the desired sampling frequency
-    data_offcet = resample_poly(data_org, 1, int(sr / fs))  # Resampling the signal to Fds
+    data_offcet, fs = librosa.load(input_file, sr=fs)  # Load the file, returns the audio signal and its sampling rate
 
     b,a = signal.butter(N=4,Wn=fc_low, btype="highpass",fs=fs)
     data_offcet = signal.filtfilt(b,a,data_offcet)   
@@ -510,7 +507,12 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
             Spectrogram window
     
     RETURN:
-        Plots the DEMON specrtogram for a given time series
+        td: 1D array of float
+            time array for spectrogram
+        fd: 1D array of float
+            frequency array for spectrogram
+        sxx_db: 2D array of float
+            2D array of intencity for spectrogram (dB)
     """
     
     #RMS data of hilbert
