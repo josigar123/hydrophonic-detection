@@ -8,6 +8,8 @@ export function useBroadbandStream(url: string, autoConnect = false) {
     times: [],
   });
 
+  const [isBroadbandDetection, setIsBroadbandDetection] = useState(false);
+
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
@@ -46,11 +48,16 @@ export function useBroadbandStream(url: string, autoConnect = false) {
           try {
             const data = JSON.parse(event.data);
 
-            console.log('RECVD broadband data: ', data.broadbandSignal);
-            setBroadbandData({
-              broadbandSignal: data.broadbandSignal || [],
-              times: data.times || [],
-            });
+            if ('detectionStatus' in data) {
+              console.log('RECVD detection status: ', data.detectionStatus);
+              setIsBroadbandDetection(data.detectionStatus);
+            } else {
+              console.log('RECVD broadband data: ', data.broadbandSignal);
+              setBroadbandData({
+                broadbandSignal: data.broadbandSignal || [],
+                times: data.times || [],
+              });
+            }
           } catch (error) {
             console.error(
               'Error parsing message in useBroadbandStream:',
@@ -116,6 +123,7 @@ export function useBroadbandStream(url: string, autoConnect = false) {
 
   return {
     broadbandData,
+    isBroadbandDetection,
     isConnected,
     error,
     connect,

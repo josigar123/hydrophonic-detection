@@ -27,6 +27,8 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
       demonSpectrogramDb: [],
     });
 
+  const [isNarrowbandDetection, setIsNarrowbandDetection] = useState(false);
+
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
@@ -64,6 +66,14 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
         socket.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
+
+            if ('detectionStatus' in data) {
+              console.log(
+                'RECVD narrowband detection status: ',
+                data.detectionStatus
+              );
+              setIsNarrowbandDetection(data.detectionStatus);
+            }
 
             if (data.spectrogramDb) {
               console.log('RECVD spectrogram data: ', data.spectrogramDb);
@@ -148,6 +158,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   return {
     spectrogramData,
     demonSpectrogramData,
+    isNarrowbandDetection,
     isConnected,
     error,
     connect,

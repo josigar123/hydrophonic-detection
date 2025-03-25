@@ -401,6 +401,14 @@ async def forward_broadband_data_to_frontend(data):
                     '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
                     is_detection = await perform_broadband_detection(adjusted_broadband_total_buffer, broadband_threshold,
                                                                             window_size)
+                    detection_dict = {
+                        "detectionStatus": is_detection
+                    }
+
+                    detection_json = json.dumps(detection_dict)
+                    print("Sending broadband detection result to frontend...")
+                    await clients["broadband_client"].send(detection_json)
+                    print("Broadband detection result sent to frontend...")
 
         except websockets.exceptions.ConnectionClosed:
             print("Connection to broadband_client was closed while sending")
@@ -510,7 +518,17 @@ async def forward_signal_processed_data_to_frontend(data):
                 data_json = json.dumps(data_dict)
                 print("Sending spectrogram data...")
                 await clients['spectrogram_client'].send(data_json)
-                print("Spectrogram data sent...")  
+                print("Spectrogram data sent...")
+
+                detection_dict = {
+                    "detectionStatus": is_detection
+                }
+                
+                detection_json = json.dumps(detection_dict)
+                print("Sending narrowband detection result to frontend...")
+                await clients["spectrogram_client"].send(detection_json)
+                print("Narrowband detection result sent to frontend...")
+
                                                                                                                                                                
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")

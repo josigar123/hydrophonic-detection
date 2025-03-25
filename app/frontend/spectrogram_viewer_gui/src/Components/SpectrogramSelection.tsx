@@ -26,6 +26,7 @@ const SpectrogramSelection = () => {
   const {
     spectrogramData,
     demonSpectrogramData,
+    isNarrowbandDetection,
     isConnected,
     connect,
     disconnect,
@@ -254,6 +255,21 @@ const SpectrogramSelection = () => {
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               Disconnected
             </span>
+          )}
+          {isNarrowbandDetection ? (
+            <div>
+              <span className="inline-flex items-center">
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                Detection in narrowband
+              </span>
+            </div>
+          ) : (
+            <div>
+              <span className="inline-flex items-center text-gray-500">
+                <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
+                No detection in narrowband
+              </span>
+            </div>
           )}
           {isInvalidConfig && (
             <div className="text-red-300">
