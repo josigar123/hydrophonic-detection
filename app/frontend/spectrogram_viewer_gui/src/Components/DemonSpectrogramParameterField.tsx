@@ -124,8 +124,10 @@ const DemonSpectrogramParameterField = ({
         <Dropdown>
           <DropdownTrigger variant="faded">
             <Button
-              className="w-full h-12 hover:bg-gray-200 truncate"
               isDisabled={isConnected}
+              className={`w-full h-12 hover:bg-gray-200 truncate ${
+                isConnected ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               {inputValues.window || 'Select window'}
             </Button>
@@ -147,7 +149,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="demonFs"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[Hz]</span>
@@ -163,7 +167,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="tperseg"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[s]</span>
@@ -177,7 +183,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="freqFilt"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[fBins]</span>
@@ -191,7 +199,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="hfilt"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[s]</span>
@@ -207,7 +217,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="windowLen"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[min]</span>
@@ -220,7 +232,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="maxFreq"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[Hz]</span>
@@ -233,7 +247,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="minFreq"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[Hz]</span>
@@ -246,7 +262,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="maxDb"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[Db]</span>
@@ -259,7 +277,9 @@ const DemonSpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="minDb"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[dB]</span>

@@ -81,7 +81,9 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="BBThresh"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[dB]</span>
@@ -97,7 +99,9 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="winSize"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[s]</span>
@@ -111,7 +115,9 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="hilbertWin"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[Hz]</span>
@@ -125,7 +131,9 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="bufferLen"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[s]</span>

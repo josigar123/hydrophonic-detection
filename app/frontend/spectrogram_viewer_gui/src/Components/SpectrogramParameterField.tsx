@@ -161,8 +161,10 @@ const SpectrogramParameterField = ({
         <Dropdown>
           <DropdownTrigger variant="faded">
             <Button
-              className="w-full h-12 hover:bg-gray-200 truncate"
               isDisabled={isConnected}
+              className={`w-full h-12 hover:bg-gray-200 truncate ${
+                isConnected ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               {inputValues.window || 'Select window'}
             </Button>
@@ -184,7 +186,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="tperseg"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         errorMessage="Value must be less horizontal filter and non-zero"
         endContent={
           <div className="pointer-events-none flex items-center">
@@ -200,7 +204,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="freqFilt"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         errorMessage="Value must be odd and non-zero"
         endContent={
           <div className="pointer-events-none flex items-center">
@@ -216,7 +222,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="hfilt"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[s]</span>
@@ -232,7 +240,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="winLen"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[min]</span>
@@ -245,7 +255,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="maxFreq"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[Hz]</span>
@@ -258,7 +270,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="minFreq"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[Hz]</span>
@@ -271,7 +285,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="maxDb"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[dB]</span>
@@ -284,7 +300,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="minDb"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[dB]</span>
@@ -297,7 +315,9 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="NBThresh"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[dB]</span>
