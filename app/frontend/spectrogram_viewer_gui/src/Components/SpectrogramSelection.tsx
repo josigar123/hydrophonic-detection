@@ -4,10 +4,11 @@ import { Button } from '@heroui/button';
 import { Tabs, Tab } from '@heroui/tabs';
 import SpectrogramParameterField from './SpectrogramParameterField';
 import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import DemonSpectrogramParameterField from './DemonSpectrogramParameterField';
 import ScrollingDemonSpectrogram from './ScrollingDemonSpectrogram';
 import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
+import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
@@ -30,11 +31,156 @@ const SpectrogramSelection = () => {
     disconnect,
   } = useSpectrogramStream(websocketUrl, false);
 
+  const [isInvalidConfig, setIsInvalidConfig] = useState(true);
+
+  // Big chunky, clunky function for validating the input, might want to refactor this
+  const validateEntireConfiguration = (
+    spectrogramConfig: SpectrogramNarrowbandAndDemonConfiguration
+  ): boolean => {
+    if (!spectrogramConfig) return false;
+
+    const { spectrogramConfiguration, demonSpectrogramConfiguration } =
+      spectrogramConfig;
+
+    if (!spectrogramConfiguration || !demonSpectrogramConfiguration)
+      return false;
+
+    return (
+      validateWindow(spectrogramConfiguration.window ?? '') &&
+      validateTperseg(
+        spectrogramConfiguration.tperseg ?? 0,
+        spectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateFrequencyFilter(spectrogramConfiguration.frequencyFilter ?? 0) &&
+      validateHorizontalFilterLength(
+        spectrogramConfiguration.tperseg ?? 0,
+        spectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateWindowInMin(spectrogramConfiguration.windowInMin ?? 0) &&
+      validateMaxFrequency(spectrogramConfiguration.maxFrequency ?? 0) &&
+      validateMinFrequency(spectrogramConfiguration.minFrequency ?? 0) &&
+      validateMaxDb(spectrogramConfiguration.maxDb ?? 0) &&
+      validateMinDb(spectrogramConfiguration.minDb ?? 0) &&
+      validateNarrowbandThreshold(
+        spectrogramConfiguration.narrowbandThreshold ?? 0
+      ) &&
+      validateDemonSampleFrequency(
+        demonSpectrogramConfiguration.demonSampleFrequency ?? 0
+      ) &&
+      validateTperseg(
+        demonSpectrogramConfiguration.tperseg ?? 0,
+        demonSpectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateFrequencyFilter(
+        demonSpectrogramConfiguration.frequencyFilter ?? 0
+      ) &&
+      validateHorizontalFilterLength(
+        demonSpectrogramConfiguration.tperseg ?? 0,
+        demonSpectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateWindowInMin(demonSpectrogramConfiguration.windowInMin ?? 0) &&
+      validateMaxFrequency(demonSpectrogramConfiguration.maxFrequency ?? 0) &&
+      validateMinFrequency(demonSpectrogramConfiguration.minFrequency ?? 0) &&
+      validateMaxDb(demonSpectrogramConfiguration.maxDb ?? 0) &&
+      validateMinDb(demonSpectrogramConfiguration.minDb ?? 0) &&
+      validateWindow(demonSpectrogramConfiguration.window ?? '')
+    );
+  };
+
+  const validateWindow = (window: string) => {
+    if (window === undefined || window === '') return false;
+
+    return true;
+  };
+
+  const validateTperseg = (tperseg: number, horizontalFilterLength: number) => {
+    if (
+      tperseg === undefined ||
+      tperseg === 0 ||
+      tperseg >= horizontalFilterLength
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateFrequencyFilter = (frequencyFilter: number) => {
+    if (
+      frequencyFilter === undefined ||
+      frequencyFilter % 2 === 0 ||
+      frequencyFilter === 0
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateHorizontalFilterLength = (
+    tperseg: number,
+    horizontalFilterLength: number
+  ) => {
+    if (
+      horizontalFilterLength === undefined ||
+      horizontalFilterLength === 0 ||
+      horizontalFilterLength <= tperseg
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateWindowInMin = (windowInMin: number) => {
+    if (
+      windowInMin === undefined ||
+      windowInMin === 0 ||
+      !Number.isInteger(windowInMin)
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateMaxFrequency = (maxFrequency: number) => {
+    if (maxFrequency === undefined) return false;
+
+    return true;
+  };
+
+  const validateMinFrequency = (minFrequency: number) => {
+    if (minFrequency === undefined) return false;
+
+    return true;
+  };
+  const validateMaxDb = (maxDb: number) => {
+    if (maxDb === undefined) return false;
+
+    return true;
+  };
+  const validateMinDb = (minDb: number) => {
+    if (minDb === undefined) return false;
+
+    return true;
+  };
+
+  const validateNarrowbandThreshold = (narrowbandThreshold: number) => {
+    if (narrowbandThreshold === undefined) return false;
+
+    return true;
+  };
+
+  const validateDemonSampleFrequency = (demonSampleFrequency: number) => {
+    if (demonSampleFrequency === undefined || demonSampleFrequency === 0)
+      return false;
+
+    return true;
+  };
+
   // Memoize configuration to prevent unnecessary re-renders
   const spectrogramProps = useMemo(
     () => ({
       windowInMin:
         spectrogramConfig.spectrogramConfiguration?.windowInMin ?? 10,
+      // Resolution default to Nyquist frequency
       resolution:
         1 +
         (sampleRate *
@@ -76,11 +222,19 @@ const SpectrogramSelection = () => {
       {/* Control buttons with improved styling */}
       <div className="flex items-center gap-3 mb-4">
         <Button
-          onPress={() => connect(spectrogramConfig)}
+          onPress={() => {
+            if (validateEntireConfiguration(spectrogramConfig)) {
+              setIsInvalidConfig(false);
+              connect(spectrogramConfig);
+            } else {
+              setIsInvalidConfig(true);
+            }
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
         >
           Connect
         </Button>
+
         <Button
           onPress={disconnect}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
@@ -88,6 +242,7 @@ const SpectrogramSelection = () => {
         >
           Disconnect
         </Button>
+
         <div className="ml-2">
           {isConnected ? (
             <span className="inline-flex items-center">
@@ -99,6 +254,13 @@ const SpectrogramSelection = () => {
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               Disconnected
             </span>
+          )}
+          {isInvalidConfig && (
+            <div className="text-red-300">
+              <p className="font-medium">
+                Error: Ensure all fields have valid values
+              </p>
+            </div>
           )}
         </div>
       </div>
