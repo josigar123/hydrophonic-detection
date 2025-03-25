@@ -119,6 +119,15 @@ async def handle_connection(websocket, path):
     clients[client_name] = websocket
 
     try:
+
+        if client_name == "map_client":
+            async for message in websocket:
+                try:
+                    print(f"Received message from map_client: {message[:100]}...")
+                except Exception as e:
+                    print(f"Error processing message: {e}")
+
+
         if client_name == "audio_consumer":
             async for message in websocket:
 
@@ -168,7 +177,7 @@ async def handle_connection(websocket, path):
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
 
-        if client_name not in clients.keys():
+        elif client_name not in clients.keys():
             async for message in websocket:
                 try:
                     print(f"Received message from {client_name}: {message[:100]}...")
@@ -186,8 +195,21 @@ async def handle_connection(websocket, path):
 async def forward_ais_to_frontend(data):
     if 'map_client' in clients:
         try:
-            await clients['map_client'].send(data)
-            print("Forwarded AIS data to map_client")
+            if isinstance(data, str):
+                json_data = data
+            elif isinstance(data, bytes):
+                try:
+                    json_data = data.decode('utf-8')
+                except UnicodeDecodeError:
+                    import base64
+                    json_data = json.dumps({
+                        "type": "binary_data",
+                        "data": base64.b64encode(data).decode('ascii')
+                    })
+            else:
+                json_data = json.dumps(data)
+                
+            await clients['map_client'].send(json_data)
         except websockets.exceptions.ConnectionClosed:
             print("Connection to map_client was closed while sending")
             if 'map_client' in clients:

@@ -212,5 +212,12 @@ services:
     volumes:
       - ./data:/data
 
+  tileserver-gl:
+    image: maptiler/tileserver-gl
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/map
+
 volumes: 
   minio_data:

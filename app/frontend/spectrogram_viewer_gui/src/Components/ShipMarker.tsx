@@ -65,7 +65,7 @@ function ShipMarker({ ship }: ShipMarkerProps) {
         position={[ship.latitude, ship.longitude]}
         icon={shipIcon}
       >
-        <Popup autoClose={false} closeOnClick={false}>
+        <Popup autoClose={false} closeOnClick={true}>
           <div className="ship-popup">
             <h3 className="font-bold mb-2">{ship.shipName}</h3>
             <table className="w-full">

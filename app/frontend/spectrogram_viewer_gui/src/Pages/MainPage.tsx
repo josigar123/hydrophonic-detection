@@ -15,14 +15,14 @@ const MainPage = () => {
         <SpectrogramSelection />
       </div>
       <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
-        {/*<MapComponent />*/}
+        <MapComponent />
       </div>
       <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
         <WaveformSelection numChannels={2} />
         {/* <ImprovedWaveform numChannels={2}></ImprovedWaveform> */}
       </div>
       <div className="min-h-0 min-w-0 overflow-auto p-4 rounded">
-        {/*<AisDataTable />*/}
+        <AisDataTable />
       </div>
     </div>
   );
