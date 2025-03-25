@@ -1,39 +1,92 @@
 import BroadbandParameterField from './BroadbandParameterField';
 import ScrollingBroadBand from './ScrollingBroadBand';
-import { BroadbandPayload } from '../Interfaces/Payloads';
 import { useContext, useState } from 'react';
 import { Button } from '@heroui/button';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
 import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
+import { BroadbandConfiguration } from '../Interfaces/Configuration';
 
 const websocketUrl = 'ws://localhost:8766?client_name=broadband_client';
 
 const BroadbandComponent = () => {
   const context = useContext(BroadbandConfigurationContext);
 
-  const [broadbandPayload, setBroadbandPayload] =
-    useState<BroadbandPayload | null>(null);
+  if (!context) {
+    throw new Error(
+      'useConfiguration must be used within a SpectrogramConfigurationProvider'
+    );
+  }
+
+  const { broadbandConfiguration } = context;
 
   const { broadbandData, isConnected, error, connect, disconnect } =
     useBroadbandStream(websocketUrl, false);
 
-  const useConfiguration = () => {
-    if (!context) {
-      throw new Error(
-        'useConfiguration must be used within a SpectrogramConfigurationProvider'
-      );
-    }
-    return context;
+  const [isInvalidConfig, setIsInvalidConfig] = useState(true);
+
+  // Input validator function for broadband config
+  const validateBroadbandConfiguration = (
+    broadbandConfiguration: BroadbandConfiguration
+  ) => {
+    if (!broadbandConfiguration) return false;
+
+    const { broadbandThreshold, windowSize, hilbertWindow, bufferLength } =
+      broadbandConfiguration;
+
+    if (!broadbandThreshold || !windowSize || !hilbertWindow || !bufferLength)
+      return false;
+
+    return (
+      validateBroadbandThreshold(broadbandThreshold) &&
+      validateWindowSize(windowSize) &&
+      validateHilbertWindow(hilbertWindow) &&
+      validateBufferLength(bufferLength)
+    );
   };
 
-  const { broadbandConfiguration } = useConfiguration();
+  const validateBroadbandThreshold = (broadbandThreshold: number) => {
+    if (broadbandThreshold === undefined || broadbandThreshold === 0)
+      return false;
+
+    return true;
+  };
+
+  const validateWindowSize = (windowSize: number) => {
+    if (windowSize === undefined || windowSize === 0) return false;
+
+    return true;
+  };
+
+  const validateHilbertWindow = (hilbertWindow: number) => {
+    if (hilbertWindow === undefined || hilbertWindow === 0) return false;
+
+    return true;
+  };
+
+  const validateBufferLength = (bufferLength: number) => {
+    if (
+      bufferLength === undefined ||
+      bufferLength === 0 ||
+      !Number.isInteger(bufferLength)
+    )
+      return false;
+
+    return true;
+  };
 
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
       <div className="flex items-center gap-3 mb-4">
         <Button
-          onPress={() => connect(broadbandConfiguration)}
+          onPress={() => {
+            if (validateBroadbandConfiguration(broadbandConfiguration)) {
+              setIsInvalidConfig(false);
+              connect(broadbandConfiguration);
+            } else {
+              setIsInvalidConfig(true);
+            }
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
         >
           Connect
@@ -57,12 +110,19 @@ const BroadbandComponent = () => {
               Disconnected
             </span>
           )}
+          {isInvalidConfig && (
+            <div className="text-red-300">
+              <p className="font-medium">
+                Error: Ensure all fields have valid values
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
         <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
-          {broadbandPayload ? (
+          {broadbandData ? (
             <ScrollingBroadBand />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-300">
