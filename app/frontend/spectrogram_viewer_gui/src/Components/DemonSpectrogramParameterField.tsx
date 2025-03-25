@@ -139,7 +139,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="demonFs"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
         value={inputValues.demonSampleFrequency}
         onChange={(e) =>
           handleInputChange('demonSampleFrequency', e.target.value)
@@ -150,7 +154,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="tperseg"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
         value={inputValues.tperseg}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
         onBlur={() => handleBlur('tperseg')}
@@ -159,7 +167,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="freqFilt"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[fBins]</span>
+          </div>
+        }
         value={inputValues.frequencyFilter}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
         onBlur={() => handleBlur('frequencyFilter')}
@@ -168,7 +180,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="hfilt"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
         value={inputValues.horizontalFilterLength}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)
@@ -179,7 +195,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="windowLen"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[min]</span>
+          </div>
+        }
         value={inputValues.windowInMin}
         onChange={(e) => handleInputChange('windowInMin', e.target.value)}
         onBlur={() => handleBlur('windowInMin')}
@@ -188,7 +208,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="maxFreq"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
         value={inputValues.maxFrequency}
         onChange={(e) => handleInputChange('maxFrequency', e.target.value)}
         onBlur={() => handleBlur('maxFrequency')}
@@ -197,7 +221,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="minFreq"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
         value={inputValues.minFrequency}
         onChange={(e) => handleInputChange('minFrequency', e.target.value)}
         onBlur={() => handleBlur('minFrequency')}
@@ -206,6 +234,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="maxDb"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Db]</span>
+          </div>
+        }
         value={inputValues.maxDb}
         onChange={(e) => handleInputChange('maxDb', e.target.value)}
         onBlur={() => handleBlur('maxDb')}
@@ -214,7 +247,11 @@ const DemonSpectrogramParameterField = () => {
         labelPlacement="inside"
         label="minDb"
         className="flex-1 min-w-0 h-12"
-        isRequired
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
         value={inputValues.minDb}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
         onBlur={() => handleBlur('minDb')}

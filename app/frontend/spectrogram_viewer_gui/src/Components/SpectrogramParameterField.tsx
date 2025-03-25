@@ -177,6 +177,11 @@ const SpectrogramParameterField = () => {
         label="tperseg"
         className="flex-1 min-w-0 h-12"
         errorMessage="Value must be less horizontal filter and non-zero"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
         isInvalid={isTpersegInvalid}
         value={inputValues.tperseg}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
@@ -187,6 +192,11 @@ const SpectrogramParameterField = () => {
         label="freqFilt"
         className="flex-1 min-w-0 h-12"
         errorMessage="Value must be odd and non-zero"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[fBins]</span>
+          </div>
+        }
         isInvalid={isFreqFiltInvalid}
         value={inputValues.frequencyFilter}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
@@ -196,6 +206,11 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="hfilt"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
         value={inputValues.horizontalFilterLength}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)
@@ -204,8 +219,13 @@ const SpectrogramParameterField = () => {
       />
       <Input
         labelPlacement="inside"
-        label="windowLen"
+        label="winLen"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[min]</span>
+          </div>
+        }
         value={inputValues.windowInMin}
         onChange={(e) => handleInputChange('windowInMin', e.target.value)}
         onBlur={() => handleBlur('windowInMin')}
@@ -214,6 +234,11 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="maxFreq"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
         value={inputValues.maxFrequency}
         onChange={(e) => handleInputChange('maxFrequency', e.target.value)}
         onBlur={() => handleBlur('maxFrequency')}
@@ -222,6 +247,11 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="minFreq"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
         value={inputValues.minFrequency}
         onChange={(e) => handleInputChange('minFrequency', e.target.value)}
         onBlur={() => handleBlur('minFrequency')}
@@ -230,6 +260,11 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="maxDb"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
         value={inputValues.maxDb}
         onChange={(e) => handleInputChange('maxDb', e.target.value)}
         onBlur={() => handleBlur('maxDb')}
@@ -238,14 +273,24 @@ const SpectrogramParameterField = () => {
         labelPlacement="inside"
         label="minDb"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
         value={inputValues.minDb}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
         onBlur={() => handleBlur('minDb')}
       />
       <Input
         labelPlacement="inside"
-        label="narrowbandThreshold"
+        label="NBThresh"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
         value={inputValues.narrowbandThreshold}
         onChange={(e) =>
           handleInputChange('narrowbandThreshold', e.target.value)

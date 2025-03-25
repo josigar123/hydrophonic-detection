@@ -74,8 +74,13 @@ const BroadbandParameterField = () => {
     <div className="flex w-full gap-x-4 items-center">
       <Input
         labelPlacement="inside"
-        label="broadbandThreshold"
+        label="BBThresh"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
         value={inputValues.broadbandThreshold}
         onChange={(e) =>
           handleInputChange('broadbandThreshold', e.target.value)
@@ -84,24 +89,39 @@ const BroadbandParameterField = () => {
       />
       <Input
         labelPlacement="inside"
-        label="windowSize"
+        label="winSize"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
         value={inputValues.windowSize}
         onChange={(e) => handleInputChange('windowSize', e.target.value)}
         onBlur={() => handleBlur('windowSize')}
       />
       <Input
         labelPlacement="inside"
-        label="hilbertWindow"
+        label="hilbertWin"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
         value={inputValues.hilbertWindow}
         onChange={(e) => handleInputChange('hilbertWindow', e.target.value)}
         onBlur={() => handleBlur('hilbertWindow')}
       />
       <Input
         labelPlacement="inside"
-        label="bufferLength"
+        label="bufferLen"
         className="flex-1 min-w-0 h-12"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
         value={inputValues.bufferLength}
         onChange={(e) => handleInputChange('bufferLength', e.target.value)}
         onBlur={() => handleBlur('bufferLength')}
