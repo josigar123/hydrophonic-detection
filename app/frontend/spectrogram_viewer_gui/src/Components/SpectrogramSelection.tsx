@@ -4,11 +4,7 @@ import { Button } from '@heroui/button';
 import { Tabs, Tab } from '@heroui/tabs';
 import SpectrogramParameterField from './SpectrogramParameterField';
 import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
-import { useContext, useEffect, useState } from 'react';
-import {
-  DemonSpectrogramPayload,
-  SpectrogramPayload,
-} from '../Interfaces/Payloads';
+import { useContext, useMemo } from 'react';
 import DemonSpectrogramParameterField from './DemonSpectrogramParameterField';
 import ScrollingDemonSpectrogram from './ScrollingDemonSpectrogram';
 import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
@@ -19,24 +15,13 @@ const sampleRate = recordingConfig['sampleRate'];
 const SpectrogramSelection = () => {
   const context = useContext(SpectrogramConfigurationContext);
 
-  const [spectrogramPayload, setSpectrogramPayload] =
-    useState<SpectrogramPayload | null>(null);
+  if (!context) {
+    throw new Error(
+      'useConfiguration must be used within a SpectrogramConfigurationProvider'
+    );
+  }
 
-  const [demonSpectrogramPayload, setDemonSpectrogramPayload] =
-    useState<DemonSpectrogramPayload | null>(null);
-
-  const [chartContainerKey, setChartContainerKey] = useState(0);
-
-  const useConfiguration = () => {
-    if (!context) {
-      throw new Error(
-        'useConfiguration must be used within a SpectrogramConfigurationProvider'
-      );
-    }
-    return context;
-  };
-
-  const { spectrogramConfig } = useConfiguration();
+  const { spectrogramConfig } = context;
   const {
     spectrogramData,
     demonSpectrogramData,
@@ -45,21 +30,46 @@ const SpectrogramSelection = () => {
     disconnect,
   } = useSpectrogramStream(websocketUrl, false);
 
-  useEffect(() => {
-    if (!spectrogramData || !isConnected) return;
-    setSpectrogramPayload(spectrogramData);
-  }, [isConnected, spectrogramData]);
+  // Memoize configuration to prevent unnecessary re-renders
+  const spectrogramProps = useMemo(
+    () => ({
+      windowInMin:
+        spectrogramConfig.spectrogramConfiguration?.windowInMin ?? 10,
+      resolution:
+        1 +
+        (sampleRate *
+          (spectrogramConfig.spectrogramConfiguration?.tperseg ?? 1)) /
+          2,
+      heatmapMinTimeStepMs: 500,
+      maxFrequency:
+        spectrogramConfig.spectrogramConfiguration?.maxFrequency ?? 1000,
+      minFrequency:
+        spectrogramConfig.spectrogramConfiguration?.minFrequency ?? 0,
+      maxDb: spectrogramConfig.spectrogramConfiguration?.maxDb ?? 100,
+      minDb: spectrogramConfig.spectrogramConfiguration?.minDb ?? -100,
+    }),
+    [spectrogramConfig]
+  );
 
-  useEffect(() => {
-    if (!demonSpectrogramData || !isConnected) return;
-    setDemonSpectrogramPayload(demonSpectrogramData);
-  }, [demonSpectrogramData, isConnected]);
-
-  useEffect(() => {
-    if (spectrogramPayload && demonSpectrogramPayload && isConnected) {
-      setChartContainerKey((prev) => prev + 1);
-    }
-  }, [spectrogramPayload, isConnected, demonSpectrogramPayload]);
+  const demonSpectrogramProps = useMemo(
+    () => ({
+      windowInMin:
+        spectrogramConfig.demonSpectrogramConfiguration?.windowInMin ?? 10,
+      resolution:
+        1 +
+        (sampleRate *
+          (spectrogramConfig.demonSpectrogramConfiguration?.tperseg ?? 1)) /
+          2,
+      heatmapMinTimeStepMs: 500,
+      maxFrequency:
+        spectrogramConfig.demonSpectrogramConfiguration?.maxFrequency ?? 1000,
+      minFrequency:
+        spectrogramConfig.demonSpectrogramConfiguration?.minFrequency ?? 0,
+      maxDb: spectrogramConfig.demonSpectrogramConfiguration?.maxDb ?? 100,
+      minDb: spectrogramConfig.demonSpectrogramConfiguration?.minDb ?? -100,
+    }),
+    [spectrogramConfig]
+  );
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -100,31 +110,19 @@ const SpectrogramSelection = () => {
             <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
               {/* Spectrogram container - using flex-1 to take available space */}
               <div
-                key={chartContainerKey}
                 className="flex-1 w-full relative"
                 style={{ minHeight: '400px' }}
               >
-                {spectrogramPayload ? (
+                {spectrogramData ? (
                   <ScrollingSpectrogram
-                    spectrogramData={spectrogramPayload as SpectrogramPayload}
-                    windowInMin={
-                      spectrogramConfig.spectrogramConfiguration.windowInMin
-                    }
-                    resolution={
-                      1 +
-                      (sampleRate *
-                        spectrogramConfig.spectrogramConfiguration.tperseg) /
-                        2
-                    }
-                    heatmapMinTimeStepMs={500}
-                    maxFrequency={
-                      spectrogramConfig.spectrogramConfiguration.maxFrequency
-                    }
-                    minFrequency={
-                      spectrogramConfig.spectrogramConfiguration.minFrequency
-                    }
-                    maxDb={spectrogramConfig.spectrogramConfiguration.maxDb}
-                    minDb={spectrogramConfig.spectrogramConfiguration.minDb}
+                    spectrogramData={spectrogramData}
+                    windowInMin={spectrogramProps.windowInMin}
+                    resolution={spectrogramProps.resolution}
+                    heatmapMinTimeStepMs={spectrogramProps.heatmapMinTimeStepMs}
+                    maxFrequency={spectrogramProps.maxFrequency}
+                    minFrequency={spectrogramProps.minFrequency}
+                    maxDb={spectrogramProps.maxDb}
+                    minDb={spectrogramProps.minDb}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -153,7 +151,7 @@ const SpectrogramSelection = () => {
 
               {/* Parameter field with improved spacing */}
               <div className="mt-4 bg-slate-700 p-3 rounded-md">
-                <SpectrogramParameterField />
+                <SpectrogramParameterField isConnected={isConnected} />
               </div>
             </div>
           </Tab>
@@ -161,41 +159,21 @@ const SpectrogramSelection = () => {
             <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
               {/* DEMON container - using flex-1 to take available space */}
               <div
-                key={chartContainerKey}
                 className="flex-1 w-full relative"
                 style={{ minHeight: '400px' }}
               >
-                {demonSpectrogramPayload ? (
+                {demonSpectrogramData ? (
                   <ScrollingDemonSpectrogram
-                    demonSpectrogramData={
-                      demonSpectrogramPayload as DemonSpectrogramPayload
+                    demonSpectrogramData={demonSpectrogramData}
+                    windowInMin={demonSpectrogramProps.windowInMin}
+                    resolution={demonSpectrogramProps.resolution}
+                    heatmapMinTimeStepMs={
+                      demonSpectrogramProps.heatmapMinTimeStepMs
                     }
-                    windowInMin={
-                      spectrogramConfig.demonSpectrogramConfiguration
-                        .windowInMin
-                    }
-                    resolution={
-                      1 +
-                      (sampleRate *
-                        spectrogramConfig.demonSpectrogramConfiguration
-                          .tperseg) /
-                        2
-                    }
-                    heatmapMinTimeStepMs={500}
-                    maxFrequency={
-                      spectrogramConfig.demonSpectrogramConfiguration
-                        .maxFrequency
-                    }
-                    minFrequency={
-                      spectrogramConfig.demonSpectrogramConfiguration
-                        .minFrequency
-                    }
-                    maxDb={
-                      spectrogramConfig.demonSpectrogramConfiguration.maxDb
-                    }
-                    minDb={
-                      spectrogramConfig.demonSpectrogramConfiguration.minDb
-                    }
+                    maxFrequency={demonSpectrogramProps.maxFrequency}
+                    minFrequency={demonSpectrogramProps.minFrequency}
+                    maxDb={demonSpectrogramProps.maxDb}
+                    minDb={demonSpectrogramProps.minDb}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -224,7 +202,7 @@ const SpectrogramSelection = () => {
 
               {/* Parameter field with improved spacing */}
               <div className="mt-4 bg-slate-700 p-3 rounded-md">
-                <DemonSpectrogramParameterField />
+                <DemonSpectrogramParameterField isConnected={isConnected} />
               </div>
             </div>
           </Tab>

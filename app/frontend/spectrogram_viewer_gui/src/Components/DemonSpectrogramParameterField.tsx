@@ -10,7 +10,13 @@ import { useContext, useState, useCallback, useRef } from 'react';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
 import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
-const DemonSpectrogramParameterField = () => {
+interface DemonSpectrogramParameterFieldProps {
+  isConnected: boolean;
+}
+
+const DemonSpectrogramParameterField = ({
+  isConnected,
+}: DemonSpectrogramParameterFieldProps) => {
   const context = useContext(SpectrogramConfigurationContext);
 
   if (!context) {
@@ -117,8 +123,11 @@ const DemonSpectrogramParameterField = () => {
       <div className="flex-1 min-w-0">
         <Dropdown>
           <DropdownTrigger variant="faded">
-            <Button className="w-full h-12 hover:bg-gray-200 truncate">
-              {inputValues.window || 'Select window type'}
+            <Button
+              className="w-full h-12 hover:bg-gray-200 truncate"
+              isDisabled={isConnected}
+            >
+              {inputValues.window || 'Select window'}
             </Button>
           </DropdownTrigger>
           <DropdownMenu
@@ -144,6 +153,7 @@ const DemonSpectrogramParameterField = () => {
             <span className="text-default-400 text-small">[Hz]</span>
           </div>
         }
+        isDisabled={isConnected}
         value={inputValues.demonSampleFrequency}
         onChange={(e) =>
           handleInputChange('demonSampleFrequency', e.target.value)
@@ -159,6 +169,7 @@ const DemonSpectrogramParameterField = () => {
             <span className="text-default-400 text-small">[s]</span>
           </div>
         }
+        isDisabled={isConnected}
         value={inputValues.tperseg}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
         onBlur={() => handleBlur('tperseg')}
@@ -172,6 +183,7 @@ const DemonSpectrogramParameterField = () => {
             <span className="text-default-400 text-small">[fBins]</span>
           </div>
         }
+        isDisabled={isConnected}
         value={inputValues.frequencyFilter}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
         onBlur={() => handleBlur('frequencyFilter')}
@@ -185,6 +197,7 @@ const DemonSpectrogramParameterField = () => {
             <span className="text-default-400 text-small">[s]</span>
           </div>
         }
+        isDisabled={isConnected}
         value={inputValues.horizontalFilterLength}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)

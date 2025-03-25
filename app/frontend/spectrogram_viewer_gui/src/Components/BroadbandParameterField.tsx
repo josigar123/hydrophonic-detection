@@ -2,7 +2,13 @@ import { Input } from '@heroui/input';
 import { useContext, useState, useCallback, useRef } from 'react';
 import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
 
-const BroadbandParameterField = () => {
+interface BroadbandParameterFieldProps {
+  isConnected: boolean;
+}
+
+const BroadbandParameterField = ({
+  isConnected,
+}: BroadbandParameterFieldProps) => {
   const context = useContext(BroadbandConfigurationContext);
 
   if (!context) {
@@ -82,6 +88,7 @@ const BroadbandParameterField = () => {
           </div>
         }
         value={inputValues.broadbandThreshold}
+        isDisabled={isConnected}
         onChange={(e) =>
           handleInputChange('broadbandThreshold', e.target.value)
         }
@@ -97,6 +104,7 @@ const BroadbandParameterField = () => {
           </div>
         }
         value={inputValues.windowSize}
+        isDisabled={isConnected}
         onChange={(e) => handleInputChange('windowSize', e.target.value)}
         onBlur={() => handleBlur('windowSize')}
       />
@@ -109,6 +117,7 @@ const BroadbandParameterField = () => {
             <span className="text-default-400 text-small">[Hz]</span>
           </div>
         }
+        isDisabled={isConnected}
         value={inputValues.hilbertWindow}
         onChange={(e) => handleInputChange('hilbertWindow', e.target.value)}
         onBlur={() => handleBlur('hilbertWindow')}
@@ -122,6 +131,7 @@ const BroadbandParameterField = () => {
             <span className="text-default-400 text-small">[s]</span>
           </div>
         }
+        isDisabled={isConnected}
         value={inputValues.bufferLength}
         onChange={(e) => handleInputChange('bufferLength', e.target.value)}
         onBlur={() => handleBlur('bufferLength')}

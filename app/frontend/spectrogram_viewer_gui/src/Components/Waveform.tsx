@@ -83,14 +83,14 @@ const Waveform = ({ channelData, setAutoListen }: WaveformProps) => {
   };
 
   return (
-    <div className="w-full p-6 bg-gray-700 rounded-lg border border-gray-700">
+    <div className="w-full p-2 bg-gray-700 rounded-lg border border-gray-700">
       <canvas
         ref={canvasRef}
         width="800"
-        height="300"
+        height="125"
         className="w-full h-auto max-w-full max-h-[300px] bg-[#232323] rounded-lg shadow-inner mb-6"
       />
-      <div className="flex justify-center gap-4">
+      {/* <div className="flex justify-center gap-4">
         <Button
           onPress={handleStartListening}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
@@ -103,7 +103,7 @@ const Waveform = ({ channelData, setAutoListen }: WaveformProps) => {
         >
           Stop Listening
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 };

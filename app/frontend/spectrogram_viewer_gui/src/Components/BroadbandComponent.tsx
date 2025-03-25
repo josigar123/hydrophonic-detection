@@ -87,7 +87,7 @@ const BroadbandComponent = () => {
           )}
         </div>
         <div className="mt-4 bg-slate-700 p-3 rounded-md">
-          <BroadbandParameterField />
+          <BroadbandParameterField isConnected={isConnected} />
         </div>
       </div>
     </div>

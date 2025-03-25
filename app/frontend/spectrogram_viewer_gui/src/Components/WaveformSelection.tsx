@@ -1,7 +1,6 @@
 import { Button } from '@heroui/button';
 import { useAudioStream } from '../Hooks/useAudioStream';
 import Waveform from './Waveform';
-import { Tabs, Tab } from '@heroui/tabs';
 import { convert16BitPcmToFloat32Arrays } from '../utils/convert16BitPcmToFloat32Arrays';
 import { useEffect, useState } from 'react';
 
@@ -80,19 +79,13 @@ const WaveformSelection = ({ numChannels }: WaveformSelectionProps) => {
       <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
         <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
           {channels.length > 0 ? (
-            <Tabs
-              key="bordered"
-              aria-label="Signal choice"
-              size="sm"
-              radius="sm"
-              className="mb-6"
-            >
+            <div>
               {channels.map((channelData, index) => (
-                <Tab key={index} title={`Channel ${index + 1}`}>
+                <div key={index}>
                   <Waveform channelData={channelData} setAutoListen={true} />
-                </Tab>
+                </div>
               ))}
-            </Tabs>
+            </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-300">
               <div className="text-center">

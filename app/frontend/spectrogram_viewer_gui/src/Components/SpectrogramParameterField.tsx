@@ -17,7 +17,13 @@ import {
 import { validWindowTypes } from '../Interfaces/WindowTypes';
 import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
-const SpectrogramParameterField = () => {
+interface SpectrogramParameterFieldProps {
+  isConnected: boolean;
+}
+
+const SpectrogramParameterField = ({
+  isConnected,
+}: SpectrogramParameterFieldProps) => {
   const context = useContext(SpectrogramConfigurationContext);
 
   if (!context) {
@@ -154,8 +160,11 @@ const SpectrogramParameterField = () => {
       <div className="flex-1 min-w-0">
         <Dropdown>
           <DropdownTrigger variant="faded">
-            <Button className="w-full h-12 hover:bg-gray-200 truncate">
-              {inputValues.window || 'Select window type'}
+            <Button
+              className="w-full h-12 hover:bg-gray-200 truncate"
+              isDisabled={isConnected}
+            >
+              {inputValues.window || 'Select window'}
             </Button>
           </DropdownTrigger>
           <DropdownMenu
@@ -183,6 +192,7 @@ const SpectrogramParameterField = () => {
           </div>
         }
         isInvalid={isTpersegInvalid}
+        isDisabled={isConnected}
         value={inputValues.tperseg}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
         onBlur={() => handleBlur('tperseg')}
@@ -198,6 +208,7 @@ const SpectrogramParameterField = () => {
           </div>
         }
         isInvalid={isFreqFiltInvalid}
+        isDisabled={isConnected}
         value={inputValues.frequencyFilter}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
         onBlur={() => handleBlur('frequencyFilter')}
@@ -212,6 +223,7 @@ const SpectrogramParameterField = () => {
           </div>
         }
         value={inputValues.horizontalFilterLength}
+        isDisabled={isConnected}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)
         }
