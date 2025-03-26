@@ -1,33 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import {
-  SpectrogramPayload,
-  DemonSpectrogramPayload,
-} from '../Interfaces/Payloads';
-import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
+import { BroadbandPayload } from '../Interfaces/Payloads';
+import { BroadbandConfiguration } from '../Interfaces/Configuration';
 
-/*
-
-A hook for fetching all spectrogramdata, both for a standards spectrogram and a DEMON spectrogram
-Supply, with the connect() function, an initial configuration, following the interface  found in 'Configurations.ts'
-in the Interfaces directory
-
-*/
-
-export function useSpectrogramStream(url: string, autoConnect = false) {
-  const [spectrogramData, setSpectrogramData] = useState<SpectrogramPayload>({
-    frequencies: [],
+export function useBroadbandStream(url: string, autoConnect = false) {
+  const [broadbandData, setBroadbandData] = useState<BroadbandPayload>({
+    broadbandSignal: [],
     times: [],
-    spectrogramDb: [],
   });
 
-  const [demonSpectrogramData, setDemonSpectrogramData] =
-    useState<DemonSpectrogramPayload>({
-      demonFrequencies: [],
-      demonTimes: [],
-      demonSpectrogramDb: [],
-    });
-
-  const [isNarrowbandDetection, setIsNarrowbandDetection] = useState(false);
+  const [isBroadbandDetection, setIsBroadbandDetection] = useState(false);
 
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +16,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   const shouldConnectRef = useRef(autoConnect);
 
   const connect = useCallback(
-    (configuration?: SpectrogramNarrowbandAndDemonConfiguration) => {
+    (configuration?: BroadbandConfiguration) => {
       if (
         socketRef.current &&
         (socketRef.current.readyState === WebSocket.OPEN ||
@@ -68,36 +49,21 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
             const data = JSON.parse(event.data);
 
             if ('detectionStatus' in data) {
-              console.log(
-                'RECVD narrowband detection status: ',
-                data.detectionStatus
-              );
-              setIsNarrowbandDetection(data.detectionStatus);
-            }
-
-            if (data.spectrogramDb) {
-              console.log('RECVD spectrogram data: ', data.spectrogramDb);
-              setSpectrogramData({
-                frequencies: data.frequencies || [],
+              console.log('RECVD detection status: ', data.detectionStatus);
+              setIsBroadbandDetection(data.detectionStatus);
+            } else {
+              console.log('RECVD broadband data: ', data.broadbandSignal);
+              setBroadbandData({
+                broadbandSignal: data.broadbandSignal || [],
                 times: data.times || [],
-                spectrogramDb: data.spectrogramDb || [],
-              });
-            }
-
-            if (data.demonSpectrogramDb) {
-              console.log('RECVD spectrogram data: ', data.demonSpectrogramDb);
-              setDemonSpectrogramData({
-                demonFrequencies: data.demonFrequencies || [],
-                demonTimes: data.demonTimes || [],
-                demonSpectrogramDb: data.demonSpectrogramDb || [],
               });
             }
           } catch (error) {
             console.error(
-              'Error parsing message in useSpectrogramStream:',
+              'Error parsing message in useBroadbandStream:',
               error
             );
-            setError('Error parsing message in useSpectrogramStream');
+            setError('Error parsing message in useBroadbandStream');
           }
         };
 
@@ -156,9 +122,8 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   }, [autoConnect, connect]);
 
   return {
-    spectrogramData,
-    demonSpectrogramData,
-    isNarrowbandDetection,
+    broadbandData,
+    isBroadbandDetection,
     isConnected,
     error,
     connect,

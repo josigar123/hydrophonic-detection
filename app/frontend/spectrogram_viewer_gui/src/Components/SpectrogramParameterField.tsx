@@ -6,101 +6,153 @@ import {
   DropdownMenu,
   DropdownItem,
 } from '@heroui/dropdown';
-import { useContext, useEffect, useMemo, useState } from 'react';
-import { ConfigurationContext } from '../Contexts/ConfigurataionContext';
-import { SpectrogramConfiguration } from '../Interfaces/Configuration';
+import {
+  useContext,
+  useCallback,
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+} from 'react';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
+import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
-const SpectrogramParameterField = () => {
-  const context = useContext(ConfigurationContext);
+interface SpectrogramParameterFieldProps {
+  isConnected: boolean;
+}
 
-  const useConfiguration = () => {
-    if (!context) {
-      throw new Error(
-        'useConfiguration must be used within a ConfigurationProvider'
-      );
-    }
-    return context;
-  };
+const SpectrogramParameterField = ({
+  isConnected,
+}: SpectrogramParameterFieldProps) => {
+  const context = useContext(SpectrogramConfigurationContext);
 
-  const { config, setConfig } = useConfiguration();
+  if (!context) {
+    throw new Error(
+      'SpectrogramParameterField must be used within a SpectrogramConfigurationProvider'
+    );
+  }
 
-  const [localParams, setLocalParams] = useState<SpectrogramConfiguration>({
-    tperseg: 0,
-    frequencyFilter: 0,
-    horizontalFilterLength: 0,
-    windowInMin: 0,
-    minFrequency: 0,
-    maxFrequency: 0,
-    minDb: 0,
-    maxDb: 0,
-    window: '',
+  const { spectrogramConfig, setSpectrogramConfig } = context;
+  const config = spectrogramConfig.spectrogramConfiguration || {};
+
+  // Use local state only for input values
+  const [inputValues, setInputValues] = useState({
+    window: config.window || '',
+    tperseg: config.tperseg?.toString() || '',
+    frequencyFilter: config.frequencyFilter?.toString() || '',
+    horizontalFilterLength: config.horizontalFilterLength?.toString() || '',
+    windowInMin: config.windowInMin?.toString() || '',
+    maxFrequency: config.maxFrequency?.toString() || '',
+    minFrequency: config.minFrequency?.toString() || '',
+    maxDb: config.maxDb?.toString() || '',
+    minDb: config.minDb?.toString() || '',
+    narrowbandThreshold: config.narrowbandThreshold?.toString() || '',
   });
 
-  // Sync local state with context on mount
-  useEffect(() => {
-    if (config?.config.spectrogramConfiguration) {
-      setLocalParams((prev) => ({
+  // Use a ref to track if we need to commit changes
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle input changes immediately for UI responsiveness
+  const handleInputChange = useCallback(
+    (field: keyof typeof inputValues, value: string) => {
+      // Update local state immediately for responsive UI
+      setInputValues((prev) => ({
         ...prev,
-        ...config.config.spectrogramConfiguration,
+        [field]: value,
       }));
-    }
-  }, [config?.config.spectrogramConfiguration]);
 
-  const handleDropdownChange = (window: string) => {
-    setLocalParams((prevParams) => ({
-      ...prevParams,
-      window,
-    }));
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
 
-    setConfig((prevConfig) => ({
-      ...prevConfig,
-      config: {
-        ...prevConfig.config,
+      updateTimeoutRef.current = setTimeout(() => {
+        setSpectrogramConfig((prevConfig) => {
+          const parsedValue = isNaN(Number(value)) ? value : Number(value);
+          return {
+            ...prevConfig,
+            spectrogramConfiguration: {
+              ...prevConfig.spectrogramConfiguration,
+              [field]: parsedValue,
+            },
+          };
+        });
+      }, 300); // 300ms debounce
+    },
+    [setSpectrogramConfig]
+  );
+
+  // Handle blur to ensure value is committed when field loses focus
+  const handleBlur = useCallback(
+    (field: keyof typeof inputValues) => {
+      const value = inputValues[field];
+      const parsedValue = isNaN(Number(value)) ? value : Number(value);
+
+      setSpectrogramConfig((prevConfig) => ({
+        ...prevConfig,
         spectrogramConfiguration: {
-          ...prevConfig.config.spectrogramConfiguration,
-          window,
-        },
-      },
-    }));
-  };
-
-  const handleInputChange = (
-    field: keyof SpectrogramConfiguration,
-    value: string
-  ) => {
-    const parsedValue = isNaN(Number(value)) ? value : Number(value);
-    setLocalParams((prevParams) => ({
-      ...prevParams,
-      [field]: parsedValue,
-    }));
-
-    setConfig((prevConfig) => ({
-      ...prevConfig,
-      config: {
-        ...prevConfig.config,
-        spectrogramConfiguration: {
-          ...prevConfig.config.spectrogramConfiguration,
+          ...prevConfig.spectrogramConfiguration,
           [field]: parsedValue,
         },
-      },
-    }));
-  };
+      }));
 
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = null;
+      }
+    },
+    [inputValues, setSpectrogramConfig]
+  );
+
+  // Handle dropdown selection
+  const handleDropdownChange = useCallback(
+    (window: string) => {
+      // Update local state
+      setInputValues((prev) => ({
+        ...prev,
+        window,
+      }));
+
+      // Update context immediately for dropdown
+      setSpectrogramConfig((prevConfig) => ({
+        ...prevConfig,
+        spectrogramConfiguration: {
+          ...prevConfig.spectrogramConfiguration,
+          window,
+        },
+      }));
+    },
+    [setSpectrogramConfig]
+  );
+
+  // Validation functions
   const isTpersegInvalid = useMemo(() => {
-    if (localParams.tperseg === 0) return true;
+    const tperseg = Number(inputValues.tperseg);
+    const horizontalFilterLength = Number(inputValues.horizontalFilterLength);
 
-    if (localParams.tperseg >= localParams.horizontalFilterLength) return true;
-  }, [localParams.horizontalFilterLength, localParams.tperseg]);
+    if (!inputValues.tperseg || tperseg === 0) return true;
+    if (tperseg >= horizontalFilterLength) return true;
+
+    return false;
+  }, [inputValues.tperseg, inputValues.horizontalFilterLength]);
 
   const validateFilterLength = (value: number) =>
     value % 2 === 0 ? false : true;
 
   const isFreqFiltInvalid = useMemo(() => {
-    if (localParams.frequencyFilter === 0) return true;
+    const frequencyFilter = Number(inputValues.frequencyFilter);
 
-    return validateFilterLength(localParams.frequencyFilter) ? false : true;
-  }, [localParams.frequencyFilter]);
+    if (!inputValues.frequencyFilter || frequencyFilter === 0) return true;
+    return !validateFilterLength(frequencyFilter);
+  }, [inputValues.frequencyFilter]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex w-full gap-x-4 items-center">
@@ -108,8 +160,13 @@ const SpectrogramParameterField = () => {
       <div className="flex-1 min-w-0">
         <Dropdown>
           <DropdownTrigger variant="faded">
-            <Button className="w-full h-12 hover:bg-gray-200 truncate">
-              {localParams?.window || 'Select window type'}
+            <Button
+              isDisabled={isConnected}
+              className={`w-full h-12 hover:bg-gray-200 truncate ${
+                isConnected ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {inputValues.window || 'Select window'}
             </Button>
           </DropdownTrigger>
           <DropdownMenu
@@ -129,65 +186,149 @@ const SpectrogramParameterField = () => {
       <Input
         labelPlacement="inside"
         label="tperseg"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         errorMessage="Value must be less horizontal filter and non-zero"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
         isInvalid={isTpersegInvalid}
-        value={localParams?.tperseg.toString() || ''}
+        isDisabled={isConnected}
+        value={inputValues.tperseg}
         onChange={(e) => handleInputChange('tperseg', e.target.value)}
+        onBlur={() => handleBlur('tperseg')}
       />
       <Input
         labelPlacement="inside"
         label="freqFilt"
-        className="flex-1 min-w-0 h-12"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         errorMessage="Value must be odd and non-zero"
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[fBins]</span>
+          </div>
+        }
         isInvalid={isFreqFiltInvalid}
-        value={localParams?.frequencyFilter.toString() || ''}
+        isDisabled={isConnected}
+        value={inputValues.frequencyFilter}
         onChange={(e) => handleInputChange('frequencyFilter', e.target.value)}
+        onBlur={() => handleBlur('frequencyFilter')}
       />
       <Input
         labelPlacement="inside"
-        label="hfiltLength"
-        className="flex-1 min-w-0 h-12"
-        value={localParams?.horizontalFilterLength.toString() || ''}
+        label="hfilt"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[s]</span>
+          </div>
+        }
+        value={inputValues.horizontalFilterLength}
+        isDisabled={isConnected}
         onChange={(e) =>
           handleInputChange('horizontalFilterLength', e.target.value)
         }
+        onBlur={() => handleBlur('horizontalFilterLength')}
       />
       <Input
         labelPlacement="inside"
-        label="windowInMin"
-        className="flex-1 min-w-0 h-12"
-        value={localParams?.windowInMin.toString() || ''}
+        label="winLen"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[min]</span>
+          </div>
+        }
+        value={inputValues.windowInMin}
         onChange={(e) => handleInputChange('windowInMin', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('windowInMin')}
+      />
       <Input
         labelPlacement="inside"
-        label="maxFrequency"
-        className="flex-1 min-w-0 h-12"
-        value={localParams?.maxFrequency.toString() || ''}
+        label="maxFreq"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
+        value={inputValues.maxFrequency}
         onChange={(e) => handleInputChange('maxFrequency', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('maxFrequency')}
+      />
       <Input
         labelPlacement="inside"
-        label="minFrequency"
-        className="flex-1 min-w-0 h-12"
-        value={localParams?.minFrequency.toString() || ''}
+        label="minFreq"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[Hz]</span>
+          </div>
+        }
+        value={inputValues.minFrequency}
         onChange={(e) => handleInputChange('minFrequency', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('minFrequency')}
+      />
       <Input
         labelPlacement="inside"
         label="maxDb"
-        className="flex-1 min-w-0 h-12"
-        value={localParams?.maxDb.toString() || ''}
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
+        value={inputValues.maxDb}
         onChange={(e) => handleInputChange('maxDb', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('maxDb')}
+      />
       <Input
         labelPlacement="inside"
         label="minDb"
-        className="flex-1 min-w-0 h-12"
-        value={localParams?.minDb.toString() || ''}
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
+        value={inputValues.minDb}
         onChange={(e) => handleInputChange('minDb', e.target.value)}
-      ></Input>
+        onBlur={() => handleBlur('minDb')}
+      />
+      <Input
+        labelPlacement="inside"
+        label="NBThresh"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
+        value={inputValues.narrowbandThreshold}
+        onChange={(e) =>
+          handleInputChange('narrowbandThreshold', e.target.value)
+        }
+        onBlur={() => handleBlur('narrowbandThreshold')}
+      />
     </div>
   );
 };

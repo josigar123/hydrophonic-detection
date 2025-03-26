@@ -25,34 +25,14 @@ This function will read the current recording config from a Kafka topic
 
     When 'spectrogram_client' first connects, expect the following config payload:
 
-            'OLD CONFIG'
-            "config":
             {
-                "spectrogramConfiguration": {
-                    "tperseg": int,
-                    "frequencyFilter": int (odd),
-                    "horizontalFilterLength": int,
-                    "window": string
-                },
-                "demonSpectrogramConfiguration":{
-                    "demonSampleFrequency": int,
-                    "tperseg": int,
-                    "frequencyFilter": int (odd),
-                    "horizontalFilterLength": int,
-                    "window": string
-                },
-                "narrowbandThreshold": int,
-                "broadbandThreshold": int,
-            }
 
-            'CURRENT CONFIG'
-            "config":
-            {
                 "spectrogramConfiguration": {
                     "tperseg": int,
                     "frequencyFilter": int (odd),
                     "horizontalFilterLength": int,
-                    "window": string
+                    "window": string,
+                    "narrowbandThreshold": int,
                 },
                 "demonSpectrogramConfiguration":{
                     "demonSampleFrequency": int,
@@ -61,23 +41,23 @@ This function will read the current recording config from a Kafka topic
                     "horizontalFilterLength": int,
                     "window": string
                 },
-                "broadbandConfiguration": {
-                    "broadbandThreshold": int,
-                    "windowSize": int,
-                    "hilbertWindow": int,
-                    "bufferLength": int
-                },
-                "narrowbandThreshold": int,
-                
+            }
+    When 'broadband_client' first connects, expect the following config payload:
+            {
+                "broadbandThreshold": int,
+                "windowSize": int,
+                "hilbertWindow": int,
+                "bufferLength": int
             }
 '''
 
 ################## GLOBAL VARIABLES #########################
 
 clients = {}                   # This dictionary holds a clients websocket and name
-spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram
+spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
+broadband_client_config = {}
 recording_config = {}          # This dict holds the most recent recording config
-BOOTSTRAP_SERVERS = '10.0.0.24:9092'
+BOOTSTRAP_SERVERS = 'localhost:9092'
 
 # Will be an instantiated SignalProcessingService when the server is running
 signal_processing_service: SignalProcessingService = None
@@ -87,6 +67,7 @@ spectrogram_audio_buffer = b"" # A byte array to accumulate audio for the spectr
 demon_spectrogram_audio_buffer = b"" # A byte array to accumulate audio for the demon spectrogram
 broadband_buffer = b"" # Holds window_size seconds of audio data
 broadband_total_buffer = b"" # Hold buffer_length seconds of audio data
+broadband_signal_buffer = [] # An array for holding processed broadband_signal chunks of window_size seconds
 
 '''
     These global variables will hold information for how much data must be collected in a buffer before the spectrogram data can be produced
@@ -103,44 +84,46 @@ async def consume_recording_config():
     """Async function to consume configuration messages from Kafka before WebSocket server starts."""
     global recording_config
 
-    try:
-        topic = 'recording-parameters'
-        consumer = AIOKafkaConsumer(
-            topic,
-            bootstrap_servers=BOOTSTRAP_SERVERS,
-            auto_offset_reset='latest',
-            enable_auto_commit=False,
-            value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-        )
-
-        await consumer.start()
+    while True:
         try:
-            message = await consumer.getone()
-            config_data = message.value
-            
-            # Create the target directory two levels up
-            target_directory = os.path.join(os.path.dirname(__file__), "../../../configs")
-            os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
+            topic = 'recording-parameters'
+            consumer = AIOKafkaConsumer(
+                topic,
+                bootstrap_servers=BOOTSTRAP_SERVERS,
+                auto_offset_reset='latest',
+                enable_auto_commit=False,
+                value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+            )
 
-            # Define the file path within the 'configs' directory
-            file_path = os.path.join(target_directory, 'recording_parameters.json')
+            await consumer.start()
+            print("Connected to Kafka, waiting for configuration...")
+            try:
+                message = await consumer.getone()
+                config_data = message.value
+                
+                # Create the target directory two levels up
+                target_directory = os.path.join(os.path.dirname(__file__), "../../../configs")
+                os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
 
-            with open(file_path, 'w') as json_file:
-                json.dump(config_data, json_file, indent=4)
-                print(f"Configuration saved to {file_path}")
-            recording_config =config_data
-            return config_data
-        finally:
-            await consumer.stop()
-    except Exception as e:
-        print(f"Error consuming configuration: {e}")
-        raise
+                # Define the file path within the 'configs' directory
+                file_path = os.path.join(target_directory, 'recording_parameters.json')
+
+                with open(file_path, 'w') as json_file:
+                    json.dump(config_data, json_file, indent=4)
+                    print(f"Configuration saved to {file_path}")
+
+                recording_config =config_data
+                return config_data
+            finally:
+                await consumer.stop()
+        except Exception as e:
+            print(f"Error consuming configuration: {e}. Retrying in 5 seconds...")
+            await asyncio.sleep(5)
         
 
 '''Function will produce a narrowband detection on the intensities passed and write it to the appropriate kafka topic'''
 async def produce_narrowband_detection_result(spectrogram_db: list[float], threshold: float) -> bool:
     global signal_processing_service
-
 
     topic = 'narrowband-detection'
     producer = AIOKafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS,
@@ -160,7 +143,7 @@ async def produce_narrowband_detection_result(spectrogram_db: list[float], thres
     return is_detection
 
 '''Function will produce a broadband detection on the buffer passed and write it to the appropriate kafka topic'''
-async def produce_broadband_detection_result(broadband_total_buffer: bytes, threshold: int, window_size: int) -> bool:
+async def produce_broadband_detection_result(broadband_filo_signal_buffer: np.ndarray, threshold: int, window_size: int) -> bool:
     global signal_processing_service
 
     topic = 'broadband_detection'
@@ -169,7 +152,7 @@ async def produce_broadband_detection_result(broadband_total_buffer: bytes, thre
     
     await producer.start()
     try:
-        is_detection = signal_processing_service.broadband_detection(broadband_total_buffer, threshold, window_size)
+        is_detection = signal_processing_service.broadband_detection(broadband_filo_signal_buffer, threshold, window_size)
         await producer.send(topic, value=is_detection)
         await producer.flush()
         print(f"A value of '{is_detection}' was sent to the kafka topic: '{topic}'")
@@ -188,6 +171,7 @@ async def handle_connection(websocket, path):
     global broadband_total_required_buffer_size
 
     global spectrogram_client_config
+    global broadband_client_config
 
     parsed_url = urlparse(path)
     query_params = parse_qs(parsed_url.query)
@@ -219,11 +203,10 @@ async def handle_connection(websocket, path):
         if client_name == "spectrogram_client":
             async for message in websocket:
                 try:
-
                     data = json.loads(message)
                     '''Set the recvd config sent onconnect'''
-                    if "config" in data:
-                        spectrogram_client_config[client_name] = data["config"]
+                    if "spectrogramConfiguration" in data:
+                        spectrogram_client_config[client_name] = data
 
                         sample_rate = recording_config["sampleRate"]
 
@@ -239,19 +222,39 @@ async def handle_connection(websocket, path):
                         spectrogram_required_samples = calculate_required_samples(spectrogram_hfilt_length, sample_rate)
                         spectrogram_required_buffer_size = spectrogram_required_samples * bytes_per_sample
 
-                        '''Set buffer sizes for broadband data'''
-                        _, window_size, _, buffer_length, = get_broadband_config(spectrogram_client_config)
-                        broadband_required_samples = calculate_required_samples(window_size, sample_rate)
-                        broadband_total_required_samples = calculate_required_samples(buffer_length, sample_rate)
-                        broadband_required_buffer_size = broadband_required_samples * bytes_per_sample
-                        broadband_required_buffer_size = broadband_total_required_samples * bytes_per_sample
-
                         print(f"Updated spectrogram configuration: {spectrogram_client_config[client_name]}")
                     else:
                         print(f"Received unknow message from {client_name}: {data}")
 
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
+
+        if client_name == "broadband_client":
+            async for message in websocket:
+                try:
+                    data = json.loads(message)
+
+                    '''Set the recvd broadband config onconnect'''
+                    if "broadbandThreshold" in data:
+                        broadband_client_config[client_name] = data
+
+                        sample_rate = recording_config["sampleRate"]
+
+                        bytes_per_sample = calculate_bytes_per_sample(recording_config["bitDepth"], recording_config["channels"])
+
+                        '''Set buffer sizes for broadband data'''
+                        _, window_size, _, buffer_length = get_broadband_config(spectrogram_client_config)
+                        broadband_required_samples = calculate_required_samples(window_size, sample_rate)
+                        broadband_total_required_samples = calculate_required_samples(buffer_length, sample_rate)
+                        broadband_required_buffer_size = broadband_required_samples * bytes_per_sample
+                        broadband_required_buffer_size = broadband_total_required_samples * bytes_per_sample
+
+                        print(f"Updated broadband configuration: {broadband_client_config[client_name]}")
+                    else:
+                        print(f"Received unknown message from {client_name}: {e}")
+                except Exception as e:
+                    print(f"Error handling message from {client_name}: {e}")
+
 
         if client_name in clients.keys():
             async for message in websocket:
@@ -285,21 +288,20 @@ def get_demon_spectrogram_config(spectrogram_client_config):
 def get_spectrogram_config(spectrogram_client_config):
     spectrogram_config = spectrogram_client_config.get("spectrogram_client").get("spectrogramConfiguration")
     
-    narrowband_threshold = spectrogram_client_config.get("spectrogram_client").get("narrowbandThreshold")
-    
     if spectrogram_config:
         tperseg = spectrogram_config.get("tperseg")
         freq_filter = spectrogram_config.get("frequencyFilter")
         hfilt_length = spectrogram_config.get("horizontalFilterLength")
         window = spectrogram_config.get("window")
+        narrowband_threshold = spectrogram_config.get("narrowbandThreshold")
         
         return tperseg, freq_filter, hfilt_length, window, narrowband_threshold
     else:
         print("Spectrogram config is not available")
         return None
 
-def get_broadband_config(spectrogram_client_config):
-    broadband_config = spectrogram_client_config.get("spectrogram_client").get("broadbandConfiguration")
+def get_broadband_config(broadband_client_config):
+    broadband_config = broadband_client_config.get("broadband_client")
 
     if broadband_config:
         broadband_threshold = broadband_config.get("broadbandThreshold")
@@ -342,20 +344,22 @@ async def forward_ais_to_frontend(data):
         print("map_client not connected")
 
 async def forward_broadband_data_to_frontend(data):
-    global spectrogram_client_config
+    global broadband_client_config
     global broadband_required_buffer_size
     global broadband_total_buffer
+    global broadband_buffer
     global broadband_total_required_buffer_size
+    global broadband_signal_buffer
     global signal_processing_service
 
     if 'broadband_client' in clients:
         try:
-            broadband_threshold, window_size, hilbert_window, buffer_length = get_broadband_config(spectrogram_client_config)
+            broadband_threshold, window_size, hilbert_window, _ = get_broadband_config(broadband_client_config)
 
-            # Concating new data in the temp buffer
+            # Concating new data in the temp buffer, PCM data
             broadband_buffer += data
 
-            # The small buffer is filled, appending to the total buffer
+            # The small buffer is filled contains window_size seconds of data
             if len(broadband_buffer) >= broadband_required_buffer_size:
                 adjusted_broadband_buffer, broadband_buffer = broadband_buffer[:broadband_required_buffer_size], \
                                                               broadband_buffer[broadband_required_buffer_size:]
@@ -363,10 +367,10 @@ async def forward_broadband_data_to_frontend(data):
                 print("Broadband buffer filled, generating and sending data...")
 
                 '''Can here produce the data for broadband plot, signal is a 1D NDarray, t is time, can be ignored and plotted against time'''
-                broadband_signal, t = signal_processing_service.generate_broadband_data(adjusted_broadband_buffer, hilbert_window, window_size)
+                broadband_signal, t = signal_processing_service.generate_broadband_data(adjusted_broadband_buffer, hilbert_window, window_size) 
 
                 data_dict = {
-                    "broadbandSignal": broadband_signal.tolist(),
+                    "broadbandSignal": broadband_signal.tolist(), # NDArrays are not JSON serializable, must convert to list
                     "times": t.tolist()
                 }
 
@@ -375,21 +379,36 @@ async def forward_broadband_data_to_frontend(data):
                 await clients["broadband_client"].send(data_json)
                 print("Broadband data sent...")
 
-                # Appending window_size seconds of data to the total buffer
+                # Appending window_size seconds of data to the total buffer, this buffer is used to keep track of the total length in seconds
                 broadband_total_buffer += adjusted_broadband_buffer
-    
-                # If this is true, we want to remove the first window_size seconds of data from the buffer
+
+                # Appending the signal to the FILO broadband_signal_buffer, this buffer is purely used for analysis
+                broadband_signal_buffer.append(broadband_signal)
+
+                # If this is true, we want to remove the first window_size seconds of data from broadband_total_buffer and broadband_signal_buffer
                 if len(broadband_total_buffer) >= broadband_total_required_buffer_size:
 
                     print("Total broadband buffer filled, performing broadband detection...")
 
                     '''Buffer gets resized such that, only the bytes from window_size and up gets included'''
-                    adjusted_broadband_total_buffer = broadband_total_buffer[window_size:]
+                    adjusted_broadband_total_buffer = broadband_total_buffer[broadband_required_buffer_size:] # broadband_required_buffer_size represents window_size seconds of data
                     broadband_total_buffer = adjusted_broadband_total_buffer
+
+                    # Buffer is full, we want to remove oldest window_size entry, which will be element at index zero
+                    broadband_signal_buffer.pop(0) 
+                    broadband_signal_to_analyze = np.ravel(broadband_signal_buffer) # Flatten matrix
 
                     '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
                     is_detection = await perform_broadband_detection(adjusted_broadband_total_buffer, broadband_threshold,
                                                                             window_size)
+                    detection_dict = {
+                        "detectionStatus": bool(is_detection)
+                    }
+
+                    detection_json = json.dumps(detection_dict)
+                    print("Sending broadband detection result to frontend...")
+                    await clients["broadband_client"].send(detection_json)
+                    print("Broadband detection result sent to frontend...")
 
         except websockets.exceptions.ConnectionClosed:
             print("Connection to broadband_client was closed while sending")
@@ -400,10 +419,10 @@ async def forward_broadband_data_to_frontend(data):
     else:
         print('broadband_client not connected')                
 
-async def perform_broadband_detection(broadband_total_buffer: bytes, threshold: int, window_size: int):
+async def perform_broadband_detection(broadband_filo_signal_buffer: bytes, threshold: int, window_size: int):
 
     try:
-        is_detection = await produce_broadband_detection_result(broadband_total_buffer, threshold, window_size)
+        is_detection = await produce_broadband_detection_result(broadband_filo_signal_buffer, threshold, window_size)
         if is_detection:
             print("BROADBAND DETECTION IN THE BUFFER")
         return is_detection
@@ -499,7 +518,17 @@ async def forward_signal_processed_data_to_frontend(data):
                 data_json = json.dumps(data_dict)
                 print("Sending spectrogram data...")
                 await clients['spectrogram_client'].send(data_json)
-                print("Spectrogram data sent...")  
+                print("Spectrogram data sent...")
+
+                detection_dict = {
+                    "detectionStatus": bool(is_detection)
+                }
+                
+                detection_json = json.dumps(detection_dict)
+                print("Sending narrowband detection result to frontend...")
+                await clients["spectrogram_client"].send(detection_json)
+                print("Narrowband detection result sent to frontend...")
+
                                                                                                                                                                
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
@@ -527,6 +556,7 @@ async def perform_narrowband_detection(spectrogram_db_flattened: np.ndarray, nar
 
 async def main():
     global signal_processing_service
+    global recording_config
 
     try:
         print("Loading configuration from Kafka...")
@@ -537,6 +567,7 @@ async def main():
         
         print(f"Configuration loaded: {recording_config}")
 
+        '''Recording MUST be set before the server is served så that the signal_processing_service is instantiated'''
         signal_processing_service = SignalProcessingService(
             sample_rate=recording_config["sampleRate"],
             num_channels=recording_config["channels"],

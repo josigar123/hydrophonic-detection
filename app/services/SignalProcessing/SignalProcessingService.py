@@ -62,16 +62,6 @@ class SignalProcessingService:
     def narrowband_detection(self, spectrogram_db: np.ndarray, threshold: int) -> bool:
         return np.any(spectrogram_db > threshold)
 
-    '''
-    
-        hilbert_win: en mengde samples samples til ett gjennomsnitt data punkt, får da et nytt antall samples: original_samples / hilber_win
-        window_size: antall sekunder som skal glattes ut, bestemmer minimum sekunder data som må samles?
-                     må være lik for broadband_trigger og
-        
-        
-    
-    '''
-
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
     def generate_broadband_data(self, pcm_data: bytes, hilbert_win, window_size):
 
@@ -95,12 +85,10 @@ class SignalProcessingService:
 
         return broadband_signal, t
 
-    def broadband_detection(self, filo_buffer: bytes, threshold: int, window_size: int):
-        
-        mono_signal = self.convert_n_channel_signal_to_mono(filo_buffer)
+    def broadband_detection(self, filo_buffer: np.ndarray, threshold: int, window_size: int):
 
-        min_val = np.min(mono_signal)
-        last_win = mono_signal[-window_size*self.sample_rate:]
+        min_val = np.min(filo_buffer)
+        last_win = filo_buffer[-window_size*self.sample_rate:]
 
         return True in (last_win > min_val + threshold)
 
@@ -121,9 +109,9 @@ class SignalProcessingService:
             raise ValueError(f"Invalid PCM data size {len(samples)} for {self.num_channels} channels.")
 
         try:
-            samples = samples.reshape(-1, self.channels)
+            samples = samples.reshape(-1, self.num_channels)
         except ValueError as e:
-            raise ValueError(f"Error reshaping PCM data. Expected {self.channels} channels, but got data size {samples.shape[0]}") from e
+            raise ValueError(f"Error reshaping PCM data. Expected {self.num_channels} channels, but got data size {samples.shape[0]}") from e
         
         # Convert to mono by averaging channels
         mono_signal = np.mean(samples, axis=1).astype(np.int16)

@@ -4,76 +4,238 @@ import { Button } from '@heroui/button';
 import { Tabs, Tab } from '@heroui/tabs';
 import SpectrogramParameterField from './SpectrogramParameterField';
 import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
-import { ConfigurationContext } from '../Contexts/ConfigurataionContext';
-import { useContext, useEffect, useState } from 'react';
-import {
-  DemonSpectrogramPayload,
-  SpectrogramPayload,
-} from '../Interfaces/SpectrogramPayload';
+import { useContext, useMemo, useState } from 'react';
 import DemonSpectrogramParameterField from './DemonSpectrogramParameterField';
 import ScrollingDemonSpectrogram from './ScrollingDemonSpectrogram';
+import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
+import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
 
 const SpectrogramSelection = () => {
-  const context = useContext(ConfigurationContext);
-  const [spectrogramPayload, setSpectrogramPayload] =
-    useState<SpectrogramPayload | null>(null);
-  const [demonSpectrogramPayload, setDemonSpectrogramPayload] =
-    useState<DemonSpectrogramPayload | null>(null);
-  const [chartContainerKey, setChartContainerKey] = useState(0);
+  const context = useContext(SpectrogramConfigurationContext);
 
-  const useConfiguration = () => {
-    if (!context) {
-      throw new Error(
-        'useConfiguration must be used within a ConfigurationProvider'
-      );
-    }
-    return context;
-  };
+  if (!context) {
+    throw new Error(
+      'useConfiguration must be used within a SpectrogramConfigurationProvider'
+    );
+  }
 
-  const { config, isConfigValid } = useConfiguration();
+  const { spectrogramConfig } = context;
   const {
     spectrogramData,
     demonSpectrogramData,
+    isNarrowbandDetection,
     isConnected,
     connect,
     disconnect,
   } = useSpectrogramStream(websocketUrl, false);
 
-  useEffect(() => {
-    if (!spectrogramData || !isConnected) return;
-    setSpectrogramPayload(spectrogramData);
-  }, [isConnected, spectrogramData]);
+  const [isInvalidConfig, setIsInvalidConfig] = useState(true);
 
-  useEffect(() => {
-    if (!demonSpectrogramData || !isConnected) return;
-    setDemonSpectrogramPayload(demonSpectrogramData);
-  }, [demonSpectrogramData, isConnected]);
+  // Big chunky, clunky function for validating the input, might want to refactor this
+  const validateEntireConfiguration = (
+    spectrogramConfig: SpectrogramNarrowbandAndDemonConfiguration
+  ): boolean => {
+    if (!spectrogramConfig) return false;
 
-  useEffect(() => {
-    if (spectrogramPayload && isConnected) {
-      setChartContainerKey((prev) => prev + 1);
-    }
-  }, [spectrogramPayload, isConnected]);
+    const { spectrogramConfiguration, demonSpectrogramConfiguration } =
+      spectrogramConfig;
 
-  useEffect(() => {
-    if (!config) return;
-    console.log('Config: ', config);
-  });
+    if (!spectrogramConfiguration || !demonSpectrogramConfiguration)
+      return false;
+
+    return (
+      validateWindow(spectrogramConfiguration.window ?? '') &&
+      validateTperseg(
+        spectrogramConfiguration.tperseg ?? 0,
+        spectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateFrequencyFilter(spectrogramConfiguration.frequencyFilter ?? 0) &&
+      validateHorizontalFilterLength(
+        spectrogramConfiguration.tperseg ?? 0,
+        spectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateWindowInMin(spectrogramConfiguration.windowInMin ?? 0) &&
+      validateMaxFrequency(spectrogramConfiguration.maxFrequency ?? 0) &&
+      validateMinFrequency(spectrogramConfiguration.minFrequency ?? 0) &&
+      validateMaxDb(spectrogramConfiguration.maxDb ?? 0) &&
+      validateMinDb(spectrogramConfiguration.minDb ?? 0) &&
+      validateNarrowbandThreshold(
+        spectrogramConfiguration.narrowbandThreshold ?? 0
+      ) &&
+      validateDemonSampleFrequency(
+        demonSpectrogramConfiguration.demonSampleFrequency ?? 0
+      ) &&
+      validateTperseg(
+        demonSpectrogramConfiguration.tperseg ?? 0,
+        demonSpectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateFrequencyFilter(
+        demonSpectrogramConfiguration.frequencyFilter ?? 0
+      ) &&
+      validateHorizontalFilterLength(
+        demonSpectrogramConfiguration.tperseg ?? 0,
+        demonSpectrogramConfiguration.horizontalFilterLength ?? 0
+      ) &&
+      validateWindowInMin(demonSpectrogramConfiguration.windowInMin ?? 0) &&
+      validateMaxFrequency(demonSpectrogramConfiguration.maxFrequency ?? 0) &&
+      validateMinFrequency(demonSpectrogramConfiguration.minFrequency ?? 0) &&
+      validateMaxDb(demonSpectrogramConfiguration.maxDb ?? 0) &&
+      validateMinDb(demonSpectrogramConfiguration.minDb ?? 0) &&
+      validateWindow(demonSpectrogramConfiguration.window ?? '')
+    );
+  };
+
+  const validateWindow = (window: string) => {
+    if (window === undefined || window === '') return false;
+
+    return true;
+  };
+
+  const validateTperseg = (tperseg: number, horizontalFilterLength: number) => {
+    if (
+      tperseg === undefined ||
+      tperseg === 0 ||
+      tperseg >= horizontalFilterLength
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateFrequencyFilter = (frequencyFilter: number) => {
+    if (
+      frequencyFilter === undefined ||
+      frequencyFilter % 2 === 0 ||
+      frequencyFilter === 0
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateHorizontalFilterLength = (
+    tperseg: number,
+    horizontalFilterLength: number
+  ) => {
+    if (
+      horizontalFilterLength === undefined ||
+      horizontalFilterLength === 0 ||
+      horizontalFilterLength <= tperseg
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateWindowInMin = (windowInMin: number) => {
+    if (
+      windowInMin === undefined ||
+      windowInMin === 0 ||
+      !Number.isInteger(windowInMin)
+    )
+      return false;
+
+    return true;
+  };
+
+  const validateMaxFrequency = (maxFrequency: number) => {
+    if (maxFrequency === undefined) return false;
+
+    return true;
+  };
+
+  const validateMinFrequency = (minFrequency: number) => {
+    if (minFrequency === undefined) return false;
+
+    return true;
+  };
+  const validateMaxDb = (maxDb: number) => {
+    if (maxDb === undefined) return false;
+
+    return true;
+  };
+  const validateMinDb = (minDb: number) => {
+    if (minDb === undefined) return false;
+
+    return true;
+  };
+
+  const validateNarrowbandThreshold = (narrowbandThreshold: number) => {
+    if (narrowbandThreshold === undefined) return false;
+
+    return true;
+  };
+
+  const validateDemonSampleFrequency = (demonSampleFrequency: number) => {
+    if (demonSampleFrequency === undefined || demonSampleFrequency === 0)
+      return false;
+
+    return true;
+  };
+
+  // Memoize configuration to prevent unnecessary re-renders
+  const spectrogramProps = useMemo(
+    () => ({
+      windowInMin:
+        spectrogramConfig.spectrogramConfiguration?.windowInMin ?? 10,
+      // Resolution default to Nyquist frequency
+      resolution:
+        1 +
+        (sampleRate *
+          (spectrogramConfig.spectrogramConfiguration?.tperseg ?? 1)) /
+          2,
+      heatmapMinTimeStepMs: 500,
+      maxFrequency:
+        spectrogramConfig.spectrogramConfiguration?.maxFrequency ?? 1000,
+      minFrequency:
+        spectrogramConfig.spectrogramConfiguration?.minFrequency ?? 0,
+      maxDb: spectrogramConfig.spectrogramConfiguration?.maxDb ?? 100,
+      minDb: spectrogramConfig.spectrogramConfiguration?.minDb ?? -100,
+    }),
+    [spectrogramConfig]
+  );
+
+  const demonSpectrogramProps = useMemo(
+    () => ({
+      windowInMin:
+        spectrogramConfig.demonSpectrogramConfiguration?.windowInMin ?? 10,
+      resolution:
+        1 +
+        (sampleRate *
+          (spectrogramConfig.demonSpectrogramConfiguration?.tperseg ?? 1)) /
+          2,
+      heatmapMinTimeStepMs: 500,
+      maxFrequency:
+        spectrogramConfig.demonSpectrogramConfiguration?.maxFrequency ?? 1000,
+      minFrequency:
+        spectrogramConfig.demonSpectrogramConfiguration?.minFrequency ?? 0,
+      maxDb: spectrogramConfig.demonSpectrogramConfiguration?.maxDb ?? 100,
+      minDb: spectrogramConfig.demonSpectrogramConfiguration?.minDb ?? -100,
+    }),
+    [spectrogramConfig]
+  );
 
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
       <div className="flex items-center gap-3 mb-4">
         <Button
-          onPress={() => connect(config)}
+          onPress={() => {
+            if (validateEntireConfiguration(spectrogramConfig)) {
+              setIsInvalidConfig(false);
+              connect(spectrogramConfig);
+            } else {
+              setIsInvalidConfig(true);
+            }
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-          disabled={!isConfigValid(config)}
         >
           Connect
         </Button>
+
         <Button
           onPress={disconnect}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
@@ -81,6 +243,7 @@ const SpectrogramSelection = () => {
         >
           Disconnect
         </Button>
+
         <div className="ml-2">
           {isConnected ? (
             <span className="inline-flex items-center">
@@ -93,6 +256,28 @@ const SpectrogramSelection = () => {
               Disconnected
             </span>
           )}
+          {isNarrowbandDetection ? (
+            <div>
+              <span className="inline-flex items-center">
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                Detection in narrowband
+              </span>
+            </div>
+          ) : (
+            <div>
+              <span className="inline-flex items-center text-gray-500">
+                <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
+                No detection in narrowband
+              </span>
+            </div>
+          )}
+          {isInvalidConfig && (
+            <div className="text-red-300">
+              <p className="font-medium">
+                Error: Ensure all fields have valid values
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -103,31 +288,19 @@ const SpectrogramSelection = () => {
             <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
               {/* Spectrogram container - using flex-1 to take available space */}
               <div
-                key={chartContainerKey}
                 className="flex-1 w-full relative"
                 style={{ minHeight: '400px' }}
               >
-                {spectrogramPayload ? (
+                {spectrogramData ? (
                   <ScrollingSpectrogram
-                    spectrogramData={spectrogramPayload as SpectrogramPayload}
-                    windowInMin={
-                      config.config.spectrogramConfiguration.windowInMin
-                    }
-                    resolution={
-                      1 +
-                      (sampleRate *
-                        config.config.spectrogramConfiguration.tperseg) /
-                        2
-                    }
-                    heatmapMinTimeStepMs={500}
-                    maxFrequency={
-                      config.config.spectrogramConfiguration.maxFrequency
-                    }
-                    minFrequency={
-                      config.config.spectrogramConfiguration.minFrequency
-                    }
-                    maxDb={config.config.spectrogramConfiguration.maxDb}
-                    minDb={config.config.spectrogramConfiguration.minDb}
+                    spectrogramData={spectrogramData}
+                    windowInMin={spectrogramProps.windowInMin}
+                    resolution={spectrogramProps.resolution}
+                    heatmapMinTimeStepMs={spectrogramProps.heatmapMinTimeStepMs}
+                    maxFrequency={spectrogramProps.maxFrequency}
+                    minFrequency={spectrogramProps.minFrequency}
+                    maxDb={spectrogramProps.maxDb}
+                    minDb={spectrogramProps.minDb}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -156,7 +329,7 @@ const SpectrogramSelection = () => {
 
               {/* Parameter field with improved spacing */}
               <div className="mt-4 bg-slate-700 p-3 rounded-md">
-                <SpectrogramParameterField />
+                <SpectrogramParameterField isConnected={isConnected} />
               </div>
             </div>
           </Tab>
@@ -164,33 +337,21 @@ const SpectrogramSelection = () => {
             <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
               {/* DEMON container - using flex-1 to take available space */}
               <div
-                key={chartContainerKey}
                 className="flex-1 w-full relative"
                 style={{ minHeight: '400px' }}
               >
-                {demonSpectrogramPayload ? (
+                {demonSpectrogramData ? (
                   <ScrollingDemonSpectrogram
-                    demonSpectrogramData={
-                      demonSpectrogramPayload as DemonSpectrogramPayload
+                    demonSpectrogramData={demonSpectrogramData}
+                    windowInMin={demonSpectrogramProps.windowInMin}
+                    resolution={demonSpectrogramProps.resolution}
+                    heatmapMinTimeStepMs={
+                      demonSpectrogramProps.heatmapMinTimeStepMs
                     }
-                    windowInMin={
-                      config.config.demonSpectrogramConfiguration.windowInMin
-                    }
-                    resolution={
-                      1 +
-                      (sampleRate *
-                        config.config.demonSpectrogramConfiguration.tperseg) /
-                        2
-                    }
-                    heatmapMinTimeStepMs={500}
-                    maxFrequency={
-                      config.config.demonSpectrogramConfiguration.maxFrequency
-                    }
-                    minFrequency={
-                      config.config.demonSpectrogramConfiguration.minFrequency
-                    }
-                    maxDb={config.config.demonSpectrogramConfiguration.maxDb}
-                    minDb={config.config.demonSpectrogramConfiguration.minDb}
+                    maxFrequency={demonSpectrogramProps.maxFrequency}
+                    minFrequency={demonSpectrogramProps.minFrequency}
+                    maxDb={demonSpectrogramProps.maxDb}
+                    minDb={demonSpectrogramProps.minDb}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -219,7 +380,7 @@ const SpectrogramSelection = () => {
 
               {/* Parameter field with improved spacing */}
               <div className="mt-4 bg-slate-700 p-3 rounded-md">
-                <DemonSpectrogramParameterField />
+                <DemonSpectrogramParameterField isConnected={isConnected} />
               </div>
             </div>
           </Tab>

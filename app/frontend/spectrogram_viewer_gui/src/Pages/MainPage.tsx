@@ -2,6 +2,7 @@ import AisDataTable from '../Components/AisDataTable';
 import MapComponent from '../Components/MapComponent';
 import WaveformSelection from '../Components/WaveformSelection';
 import SpectrogramSelection from '../Components/SpectrogramSelection';
+import BroadbandComponent from '../Components/BroadbandComponent';
 
 const MainPage = () => {
   return (
@@ -13,7 +14,14 @@ const MainPage = () => {
         <MapComponent />
       </div>
       <div className="overflow-auto p-4 rounded h-full">
-        <WaveformSelection numChannels={1} />
+        <div className="flex h-full gap-2 lg:gap-4">
+          <div className="w-1/2">
+            <WaveformSelection numChannels={4} />
+          </div>
+          <div className="w-1/2">
+            <BroadbandComponent />
+          </div>
+        </div>
       </div>
       <div className="overflow-auto p-4 rounded h-full">
         <AisDataTable />

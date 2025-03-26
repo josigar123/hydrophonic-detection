@@ -13,7 +13,7 @@ import {
   Themes,
 } from '@lightningchart/lcjs';
 import lightningchartLicense from '../lightningchartLicense.json';
-import { DemonSpectrogramPayload } from '../Interfaces/SpectrogramPayload';
+import { DemonSpectrogramPayload } from '../Interfaces/Payloads';
 
 interface DemonSpectrogramProps {
   demonSpectrogramData: DemonSpectrogramPayload; // Contains all necessary spectrogram data
@@ -44,40 +44,15 @@ const ScrollingDemonSpectrogram = ({
   const id = useId();
 
   const [containerReady, setContainerReady] = useState(false);
+  const dataCountRef = useRef(0);
 
   const prevTimeStampRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    const container = document.getElementById(id);
-    if (!container) return;
-
-    // Check if container has dimensions
-    const { width, height } = container.getBoundingClientRect();
-    if (width > 0 && height > 0) {
-      setContainerReady(true);
-    } else {
-      // Use ResizeObserver to detect when dimensions become available
-      const resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          if (width > 0 && height > 0) {
-            setContainerReady(true);
-            resizeObserver.disconnect();
-          }
-        }
-      });
-
-      resizeObserver.observe(container);
-      return () => resizeObserver.disconnect();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (!containerReady) return;
-
+  // Function for memoizing chart creation, preventing unecessary re-renders
+  const createChart = useCallback(() => {
     const container = document.getElementById(id) as HTMLDivElement;
-    if (!container) return;
-    // Creating the XY chart for plotting the heatmap
+    if (!container) return null;
+
     const chart = lightningChart({
       license: lightningchartLicense['license'],
       licenseInformation: {
@@ -90,9 +65,9 @@ const ScrollingDemonSpectrogram = ({
         theme: Themes.darkGold,
         container,
       })
-      .setTitle('DEMON Spectrogram');
+      .setTitle('DEMON');
 
-    const viewMs = 1000 * 60 * windowInMin; // This defines the time windown that will be shown at all along x-axis
+    const viewMs = 1000 * 60 * windowInMin;
 
     chart.axisX
       .setScrollStrategy(AxisScrollStrategies.progressive)
@@ -104,12 +79,13 @@ const ScrollingDemonSpectrogram = ({
       .setTickStrategy(AxisTickStrategies.DateTime);
 
     chart.axisY
-      .setTitle('Frequency')
+      .setTitle('DEMON Frequency')
       .setUnits('Hz')
       .setInterval({ start: minFrequency, end: maxFrequency });
 
     const theme = chart.getTheme();
-    if (!theme.examples) return;
+    if (!theme.examples) return null;
+
     const lut = new LUT({
       steps: regularColorSteps(
         minDb,
@@ -129,7 +105,7 @@ const ScrollingDemonSpectrogram = ({
       })
       .setStep({
         x: heatmapMinTimeStepMs,
-        y: (maxFrequency - minFrequency) / (resolution - 1), // Assumes uniformly distributed frequency bins
+        y: (maxFrequency - minFrequency) / (resolution - 1),
       })
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)
@@ -145,67 +121,82 @@ const ScrollingDemonSpectrogram = ({
       })
       .add(chart);
 
-    heatmapSeriesRef.current = heatmapSeries;
-    chartRef.current = chart;
-
-    return () => {
-      heatmapSeriesRef.current?.dispose();
-      chartRef.current?.dispose();
-      heatmapSeriesRef.current = null;
-      chartRef.current = null;
-    };
+    return { chart, heatmapSeries };
   }, [
-    containerReady,
-    heatmapMinTimeStepMs,
     id,
-    maxDb,
-    maxFrequency,
-    minDb,
-    minFrequency,
-    resolution,
     windowInMin,
+    minFrequency,
+    maxFrequency,
+    resolution,
+    heatmapMinTimeStepMs,
+    minDb,
+    maxDb,
   ]);
 
-  const handleIncomingData = useCallback(
-    (timestamp: number, sample: number[], frequencies: number[]) => {
-      if (tFirstSampleRef.current === null) {
-        tFirstSampleRef.current = timestamp;
+  // Setting container readiness, lightningchart wont render if its container is not ready (WebGL warning)
+  useEffect(() => {
+    const container = document.getElementById(id);
+    if (!container) return;
 
-        const minFreq = frequencies[0] || 0;
-        heatmapSeriesRef.current?.setStart({ x: timestamp, y: minFreq });
-      }
-
-      // Keep timestamp in milliseconds (don't convert to seconds)
-      const iSample = Math.round(
-        (timestamp - tFirstSampleRef.current) / heatmapMinTimeStepMs
-      );
-
-      heatmapSeriesRef.current?.invalidateIntensityValues({
-        iSample,
-        values: [sample],
+    const { width, height } = container.getBoundingClientRect();
+    if (width > 0 && height > 0) {
+      setContainerReady(true);
+    } else {
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0) {
+            setContainerReady(true);
+            resizeObserver.disconnect();
+          }
+        }
       });
-    },
-    [heatmapMinTimeStepMs]
-  );
+
+      resizeObserver.observe(container);
+      return () => resizeObserver.disconnect();
+    }
+  }, [id]);
+
+  // Chart gets created if, and only if continer is ready
+  useEffect(() => {
+    if (!containerReady) return;
+
+    const chartInstance = createChart();
+    if (!chartInstance) return;
+
+    const { chart, heatmapSeries } = chartInstance;
+    chartRef.current = chart;
+    heatmapSeriesRef.current = heatmapSeries;
+
+    return () => {
+      heatmapSeries?.dispose();
+      chart?.dispose();
+      chartRef.current = null;
+      heatmapSeriesRef.current = null;
+    };
+  }, [containerReady, createChart]);
 
   useEffect(() => {
-    if (!demonSpectrogramData || !heatmapSeriesRef.current || !chartRef.current)
-      return;
+    if (!demonSpectrogramData || !heatmapSeriesRef.current) return;
 
-    // Use timestamp in milliseconds to better match the example code
-    const currentTimeStamp = Date.now();
+    const currentTimestamp = Date.now();
 
-    if (!prevTimeStampRef.current) {
-      prevTimeStampRef.current = currentTimeStamp;
-      return; // Skip first data point to establish time reference
+    if (tFirstSampleRef.current === null) {
+      tFirstSampleRef.current = currentTimestamp;
+      heatmapSeriesRef.current.setStart({
+        x: currentTimestamp,
+        y: demonSpectrogramData.demonFrequencies[0] || minFrequency,
+      });
     }
 
-    const sample = demonSpectrogramData.demonSpectrogramDb;
-    const frequencies = demonSpectrogramData.demonFrequencies;
-    handleIncomingData(currentTimeStamp, sample, frequencies);
+    const sampleIndex = dataCountRef.current;
+    dataCountRef.current += 1;
 
-    prevTimeStampRef.current = currentTimeStamp;
-  }, [handleIncomingData, demonSpectrogramData]);
+    heatmapSeriesRef.current.invalidateIntensityValues({
+      iSample: sampleIndex,
+      values: [demonSpectrogramData.demonSpectrogramDb],
+    });
+  }, [demonSpectrogramData, minFrequency]);
 
   return (
     <>

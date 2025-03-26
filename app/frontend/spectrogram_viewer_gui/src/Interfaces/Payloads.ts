@@ -9,3 +9,8 @@ export interface DemonSpectrogramPayload {
   demonTimes: number[];
   demonSpectrogramDb: number[];
 }
+
+export interface BroadbandPayload {
+  broadbandSignal: number[];
+  times: number[];
+}
