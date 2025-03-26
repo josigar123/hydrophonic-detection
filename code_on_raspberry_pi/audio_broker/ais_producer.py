@@ -4,15 +4,18 @@ from kafka import KafkaProducer
 import pyais
 from pyais.stream import TCPConnection 
 
-with open("broker_info_ais.json", "r") as file:
+with open("aiscatcher_config.json", "r") as file:
+    ais_broker_info = json.load(file)
+
+with open("broker_info.json", "r") as file:
     broker_info = json.load(file)
 
 
 broker_ip = broker_info["ip"]
-broker_port = broker_info ["brokerPort"]
-topic = broker_info["topicName"]
-ais_host = broker_info["aisHost"]
-ais_port = int(broker_info["aisPort"])
+broker_port = broker_info ["port"]
+topic = "ais-log"
+ais_host = ais_broker_info["ip"]
+ais_port = int(ais_broker_info["port"])
 batch_size = 10
 send_interval = 5
 
@@ -65,8 +68,7 @@ try:
                     "ship_type": decoded.ship_type,
                     "destination": decoded.destination
                 })
-
-
+                
             message_batch.append(ais_data)
 
             current_time = time.time()

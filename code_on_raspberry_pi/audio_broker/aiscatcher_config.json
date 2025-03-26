@@ -1,6 +1,6 @@
 {
-    "aisHost": "localhost",
-    "aisPort": "8110" 
+    "ip": "localhost",
+    "port": "8110" 
 }
 
   
