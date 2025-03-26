@@ -5,39 +5,36 @@ import uuid
 
 
 class MongoDBHandler:
-    def __init__(self, mongodb_config: dict):
-        self.config = mongodb_config
-        self.client = MongoClient(mongodb_config["connection_string"])
-        self.db = self.client[mongodb_config["database"]]
+    def __init__(self, connection_string, db_name="hydrophone_data"):
+        self.client = MongoClient(connection_string)
+        self.db = self.client[db_name]
 
-        self.collections = {
-            "ais_logs": self.db[mongodb_config["collections"]["ais_logs"]],
-            "ships": self.db[mongodb_config["collections"]["ships"]],
-            "recordings": self.db[mongodb_config["collections"]["recordings"]],
-            "detections": self.db[mongodb_config["collections"]["detections"]]
-        }
+        self.ships_collection = self.db["ships"]
+        self.ais_logs_collection = self.db["ais_logs"]
+        self.recordings_collection = self.db["recordings"]
+        self.detections_collection = self.db["detections"]
 
         self.setup_indexes()
 
     def setup_indexes(self):
-        self.collections["ships"].create_index("mmsi", unique=True)
-        self.collections["ships"].create_index("last_seen")
+        self.ships_collection.create_index("mmsi", unique=True)
+        self.ships_collection.create_index("last_seen")
 
-        self.collections["ais_logs"].create_index("log_id", unique=True)
-        self.collections["ais_logs"].create_index("mmsi")
-        self.collections["ais_logs"].create_index("timestamp")
-        self.collections["ais_logs"].create_index(["location", GEOSPHERE], sparse=True)
+        self.ais_logs_collection.create_index("log_id", unique=True)
+        self.ais_logs_collection.create_index("mmsi")
+        self.ais_logs_collection.create_index("timestamp")
+        self.ais_logs_collection.create_index(["location", GEOSPHERE], sparse=True)
 
-        self.collections["recordings"].create_index("recording_id", unique=True)
-        self.collections["recordings"].create_index("start_time")
-        self.collections["recordings"].create_index("end_time")
-        self.collections["recordings"].create_index("detection_id")
+        self.recordings_collection.create_index("recording_id", unique=True)
+        self.recordings_collection.create_index("start_time")
+        self.recordings_collection.create_index("end_time")
+        self.recordings_collection.create_index("detection_id")
 
-        self.collections["detections"].create_index("detection_id", unique=True)
-        self.collections["detections"].create_index("recording_id")
-        self.collections["detections"].create_index("timestamp")
-        self.collections["detections"].create_index("type")
-        self.collections["detections"].create_index("ais_logs")
+        self.detections_collection.create_index("detection_id", unique=True)
+        self.detections_collection.create_index("recording_id")
+        self.detections_collection.create_index("timestamp")
+        self.detections_collection.create_index("type")
+        self.detections_collection.create_index("ais_logs")
         
 
     def store_ais_data(self, data_list):
@@ -58,7 +55,7 @@ class MongoDBHandler:
                         "type": "Point",
                         "coordinates": [data["longitude"], data["latitude"]]
                     }
-                result = self.collections["ais_logs"].insert_one(data)
+                result = self.ais_logs_collection.insert_one(data)
                 self.update_ships_info(data)
 
                 inserted_ids.append(data["log_id"])
@@ -73,7 +70,7 @@ class MongoDBHandler:
         try:
             data["server_timestamp"] = datetime.now()
 
-            result = self.collections["recordings"].insert_one(data)
+            result = self.recordings_collection.insert_one(data)
 
             return result.inserted_id
         except Exception as e:
@@ -88,7 +85,7 @@ class MongoDBHandler:
         try:
             data["server_timestamp"] = datetime.now()
 
-            result = self.collections["detections"].insert_one(data)
+            result = self.detections_collection.insert_one(data)
 
             return result.inserted_id
         except Exception as e:
@@ -112,7 +109,7 @@ class MongoDBHandler:
                     "heading": data.get("heading")
                 }
             }
-            self.collections["ships"].update_one({"mmsi": mmsi}, update_data, upsert=True)
+            self.ships_collection.update_one({"mmsi": mmsi}, update_data, upsert=True)
 
         elif msg_type == 5 :
             update_data = {
@@ -125,12 +122,12 @@ class MongoDBHandler:
                     "last_updated": data["server_timestamp"]
                 }
             }
-            self.collections["ships"].update_one({"mmsi": mmsi}, update_data, upsert=True)
+            self.ships_collection.update_one({"mmsi": mmsi}, update_data, upsert=True)
 
     
     def get_recordings(self, recording_id):
         try:
-            return self.collections["recordings"].find_one({"recording_id": recording_id})
+            return self.recordings_collection.find_one({"recording_id": recording_id})
         except Exception as e:
             print(f"Error retrieving recording: {e}")
             return None
@@ -138,14 +135,14 @@ class MongoDBHandler:
         
     def get_detections(self, detection_id):
         try:
-            return self.collections["detections"].find_one({"detection_id": detection_id})
+            return self.detections_collection.find_one({"detection_id": detection_id})
         except Exception as e:
             print(f"Error retrieving detection: {e}")
             return None
         
     def get_ais_log_id_in_timerange(self, start_time, end_time):
         try:
-            docs = list(self.collections["ais_logs"].find({
+            docs = list(self.ais_logs_collection.find({
                 "timestamp": {
                     "$gte": start_time,
                     "$lte": end_time
@@ -159,7 +156,7 @@ class MongoDBHandler:
             
         
     def get_detections_for_recording(self, recording_id):
-        return list(self.collections["detections"].find({"recording_id": recording_id}))
+        return list(self.detections_collection.find({"recording_id": recording_id}))
     
     def get_recordings_by_mmsi(self, mmsi, start_time=None, end_time=None):
 
@@ -171,8 +168,8 @@ class MongoDBHandler:
             if end_time:
                 query["timestamp"]["$lte"] = end_time
     
-        log_ids = list(self.collections["ais_logs"].find(query).distinct("log_id"))
-        recordings = list(self.collections["recordings"].find({"ais_log_ids": {"$in": log_ids}}))
+        log_ids = list(self.ais_logs_collection.find(query).distinct("log_id"))
+        recordings = list(self.recordings_collection.find({"ais_log_ids": {"$in": log_ids}}))
         
         for recording in recordings:
             recording["detections"] = self.get_detections_for_recording(recording["recording_id"])

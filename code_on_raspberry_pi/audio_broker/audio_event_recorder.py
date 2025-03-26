@@ -7,7 +7,6 @@ import uuid
 from aiokafka import AIOKafkaConsumer
 from datetime import timedelta
 import sys
-import multiprocessing
 # Get the absolute path to the project root
 current_dir = os.path.dirname(os.path.abspath(__file__))  # audio_broker directory
 project_root = os.path.dirname(os.path.dirname(current_dir))  # hydrophonic-detection directory
@@ -19,45 +18,25 @@ sys.path.insert(0, os.path.join(project_root, "app", "services", "Database"))
 from mongodb_handler import MongoDBHandler
 from minio_handler import upload_file
 
+class AudioEventRecorder:
+    def __init__(self, config_file="recording_parameters.json", mongodb_config="mongodb_config.json"):
+        with open(config_file, "r") as file:
+            self.recording_params = json.load(file)
+        
+        with open(mongodb_config, "r") as file:
+            self.mongodb_config = json.load(file)
 
-def run_detection_consumer(broker_info, recording_parameters, mongodb_config, minio_config):
-    consumer = DetectionConsumer(
-        broker_info=broker_info,
-        recording_parameters=recording_parameters,
-        mongodb_config=mongodb_config,
-        minio_config=minio_config
-    )
-    asyncio.run(main_consumer_loop(consumer))
+        with open("broker_info.json", "r") as file:
+            self.broker_info = json.load(file)
 
-def consume_detection_event(broker_info: dict, recording_parameters: dict, mongodb_config: dict, minio_config: dict):
-    consumer_process = multiprocessing.Process(
-        target=run_detection_consumer, 
-        args=(broker_info, recording_parameters, mongodb_config, minio_config)
-    )
-    consumer_process.start()
-    return consumer_process
+        with open("aiscatcher_config.json", "r") as file:
+            self.broker_info_ais = json.load(file)
 
+        self.db_handler = MongoDBHandler(self.mongodb_config["connection_string"])
 
-async def main_consumer_loop(consumer):
-    await asyncio.gather(
-        consume_audio(consumer),
-        consume_ais_data(consumer),
-        listen_for_events(consumer)
-    )
-
-
-class DetectionConsumer:
-    def __init__(self, broker_info, recording_parameters, mongodb_config, minio_config):
-        self.broker_info = broker_info
-        self.recording_parameters = recording_parameters
-        self.mongodb_config = mongodb_config
-        self.minio_config = minio_config
-
-        self.db_handler = MongoDBHandler(mongodb_config)
-
-        self.channels = self.recording_parameters["channels"]
-        self.sample_rate = self.recording_parameters["sampleRate"]
-        self.chunk_size = self.recording_parameters["recordingChunkSize"]
+        self.channels = self.recording_params["channels"]
+        self.sample_rate = self.recording_params["sampleRate"]
+        self.chunk_size = self.recording_params["recordingChunkSize"]
         self.bit_depth = 16  
         self.bytes_per_sample = self.bit_depth // 8
 
@@ -210,47 +189,47 @@ class DetectionConsumer:
         return detection_metadata
         
 
-async def consume_audio(consumer):
-    kafka_consumer = AIOKafkaConsumer(
+async def consume_audio(recorder):
+    consumer = AIOKafkaConsumer(
         "audio-stream",
-        bootstrap_servers=f"{consumer.broker_info['ip']}:{consumer.broker_info['port']}",
+        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
         auto_offset_reset="latest"
     )
 
-    await kafka_consumer.start()
+    await consumer.start()
     try:
         print(f"Started consuming audio from audio-stream")
-        async for msg in kafka_consumer:
-            consumer.add_audio_chunk(msg.value)
+        async for msg in consumer:
+            recorder.add_audio_chunk(msg.value)
     finally:
         await consumer.stop()
 
-async def consume_ais_data(consumer):
-    kafka_consumer = AIOKafkaConsumer(
+async def consume_ais_data(recorder):
+    consumer = AIOKafkaConsumer(
         "ais-log",
-        bootstrap_servers=f"{consumer.broker_info['ip']}:{consumer.broker_info['port']}",
+        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
         auto_offset_reset="latest",
         value_deserializer=lambda m: json.loads(m.decode("utf-8"))
     )
     
-    await kafka_consumer.start()
+    await consumer.start()
     try:
         print("Started consuming AIS data from ais-data")
-        async for msg in kafka_consumer:
-            consumer.add_ais_data(msg.value)
+        async for msg in consumer:
+            recorder.add_ais_data(msg.value)
     finally:
         await consumer.stop()
 
-async def listen_for_events(consumer):
-    kafka_consumer = AIOKafkaConsumer(
+async def listen_for_events(recorder):
+    consumer = AIOKafkaConsumer(
         "narrowband-detection",
         "broadband-detection",
-        bootstrap_servers=f"{consumer.broker_info['ip']}:{consumer.broker_info['port']}",
+        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
         auto_offset_reset="latest",
         value_deserializer=lambda m: json.loads(m.decode("utf-8"))
     )
 
-    await kafka_consumer.start()
+    await consumer.start()
 
     topic_states = {
         "narrowband-detection": False,
@@ -260,7 +239,7 @@ async def listen_for_events(consumer):
     current_event_id = None
     try:
         print("Started listening for events from narrowband and broadband")
-        async for msg in kafka_consumer:
+        async for msg in consumer:
             topic = msg.topic
             threshold_reached = bool(int(msg.value))
 
@@ -269,13 +248,24 @@ async def listen_for_events(consumer):
 
             if both_threshold_reached and current_event_id is None:
                 current_event_id = str(uuid.uuid4())
-                consumer.start_event_detection(current_event_id)
+                recorder.start_event_detection(current_event_id)
                 print(f"Started recording for threshold event: {current_event_id}")
 
             elif not both_threshold_reached and current_event_id is not None:
-                consumer.stop_event_detection(current_event_id)
+                recorder.stop_event_detection(current_event_id)
                 print(f"Stopped recording for threshold event: {current_event_id}")
                 current_event_id = None
     finally:
-        await kafka_consumer.stop()
+        await consumer.stop()
 
+async def main():
+    recorder = AudioEventRecorder()
+    
+    await asyncio.gather(
+        consume_audio(recorder),
+        consume_ais_data(recorder),
+        listen_for_events(recorder)
+    )
+
+if __name__ == "__main__":
+    asyncio.run(main())
