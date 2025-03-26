@@ -212,5 +212,14 @@ services:
     volumes:
       - ./data:/data
 
+  tileserver-gl:
+    image: maptiler/tileserver-gl
+    ports:
+      - "8080:8080"
+    volumes:      
+      - ./data:/data
+    command: --file vestfold.mbtiles
+    restart: unless-stopped
+
 volumes: 
   minio_data:
