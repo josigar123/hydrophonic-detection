@@ -165,14 +165,23 @@ async def produce_broadband_detection_result(broadband_filo_signal_buffer: np.nd
 
 async def handle_connection(websocket, path):
 
+    '''Global variables for tracking relevant sizes'''
     global demon_required_buffer_size
     global spectrogram_required_buffer_size
     global broadband_required_buffer_size
     global broadband_total_required_buffer_size
 
+    '''Global dicts for storing config'''
     global spectrogram_client_config
     global broadband_client_config
 
+    '''Global variables containing buffer data'''
+    global broadband_total_buffer
+    global broadband_buffer
+    global spectrogram_audio_buffer
+    global demon_spectrogram_audio_buffer
+    global broadband_signal_buffer
+    
     parsed_url = urlparse(path)
     query_params = parse_qs(parsed_url.query)
 
@@ -275,6 +284,22 @@ async def handle_connection(websocket, path):
     finally:
         if client_name in clients and clients[client_name] == websocket:
             clients.pop(client_name, None)
+            
+            # Empty the buffers on disconnect
+            if client_name == "broadband_client":
+                broadband_total_buffer = b""
+                broadband_buffer = b""
+                broadband_signal_buffer = []
+                broadband_total_required_buffer_size = None
+                broadband_required_buffer_size = None
+            
+            # Empty the buffers on disconnect
+            if client_name == "spectrogram_client":
+                spectrogram_audio_buffer = b""
+                demon_spectrogram_audio_buffer = b""
+                demon_required_buffer_size = None
+                spectrogram_required_buffer_size = None
+                
             print(f"Removed {client_name} from active clients")
 
 def get_demon_spectrogram_config(spectrogram_client_config):
