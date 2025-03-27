@@ -29,10 +29,6 @@ const BroadbandComponent = () => {
 
   const [isInvalidConfig, setIsInvalidConfig] = useState(true);
 
-  useEffect(() => {
-    console.log('Recieved broadband data: ', broadbandData.broadbandSignal);
-  }, [broadbandData]);
-
   // Input validator function for broadband config
   const validateBroadbandConfiguration = (
     broadbandConfiguration: BroadbandConfiguration
