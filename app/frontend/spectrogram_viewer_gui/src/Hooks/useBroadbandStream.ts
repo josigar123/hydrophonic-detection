@@ -40,7 +40,6 @@ export function useBroadbandStream(url: string, autoConnect = false) {
 
           if (configuration) {
             const messageString = JSON.stringify(configuration);
-            console.log('SENDING THE FOLLOWING CONFIGURATION: ', messageString);
             socket.send(messageString);
           }
         };
@@ -50,10 +49,8 @@ export function useBroadbandStream(url: string, autoConnect = false) {
             const data = JSON.parse(event.data);
 
             if ('detectionStatus' in data) {
-              console.log('RECVD detection status: ', data.detectionStatus);
               setIsBroadbandDetection(data.detectionStatus);
             } else {
-              console.log('RECVD broadband data: ', data.broadbandSignal);
               setBroadbandData({
                 broadbandSignal: data.broadbandSignal || [],
                 times: data.times || [],

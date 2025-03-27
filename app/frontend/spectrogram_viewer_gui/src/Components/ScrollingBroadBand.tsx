@@ -4,6 +4,7 @@ import {
   ChartXY,
   emptyFill,
   emptyLine,
+  LegendBoxBuilders,
   lightningChart,
   PointLineAreaSeries,
   Themes,
@@ -49,6 +50,7 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
 
     chart.axisX
       .setScrollStrategy(AxisScrollStrategies.progressive)
+      .setStrokeStyle(emptyLine)
       .setDefaultInterval((state) => ({
         end: state.dataMax,
         start: (state.dataMax ?? 0) - viewMs,
@@ -59,14 +61,20 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
     chart.axisY
       .setTitle('Amplitude')
       .setUnits('dB')
-      .setInterval({ start: 0, end: 20 });
+      .setInterval({ start: 0, end: 60 });
 
     const pointLineSeries = chart
       .addPointLineAreaSeries({
         dataPattern: 'ProgressiveX',
       })
       .setAreaFillStyle(emptyFill)
-      .setStrokeStyle(emptyLine);
+      .setStrokeStyle(emptyLine)
+      .setMaxSampleCount(50000)
+      .setStrokeStyle((style) => style.setThickness(2));
+
+    chart
+      .addLegendBox(LegendBoxBuilders.HorizontalLegendBox)
+      .add(pointLineSeries);
 
     return { chart, pointLineSeries };
   }, [id, windowInMin]);
@@ -123,9 +131,16 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
 
     dataCountRef.current += 1;
 
-    broadbandData.broadbandSignal.forEach((sample) => {
-      lineSeriesRef.current?.appendSample({ y: sample, x: Date.now() });
-    });
+    for (let i = 0; i < broadbandData.broadbandSignal.length; i++) {
+      lineSeriesRef.current.appendSample({
+        x: Date.now(),
+        y: broadbandData.broadbandSignal[i],
+      });
+    }
+    // lineSeriesRef.current.appendSamples({
+    //   xValues: broadbandData.times,
+    //   yValues: broadbandData.broadbandSignal,
+    // });
   }, [broadbandData]);
 
   return (
