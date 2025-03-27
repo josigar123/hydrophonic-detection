@@ -50,7 +50,9 @@ export function useBroadbandStream(url: string, autoConnect = false) {
 
             if ('detectionStatus' in data) {
               setIsBroadbandDetection(data.detectionStatus);
-            } else {
+            }
+
+            if ('broadbandThreshold' in data) {
               setBroadbandData({
                 broadbandSignal: data.broadbandSignal || [],
                 times: data.times || [],

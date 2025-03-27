@@ -131,16 +131,10 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
 
     dataCountRef.current += 1;
 
-    for (let i = 0; i < broadbandData.broadbandSignal.length; i++) {
-      lineSeriesRef.current.appendSample({
-        x: Date.now(),
-        y: broadbandData.broadbandSignal[i],
-      });
-    }
-    // lineSeriesRef.current.appendSamples({
-    //   xValues: broadbandData.times,
-    //   yValues: broadbandData.broadbandSignal,
-    // });
+    lineSeriesRef.current.appendSamples({
+      xValues: broadbandData.times,
+      yValues: broadbandData.broadbandSignal,
+    });
   }, [broadbandData]);
 
   return (

@@ -146,7 +146,7 @@ async def produce_narrowband_detection_result(spectrogram_db: list[float], thres
 async def produce_broadband_detection_result(broadband_filo_signal_buffer: np.ndarray, threshold: int, window_size: int) -> bool:
     global signal_processing_service
 
-    topic = 'broadband_detection'
+    topic = 'broadband-detection'
     producer = AIOKafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS,
                                 value_serializer= lambda v: (1 if v else 0).to_bytes(1, byteorder='big'))
     
@@ -378,7 +378,8 @@ async def forward_broadband_data_to_frontend(data):
 
             # Concating new data in the temp buffer, PCM data
             broadband_buffer += data
-
+            print("BROADBAND BUFFER LENGTH: ", len(broadband_buffer))
+            print("REQUIRED BUFFER SIZE: ", broadband_required_buffer_size)
             # The small buffer is filled contains window_size seconds of data
             if len(broadband_buffer) >= broadband_required_buffer_size:
                 adjusted_broadband_buffer, broadband_buffer = broadband_buffer[:broadband_required_buffer_size], \
@@ -407,7 +408,9 @@ async def forward_broadband_data_to_frontend(data):
 
                 # If this is true, we want to remove the first window_size seconds of data from broadband_total_buffer and broadband_signal_buffer
                 if len(broadband_total_buffer) >= broadband_total_required_buffer_size:
-
+                    print("THE BB TOTAL BUFFER IS FILLED!")
+                    print("BROADBAND TOTAL BUFFER LENGTH: ", len(broadband_total_buffer))
+                    print("REQUIRED TOTAL BROADBAND BUFFER SIZE: ", broadband_total_required_buffer_size)
                     print("Total broadband buffer filled, performing broadband detection...")
 
                     '''Buffer gets resized such that, only the bytes from window_size and up gets included'''
