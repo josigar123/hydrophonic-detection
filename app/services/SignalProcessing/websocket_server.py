@@ -279,11 +279,11 @@ async def handle_connection(websocket, path):
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
 
-    except websockets.exceptions.ConnectionClosed as e:
+    except websockets.exceptions.ConnectionClosed as e:  
+            
         print(f"Client '{client_name}' disconnected: {e}")
     finally:
         if client_name in clients and clients[client_name] == websocket:
-            clients.pop(client_name, None)
             
             # Empty the buffers on disconnect
             if client_name == "broadband_client":
@@ -292,13 +292,15 @@ async def handle_connection(websocket, path):
                 broadband_signal_buffer = []
                 broadband_total_required_buffer_size = None
                 broadband_required_buffer_size = None
-            
+                    
             # Empty the buffers on disconnect
             if client_name == "spectrogram_client":
                 spectrogram_audio_buffer = b""
                 demon_spectrogram_audio_buffer = b""
                 demon_required_buffer_size = None
                 spectrogram_required_buffer_size = None
+            
+            clients.pop(client_name, None)
                 
             print(f"Removed {client_name} from active clients")
 
@@ -403,8 +405,7 @@ async def forward_broadband_data_to_frontend(data):
 
             # Concating new data in the temp buffer, PCM data
             broadband_buffer += data
-            print("BROADBAND BUFFER LENGTH: ", len(broadband_buffer))
-            print("REQUIRED BUFFER SIZE: ", broadband_required_buffer_size)
+
             # The small buffer is filled contains window_size seconds of data
             if len(broadband_buffer) >= broadband_required_buffer_size:
                 adjusted_broadband_buffer, broadband_buffer = broadband_buffer[:broadband_required_buffer_size], \
@@ -419,7 +420,6 @@ async def forward_broadband_data_to_frontend(data):
                     "broadbandSignal": broadband_signal.tolist(), # NDArrays are not JSON serializable, must convert to list
                     "times": t.tolist()
                 }
-
                 data_json = json.dumps(data_dict)
                 print("Sending broadband data...")
                 await clients["broadband_client"].send(data_json)
@@ -433,9 +433,6 @@ async def forward_broadband_data_to_frontend(data):
 
                 # If this is true, we want to remove the first window_size seconds of data from broadband_total_buffer and broadband_signal_buffer
                 if len(broadband_total_buffer) >= broadband_total_required_buffer_size:
-                    print("THE BB TOTAL BUFFER IS FILLED!")
-                    print("BROADBAND TOTAL BUFFER LENGTH: ", len(broadband_total_buffer))
-                    print("REQUIRED TOTAL BROADBAND BUFFER SIZE: ", broadband_total_required_buffer_size)
                     print("Total broadband buffer filled, performing broadband detection...")
 
                     '''Buffer gets resized such that, only the bytes from window_size and up gets included'''

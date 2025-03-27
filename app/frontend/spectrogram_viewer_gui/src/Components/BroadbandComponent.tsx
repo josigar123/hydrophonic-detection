@@ -1,6 +1,6 @@
 import BroadbandParameterField from './BroadbandParameterField';
 import ScrollingBroadBand from './ScrollingBroadBand';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Button } from '@heroui/button';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
 import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
@@ -28,6 +28,10 @@ const BroadbandComponent = () => {
   } = useBroadbandStream(websocketUrl, false);
 
   const [isInvalidConfig, setIsInvalidConfig] = useState(true);
+
+  useEffect(() => {
+    console.log('Recieved broadband data: ', broadbandData.broadbandSignal);
+  }, [broadbandData]);
 
   // Input validator function for broadband config
   const validateBroadbandConfiguration = (

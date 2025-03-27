@@ -52,11 +52,13 @@ export function useBroadbandStream(url: string, autoConnect = false) {
               setIsBroadbandDetection(data.detectionStatus);
             }
 
-            if ('broadbandThreshold' in data) {
+            if ('broadbandSignal' in data) {
               setBroadbandData({
                 broadbandSignal: data.broadbandSignal || [],
                 times: data.times || [],
               });
+              console.log('RECIEVED bbSIG: ', data.broadbandSignal);
+              console.log('RECIEVED TIMES: ', data.times);
             }
           } catch (error) {
             console.error(
