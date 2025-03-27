@@ -217,9 +217,31 @@ services:
     ports:
       - "8080:8080"
     volumes:      
-      - ./data:/data
-    command: --file vestfold.mbtiles
+      - ./data:/map
+    command: --file /map/vestfold.mbtiles
     restart: unless-stopped
+    depends_on:
+      map-downloader:
+        condition: service_completed_successfully
+ 
+  map-downloader:
+    image: alpine
+    volumes:
+      - ./data:/map
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+    command: >
+      /bin/sh -c "
+      apk add --no-cache aws-cli coreutils &&
+      if [ -f /map/vestfold.mbtiles ] && [ $(stat -c%s /map/vestfold.mbtiles) -gt 1000000 ]; then
+        echo 'Valid map file already exists, skipping download.'
+      else
+        echo 'Map file not found or invalid, downloading from S3...'
+        aws s3 cp s3://hydrophone-audio/vestfold.mbtiles /map/vestfold.mbtiles
+      fi"
+    restart: "no"
 
 volumes: 
   minio_data:

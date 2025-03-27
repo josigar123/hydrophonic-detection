@@ -111,6 +111,9 @@ class AudioEventRecorder:
     def add_ais_data(self, ais_data):
         if "timestamp" not in ais_data:
             ais_data["timestamp"] = datetime.now()
+        
+        ais_data["received_time"] = datetime.now()
+        
         self.ais_buffer.append(ais_data)
 
         if len(self.ais_buffer) > 1000:
@@ -128,25 +131,52 @@ class AudioEventRecorder:
         
         print(f"WAV file created: {filename}")
 
+
         TIME_BUFFER_BEFORE = 15
         TIME_BUFFER_AFTER = 15
 
+      
+        start_time = event_data["start_time"]
         end_time = datetime.now()
-        buffer_start_time = event_data["start_time"] - timedelta(seconds=TIME_BUFFER_BEFORE)
+        buffer_start_time = start_time - timedelta(seconds=TIME_BUFFER_BEFORE)
         buffer_end_time = end_time + timedelta(seconds=TIME_BUFFER_AFTER)
 
-        duration = (end_time - event_data["start_time"]).total_seconds()
+        duration = (end_time - start_time).total_seconds()
 
+        print(f"Detection time range: {start_time} to {end_time}")
+        print(f"Buffered time range for AIS data: {buffer_start_time} to {buffer_end_time}")
+
+      
         relevant_ais_data = [] 
-        for ais_entry in self.ais_buffer[event_data["ais_start_index"]:]:
-            if buffer_start_time <= ais_entry.get("timestamp", datetime.now()) <= buffer_end_time:
-                relevant_ais_data.append(ais_entry)
+        for ais_entry in self.ais_buffer:
+            try:
+            
+                entry_timestamp = ais_entry.get("timestamp")
+                if entry_timestamp is None:
+                    entry_timestamp = ais_entry.get("received_time", datetime.now())
 
+                elif isinstance(entry_timestamp, (int, float)):
+                    entry_timestamp = datetime.fromtimestamp(entry_timestamp)
+
+                elif isinstance(entry_timestamp, str):
+                    try:
+                        entry_timestamp = datetime.fromisoformat(entry_timestamp.replace('Z', '+00:00'))
+                    except ValueError:
+                        entry_timestamp = ais_entry.get("received_time", datetime.now())
+
+                if buffer_start_time <= entry_timestamp <= buffer_end_time:
+                    entry_copy = ais_entry.copy()
+                    relevant_ais_data.append(entry_copy)
+                    
+            except Exception as e:
+                print(f"Error processing AIS entry timestamp: {e}")
+                continue
         try:
-            self.db_handler.store_ais_data(relevant_ais_data)
-            print(f"Relevant AIS-data stored in MongoDB")
+            stored_ids = self.db_handler.store_ais_data(relevant_ais_data)
+            print(f"Stored {len(stored_ids)} AIS data entries in MongoDB")
         except Exception as e:
             print(f"Error storing relevant AIS-data in MongoDB {e}")
+            stored_ids = []
 
         try:
             storage_info = upload_file(filename, self.current_session_id, event_id)
@@ -155,11 +185,12 @@ class AudioEventRecorder:
             print(f"Error uploading to MinIO: {e}")
             storage_info = {"error": str(e)}
 
-        associated_ais_logs = self.db_handler.get_ais_log_id_in_timerange(event_data["start_time"], end_time)
+
+        associated_ais_logs = stored_ids
 
         detection_metadata = {
             "detection_id": event_id,
-            "start_time": event_data['start_time'],
+            "start_time": start_time,
             "end_time": end_time,
             "duration": duration,
             "type": "type", 
@@ -169,7 +200,8 @@ class AudioEventRecorder:
             "storage_location": storage_info,
             "associated_ais_logs": associated_ais_logs,
             "num_ais_entries": len(relevant_ais_data),
-            "recording_id": self.current_session_id
+            "recording_id": self.current_session_id,
+            "ais_buffer_before_seconds": TIME_BUFFER_BEFORE,
         }
 
         detection_metadata.update(event_data["metadata"])

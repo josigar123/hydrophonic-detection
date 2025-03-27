@@ -47,7 +47,6 @@ class MongoDBHandler:
         inserted_ids = []
         for data in data_list:
             try:
-                data["server_timestamp"] = datetime.now()
                 data["log_id"] = str(uuid.uuid4())
 
                 if "latitude" in data and "longitude" in data:

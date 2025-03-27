@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableHeader,
@@ -17,19 +17,19 @@ import {
 } from '@heroui/react';
 import { Ship } from './ShipMarker';
 import { useShips } from '../Hooks/useShips';
-import { getHaversineDistance } from '../utils/distance';
+import { getHaversineDistance } from '../Utils/distance';
 
 const MAX_SHIPS = 40;
 
 const AisDataTable = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
-  const { ships, isLoading, error } = useShips();
+  const { ships, isLoading} = useShips();
 
   const closestMovingShips = useMemo(() => {
-    const center: [number, number] = [59.431633, 10.478039];
+    const center: [number, number] = [59.2674, 10.4075];
     return ships
-      .filter((ship) => parseFloat(ship.speed) > 0.5)
+      .filter((ship) => parseFloat(ship.speed) > -1.0)
       .map((ship) => ({
         ...ship,
         distance: getHaversineDistance(
@@ -117,7 +117,6 @@ const AisDataTable = () => {
           <Table aria-label="Live AIS Data Table">
             <TableHeader>
               <TableColumn key="MMSI">MMSI</TableColumn>
-              <TableColumn key="SHIP_NAME">Name</TableColumn>
               <TableColumn key="SHIP_TYPE">Type</TableColumn>
               <TableColumn key="Knots">Knots</TableColumn>
               <TableColumn key="Distance">Distance</TableColumn>
@@ -137,7 +136,6 @@ const AisDataTable = () => {
                       {ship.mmsi}
                     </Button>
                   </TableCell>
-                  <TableCell>{ship.shipName}</TableCell>
                   <TableCell>{ship.shipType}</TableCell>
                   <TableCell>{ship.speed}</TableCell>
                   <TableCell>{ship.distance.toFixed(1)} km</TableCell>

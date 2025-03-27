@@ -64,19 +64,33 @@ class WebSocketClient:
             self.websocket = None
 
 async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient):
-    
+    ships = {}
     await consumer.start()
 
     try:
         async for msg in consumer:
             try:
-                print(f"Consumed message, offset: {msg.offset}")
-
-                success = await socket_client.send(msg.value)
-                if success:
-                    print("Successfully sent message to websocket")
+                message = json.loads(msg.value)
+                
+                if "mmsi" in message:
+                    mmsi = message["mmsi"]
+                    if mmsi not in ships:
+                        ships[mmsi] = {}
+                    ships[mmsi].update(message)
+                    complete_vessel = ships[mmsi]
+                    
+                    print(f"Consumed message for vessel {mmsi}, offset: {msg.offset}")
+                
+                    success = await socket_client.send(json.dumps(complete_vessel))
+                    
+                    if success:
+                        print(f"Successfully sent complete vessel data for {mmsi} to websocket")
+                    else:
+                        print("Failed to send message to WebSocket")
                 else:
-                    print("Failed to send message to WebSocket")
+                    print("Received message without MMSI, sending as is")
+                    success = await socket_client.send(msg.value)
+                    
             except Exception as e:
                 print(f"Error processing message: {e}")
     except Exception as e:
@@ -87,12 +101,12 @@ async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient
 
 async def main():
 
-    with open("broker_info_ais.json", "r") as file:
+    with open("broker_info.json", "r") as file:
         broker_info = json.load(file)
 
     broker_ip = broker_info["ip"]
-    broker_port = broker_info["brokerPort"]
-    broker_topic = broker_info["topicName"]
+    broker_port = broker_info["port"]
+    broker_topic = "ais-log"
 
     socket_client = WebSocketClient("ws://localhost:8766?client_name=ais_consumer")
 
