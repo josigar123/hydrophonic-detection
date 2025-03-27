@@ -450,11 +450,12 @@ async def forward_demon_data_to_frontend(data):
 
                 print("Demon spectrogram buffer filled, generating and sending data...")
                 '''Adjusting the audio buffer so the amount of audio processed is always the same relative to required_buffer_size'''
+                print("ADJUSTING DEMON BUFFERS FOR DATA GENERATION")
                 adjusted_demon_spectrogram_audio_buffer, demon_spectrogram_audio_buffer = demon_spectrogram_audio_buffer[:demon_required_buffer_size], demon_spectrogram_audio_buffer[demon_required_buffer_size:]
-
+                print("GENERATING DEMON DATA FROM SIGNAL PROCESSING SERVICE")
                 demon_frequencies, demon_times, demon_spectrogram_db = signal_processing_service.generate_demon_spectrogram_data(adjusted_demon_spectrogram_audio_buffer,
-                                                                                                                                demon_sample_frequency, demon_tperseg, demon_freq_filter,
-                                                                                                                                demon_hfilt_length, demon_window)
+                                                                                                                                demon_sample_frequency, demon_tperseg, demon_freq_filter, demon_hfilt_length, demon_window)
+                print("DEMON DATA GENERATED, CONVERTING TO A PYTHON DICT")                                                                             
 
                 '''We flatten the demon_spectrogram_db matrix since it will we a matrix with only one column'''
                 demon_data_dict = {

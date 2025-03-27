@@ -19,13 +19,22 @@ class SignalProcessingService:
 
     def generate_spectrogram_data(self, pcm_data: bytes, tperseg: float, freq_filt: int, hfilt_length: int, window: str):
         
-        #Average signal over all channels
-        mono_signal = self.convert_n_channel_signal_to_mono(pcm_data)
-
+        channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
+        
         # Calculate spectrogram
         nperseg=int(tperseg*self.sample_rate)
-        f, t, sx = signal.spectrogram(mono_signal, self.sample_rate, window=window, nperseg=nperseg, detrend=False)
-        sx_norm = medfilt_vertcal_norm(sx,freq_filt)
+        
+        f = np.ndarray
+        t = np.ndarray
+        freq, times, power = signal.spectrogram(channels[0], self.sample_rate, window=window, nperseg=nperseg, detrend=False)
+        sx_norm = np.zeros_like(power)
+        for channel in channels:
+            freq, times, power = signal.spectrogram(channel, self.sample_rate, window=window, nperseg=nperseg, detrend=False)
+            f = freq
+            t = times
+            current_sx_norm = medfilt_vertcal_norm(power,freq_filt)
+            sx_norm = np.add(sx_norm, current_sx_norm)
+            
         sx_db = 10*np.log10(sx_norm)   # Convert to dB
         sx_db, f, t = spec_hfilt2(sx_db,f,t,window_length=hfilt_length)
 
@@ -33,29 +42,53 @@ class SignalProcessingService:
     
     def generate_demon_spectrogram_data(self, pcm_data: bytes, demon_sample_frequency: int, tperseg: float, freq_filt: int, hfilt_length: int, window: str):
 
-        # Average the signal over all channels
-        mono_signal = self.convert_n_channel_signal_to_mono(pcm_data)
-
+        print("LENGTH OF PCM DATA: ", len(pcm_data))
+        channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
+        print("FIRST 100 bytes of PCM DATA: ", pcm_data[:101])
+        print("NUMBER OF CHANNELS: ",len(channels))
+        # Frequency data calculation
+        nperseg = int(demon_sample_frequency * tperseg)  # Number of samples in time axis to use for each vertical spectrogram column
+        
         # RMS data of Hilbert transform
         kernal_size = int(self.sample_rate/demon_sample_frequency) 
-        analytic_signal = np.abs(hilbert(mono_signal))**2
+        analytic_signal = np.abs(hilbert(channels[0]))**2
         rms_values = average_filter(analytic_signal, kernal_size)
-
-        # Frequency data calculation
-        nperseg = demon_sample_frequency * int(tperseg)  # Number of samples in time axis to use for each vertical spectrogram column
-
         # Generate spectrogram
         fd_rms, td_rms, sxx_rms = signal.spectrogram(rms_values, demon_sample_frequency,
-                                                    nperseg=nperseg,
-                                                    noverlap=5 * nperseg // 6,
-                                                    window=window)
-
+                                                        nperseg=nperseg,
+                                                        noverlap=5 * nperseg // 6,
+                                                        window=window)
         # Normalize sxx
         sxx_rms_norm = medfilt_vertcal_norm(spec=sxx_rms, vertical_medfilt_size=freq_filt)
+        sxx_rms_norm = np.zeros_like(sxx_rms_norm)
+        print("PRE LOOP NORM RMX: ", sxx_rms_norm[:11])
+        for channel in channels:
+            analytic_signal = np.abs(hilbert(channel))**2
+            rms_values = average_filter(analytic_signal, kernal_size)
 
+            # Generate spectrogram
+            fd_rms, td_rms, sxx_rms = signal.spectrogram(rms_values, demon_sample_frequency,
+                                                        nperseg=nperseg,
+                                                        noverlap=5 * nperseg // 6,
+                                                        window=window)
+            # Normalize sxx
+            current_sxx_rms_norm = medfilt_vertcal_norm(spec=sxx_rms, vertical_medfilt_size=freq_filt)
+            sxx_rms_norm = np.add(sxx_rms_norm, current_sxx_rms_norm)
+
+        print("td_rms: ", td_rms)
+        print("fd_rms: ", fd_rms)
+        print("10 FIRST NORM RMX: ", sxx_rms_norm[:11])
+        
+        sxx_rms_norm_db = 10 * np.log10(sxx_rms_norm)
+        print("SXXRMS DB: ", sxx_rms_norm_db)
         # Apply frequency and time-domain filters
-        sxx_db, fd_rms, td_rms = spec_hfilt2(10 * np.log10(sxx_rms_norm), fd_rms, td_rms, window_length=hfilt_length)
-
+        sxx_db, fd_rms, td_rms = spec_hfilt2(sxx_rms_norm_db, fd_rms, td_rms, window_length=hfilt_length)
+        # Highpass cut filter
+        fc = 5 # Hz
+        sxx_db[0:int(fc*tperseg+1),:] = 0
+        print("SXX_DB IN SIGNAL PROCESSING SERVICE: ", sxx_db)
+        print("FD_RMS: ", fd_rms)
+        print("td_rms: ", td_rms)
         return fd_rms.tolist(), td_rms.tolist(), sxx_db.tolist()
 
     # Take a spectrogram matrix containing intensities and a threshold in dB
@@ -65,14 +98,17 @@ class SignalProcessingService:
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
     def generate_broadband_data(self, pcm_data: bytes, hilbert_win, window_size):
 
-        # Average the signal over all channels
-        mono_signal = self.convert_n_channel_signal_to_mono(pcm_data)
+        channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
 
         # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
         # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
-        envelope = moving_average_padded(np.square(np.abs(hilbert(mono_signal))),hilbert_win)
+        pre_envelope = moving_average_padded(np.square(np.abs(hilbert(channel))),hilbert_win)
+        envelope = np.zeros_like(pre_envelope)
+        for channel in channels:
+            currentEnvelope = moving_average_padded(np.square(np.abs(hilbert(channel))),hilbert_win)
+            envelope = np.add(envelope, currentEnvelope)
 
-            # Downsample the filtered signal
+        # Downsample the filtered signal
         downsampled_signal = resample_poly(envelope, 1, hilbert_win)  # Resample by the median filter window size
         downsampled_sample_rate = self.sample_rate / hilbert_win  # New sampling rate after downsampling
 
@@ -92,7 +128,7 @@ class SignalProcessingService:
 
         return True in (last_win > min_val + threshold)
 
-    def convert_n_channel_signal_to_mono(self, pcm_data: bytes):
+    def convert_n_channel_signal_to_n_arrays(self, pcm_data: bytes):
         
         # System supports recording of bit-depth 16
         if self.bit_depth != 16:
@@ -113,7 +149,6 @@ class SignalProcessingService:
         except ValueError as e:
             raise ValueError(f"Error reshaping PCM data. Expected {self.num_channels} channels, but got data size {samples.shape[0]}") from e
         
-        # Convert to mono by averaging channels
-        mono_signal = np.mean(samples, axis=1).astype(np.int16)
+        channels = [samples[:, i] for i in range(self.num_channels)]
         
-        return mono_signal
+        return channels
