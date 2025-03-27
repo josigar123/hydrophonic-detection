@@ -49,10 +49,10 @@ export function useBroadbandStream(url: string, autoConnect = false) {
             const data = JSON.parse(event.data);
 
             if ('detectionStatus' in data) {
-              console.log('RECVD detection status: ', data.detectionStatus);
               setIsBroadbandDetection(data.detectionStatus);
-            } else {
-              console.log('RECVD broadband data: ', data.broadbandSignal);
+            }
+
+            if ('broadbandSignal' in data) {
               setBroadbandData({
                 broadbandSignal: data.broadbandSignal || [],
                 times: data.times || [],

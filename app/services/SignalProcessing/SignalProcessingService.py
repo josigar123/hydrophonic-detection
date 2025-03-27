@@ -98,28 +98,30 @@ class SignalProcessingService:
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
     def generate_broadband_data(self, pcm_data: bytes, hilbert_win, window_size):
 
-        channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
+        try:
+            channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
+            # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
+            # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
+            pre_envelope = moving_average_padded(np.square(np.abs(hilbert(channels[0]))), hilbert_win)
+            envelope = np.zeros_like(pre_envelope)
 
-        # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
-        # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
-        pre_envelope = moving_average_padded(np.square(np.abs(hilbert(channel))),hilbert_win)
-        envelope = np.zeros_like(pre_envelope)
-        for channel in channels:
-            currentEnvelope = moving_average_padded(np.square(np.abs(hilbert(channel))),hilbert_win)
-            envelope = np.add(envelope, currentEnvelope)
+            for channel in channels:
+                current_envelope = moving_average_padded(np.square(np.abs(hilbert(channel))),hilbert_win)
+                envelope = np.add(envelope, current_envelope)
 
-        # Downsample the filtered signal
-        downsampled_signal = resample_poly(envelope, 1, hilbert_win)  # Resample by the median filter window size
-        downsampled_sample_rate = self.sample_rate / hilbert_win  # New sampling rate after downsampling
+            # Downsample the filtered signal
+            downsampled_signal = resample_poly(envelope, 1, hilbert_win)  # Resample by the median filter window size
+            downsampled_sample_rate = self.sample_rate / hilbert_win  # New sampling rate after downsampling
 
-        # Define kernel size for the median filter based on window size
-        kernel_size = int(window_size * downsampled_sample_rate) | 1  # Ensure odd size
-        signal_med = moving_average_padded(downsampled_signal, kernel_size)  # Apply median filter for further noise removal
+            # Define kernel size for the median filter based on window size
+            kernel_size = int(window_size * downsampled_sample_rate) | 1  # Ensure odd size
+            signal_med = moving_average_padded(downsampled_signal, kernel_size)  # Apply median filter for further noise removal
 
-        broadband_signal = 10*np.log10(signal_med)
-        t = np.linspace(0,len(broadband_signal)/downsampled_sample_rate,len(broadband_signal))
-
-        return broadband_signal, t
+            broadband_signal = 10*np.log10(signal_med)
+            t = np.linspace(0,len(broadband_signal)/downsampled_sample_rate,len(broadband_signal))
+            return broadband_signal, t
+        except Exception as e:
+            print(f"Error in 'generate_broadband_data': {e}")
 
     def broadband_detection(self, filo_buffer: np.ndarray, threshold: int, window_size: int):
 
@@ -136,10 +138,6 @@ class SignalProcessingService:
  
 
         samples = np.frombuffer(pcm_data, dtype=np.int16) 
-
-        # signal is mono, early return
-        if self.num_channels == 1:
-            return samples
         
         if len(samples) % self.num_channels != 0:
             raise ValueError(f"Invalid PCM data size {len(samples)} for {self.num_channels} channels.")

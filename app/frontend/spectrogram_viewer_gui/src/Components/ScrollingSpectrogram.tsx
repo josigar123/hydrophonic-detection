@@ -3,6 +3,7 @@ import {
   AxisScrollStrategies,
   AxisTickStrategies,
   ChartXY,
+  ColorRGBA,
   emptyLine,
   HeatmapScrollingGridSeriesIntensityValues,
   LegendBoxBuilders,
@@ -84,17 +85,36 @@ const ScrollingSpectrogram = ({
     const theme = chart.getTheme();
     if (!theme.examples) return null;
 
+    const infernoLut = new LUT({
+      percentageValues: true,
+      steps: [
+        { value: 0, color: ColorRGBA(0, 0, 4) },
+        { value: 0.14, color: ColorRGBA(40, 11, 84) },
+        { value: 0.29, color: ColorRGBA(101, 21, 110) },
+        { value: 0.43, color: ColorRGBA(159, 42, 99) },
+        { value: 0.57, color: ColorRGBA(212, 72, 66) },
+        { value: 0.71, color: ColorRGBA(245, 125, 21) },
+        { value: 0.86, color: ColorRGBA(250, 193, 39) },
+        { value: 1, color: ColorRGBA(252, 255, 164) },
+      ],
+      interpolate: true,
+      units: 'dB',
+    });
+
     const lut = new LUT({
       steps: regularColorSteps(
-        minDb,
         maxDb,
+        minDb,
         Themes.darkGold.examples.intensityColorPalette
       ),
       units: 'dB',
       interpolate: true,
     });
 
-    const palettedFill = new PalettedFill({ lut, lookUpProperty: 'value' });
+    const palettedFill = new PalettedFill({
+      lut,
+      lookUpProperty: 'value',
+    });
 
     const heatmapSeries = chart
       .addHeatmapScrollingGridSeries({

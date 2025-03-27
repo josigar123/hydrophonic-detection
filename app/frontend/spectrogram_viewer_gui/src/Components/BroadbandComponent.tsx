@@ -1,17 +1,10 @@
 import BroadbandParameterField from './BroadbandParameterField';
 import ScrollingBroadBand from './ScrollingBroadBand';
-import { useCallback, useContext, useId, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Button } from '@heroui/button';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
 import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
 import { BroadbandConfiguration } from '../Interfaces/Configuration';
-import {
-  ChartXY,
-  lightningChart,
-  PointLineAreaSeries,
-  Themes,
-} from '@lightningchart/lcjs';
-import lightningchartLicense from '../lightningchartLicense.json';
 
 const websocketUrl = 'ws://localhost:8766?client_name=broadband_client';
 
@@ -30,40 +23,11 @@ const BroadbandComponent = () => {
     broadbandData,
     isBroadbandDetection,
     isConnected,
-    error,
     connect,
     disconnect,
   } = useBroadbandStream(websocketUrl, false);
 
-  const chartRef = useRef<ChartXY | null>(null);
-  const lineSeriesRef = useRef<PointLineAreaSeries | null>(null);
-
-  const tFirstSampleRef = useRef<number | null>(null);
-  const id = useId();
-
-  const [containterReady, setContainerReady] = useState(false);
-  const dataCountRef = useRef(0);
-
   const [isInvalidConfig, setIsInvalidConfig] = useState(true);
-
-  const createChart = useCallback(() => {
-    const container = document.getElementById(id) as HTMLDivElement;
-    if (!container) return;
-
-    const chart = lightningChart({
-      license: lightningchartLicense['license'],
-      licenseInformation: {
-        appTitle: 'LightningChart JS Trial',
-        company: 'LightningChart Ltd.',
-      },
-    })
-      .ChartXY({
-        defaultAxisX: { type: 'linear-highPrecision' },
-        theme: Themes.darkGold,
-        container,
-      })
-      .setTitle('Broadband');
-  });
 
   // Input validator function for broadband config
   const validateBroadbandConfiguration = (
@@ -179,7 +143,7 @@ const BroadbandComponent = () => {
       <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
         <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
           {broadbandData ? (
-            <ScrollingBroadBand />
+            <ScrollingBroadBand broadbandData={broadbandData} windowInMin={5} />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-300">
               <div className="text-center">

@@ -8,7 +8,7 @@ class WebSocketClient:
         self.websocket = None
     
     async def connect(self):
-        seconds: int = 1
+        attempts: int = 0
         if self.websocket == None or  self.websocket.closed:
             while True:
                 try:
@@ -16,12 +16,12 @@ class WebSocketClient:
                     print(f"Successfully connected to WebSocket at {self.url}")
                     return True
                 except Exception as e:
-                    if seconds >= 30:
+                    if attempts >= 100:
                         print(f"WebSocket connection could not be established, exiting...")
                         return False
-                    print(f"WebSocket connection failed: {e}, retrying in {seconds}s...")
-                    await asyncio.sleep(seconds)
-                    seconds += 1
+                    print(f"WebSocket connection failed: {e}, retrying in 3s...")
+                    await asyncio.sleep(3)
+                    attempts += 1
     
     async def send(self, data):
         if self.websocket is None or self.websocket.closed:
