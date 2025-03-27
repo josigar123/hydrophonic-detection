@@ -245,7 +245,6 @@ async def handle_connection(websocket, path):
                     '''Set the recvd broadband config onconnect'''
                     if "broadbandThreshold" in data:
                         broadband_client_config[client_name] = data
-                        print("RECVD BROADBAND CONFIG: ", data)
                         sample_rate = recording_config["sampleRate"]
 
                         bytes_per_sample = calculate_bytes_per_sample(recording_config["bitDepth"], recording_config["channels"])
@@ -256,9 +255,6 @@ async def handle_connection(websocket, path):
                         broadband_total_required_samples = calculate_required_samples(buffer_length, sample_rate)
                         broadband_required_buffer_size = broadband_required_samples * bytes_per_sample
                         broadband_total_required_buffer_size = broadband_total_required_samples * bytes_per_sample
-
-                        print("BROADBAND_REQUIRED_BUFFER_SIZE: ", broadband_required_buffer_size)
-                        print("BROADBAND TOTAL REQUIRED BUFFER SIZE: ", broadband_total_required_buffer_size)
                         
                         print(f"Updated broadband configuration: {broadband_client_config[client_name]}")
                     else:
@@ -312,10 +308,8 @@ def get_spectrogram_config(spectrogram_client_config):
         return None
 
 def get_broadband_config(broadband_client_config):
-    print("Fetching the broadband configurations: ", broadband_client_config)
     broadband_config = broadband_client_config.get("broadband_client")
 
-    print("Trimmed broadband config: ", broadband_config)
     if broadband_config:
         broadband_threshold = broadband_config.get("broadbandThreshold")
         window_size = broadband_config.get("windowSize")
