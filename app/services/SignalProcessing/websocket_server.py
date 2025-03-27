@@ -57,7 +57,7 @@ clients = {}                   # This dictionary holds a clients websocket and n
 spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
 broadband_client_config = {}
 recording_config = {}          # This dict holds the most recent recording config
-BOOTSTRAP_SERVERS = 'localhost:9092'
+BOOTSTRAP_SERVERS = '10.0.0.24:9092'
 
 # Will be an instantiated SignalProcessingService when the server is running
 signal_processing_service: SignalProcessingService = None
@@ -245,18 +245,21 @@ async def handle_connection(websocket, path):
                     '''Set the recvd broadband config onconnect'''
                     if "broadbandThreshold" in data:
                         broadband_client_config[client_name] = data
-
+                        print("RECVD BROADBAND CONFIG: ", data)
                         sample_rate = recording_config["sampleRate"]
 
                         bytes_per_sample = calculate_bytes_per_sample(recording_config["bitDepth"], recording_config["channels"])
 
                         '''Set buffer sizes for broadband data'''
-                        _, window_size, _, buffer_length = get_broadband_config(spectrogram_client_config)
+                        _, window_size, _, buffer_length = get_broadband_config(broadband_client_config)
                         broadband_required_samples = calculate_required_samples(window_size, sample_rate)
                         broadband_total_required_samples = calculate_required_samples(buffer_length, sample_rate)
                         broadband_required_buffer_size = broadband_required_samples * bytes_per_sample
-                        broadband_required_buffer_size = broadband_total_required_samples * bytes_per_sample
+                        broadband_total_required_buffer_size = broadband_total_required_samples * bytes_per_sample
 
+                        print("BROADBAND_REQUIRED_BUFFER_SIZE: ", broadband_required_buffer_size)
+                        print("BROADBAND TOTAL REQUIRED BUFFER SIZE: ", broadband_total_required_buffer_size)
+                        
                         print(f"Updated broadband configuration: {broadband_client_config[client_name]}")
                     else:
                         print(f"Received unknown message from {client_name}: {e}")
@@ -309,8 +312,10 @@ def get_spectrogram_config(spectrogram_client_config):
         return None
 
 def get_broadband_config(broadband_client_config):
+    print("Fetching the broadband configurations: ", broadband_client_config)
     broadband_config = broadband_client_config.get("broadband_client")
 
+    print("Trimmed broadband config: ", broadband_config)
     if broadband_config:
         broadband_threshold = broadband_config.get("broadbandThreshold")
         window_size = broadband_config.get("windowSize")
@@ -319,7 +324,7 @@ def get_broadband_config(broadband_client_config):
 
         return broadband_threshold, window_size, hilbert_window, buffer_length
     else:
-        print("Spectrogram config is not available")
+        print("Broadband config is not available")
         return None
 
 async def forward_audio_to_frontend(data):
@@ -363,6 +368,7 @@ async def forward_ais_to_frontend(data):
             print(f"Error sending to map_client: {e}")
     else:
         print("map_client not connected")
+        
 async def forward_broadband_data_to_frontend(data):
     global broadband_client_config
     global broadband_required_buffer_size
@@ -419,7 +425,7 @@ async def forward_broadband_data_to_frontend(data):
                     broadband_signal_to_analyze = np.ravel(broadband_signal_buffer) # Flatten matrix
 
                     '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
-                    is_detection = await perform_broadband_detection(adjusted_broadband_total_buffer, broadband_threshold,
+                    is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold,
                                                                             window_size)
                     detection_dict = {
                         "detectionStatus": bool(is_detection)

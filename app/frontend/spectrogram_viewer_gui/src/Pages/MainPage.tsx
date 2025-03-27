@@ -11,7 +11,7 @@ const MainPage = () => {
         <SpectrogramSelection />
       </div>
       <div className="overflow-auto p-4 rounded h-full">
-        <MapComponent />
+        {/* <MapComponent /> */}
       </div>
       <div className="overflow-auto p-4 rounded h-full">
         <div className="flex h-full gap-2 lg:gap-4">
@@ -24,7 +24,7 @@ const MainPage = () => {
         </div>
       </div>
       <div className="overflow-auto p-4 rounded h-full">
-        <AisDataTable />
+        {/* <AisDataTable /> */}
       </div>
     </div>
   );

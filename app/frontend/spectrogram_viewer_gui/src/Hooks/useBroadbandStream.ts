@@ -40,6 +40,7 @@ export function useBroadbandStream(url: string, autoConnect = false) {
 
           if (configuration) {
             const messageString = JSON.stringify(configuration);
+            console.log('SENDING THE FOLLOWING CONFIGURATION: ', messageString);
             socket.send(messageString);
           }
         };
