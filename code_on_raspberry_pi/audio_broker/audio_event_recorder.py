@@ -258,7 +258,7 @@ async def listen_for_events(recorder):
         "broadband-detection",
         bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
         auto_offset_reset="latest",
-        value_deserializer=lambda m: json.loads(m.decode("utf-8"))
+        value_deserializer=lambda m: bool(int.from_bytes(m, byteorder='big'))
     )
 
     await consumer.start()
