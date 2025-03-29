@@ -187,7 +187,9 @@ const SpectrogramSelection = () => {
         (sampleRate *
           (spectrogramConfig.spectrogramConfiguration?.tperseg ?? 1)) /
           2,
-      heatmapMinTimeStepMs: 500,
+      heatmapMinTimeStepMs:
+        (spectrogramConfig.spectrogramConfiguration?.horizontalFilterLength ??
+          10) * 1000,
       maxFrequency:
         spectrogramConfig.spectrogramConfiguration?.maxFrequency ?? 1000,
       minFrequency:

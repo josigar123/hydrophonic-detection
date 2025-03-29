@@ -85,7 +85,7 @@ const ScrollingSpectrogram = ({
       steps: regularColorSteps(
         maxDb,
         minDb,
-        Themes.turquoiseHexagon.examples.intensityColorPalette
+        Themes.darkGold.examples.intensityColorPalette
       ),
       units: 'dB',
       interpolate: true,
