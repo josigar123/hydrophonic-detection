@@ -443,17 +443,17 @@ async def forward_broadband_data_to_frontend(data):
                     broadband_signal_buffer.pop(0) 
                     broadband_signal_to_analyze = np.ravel(broadband_signal_buffer) # Flatten matrix
 
-                    '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
-                    is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold,
+                '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
+                is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold,
                                                                             window_size)
-                    detection_dict = {
-                        "detectionStatus": bool(is_detection)
-                    }
+                detection_dict = {
+                    "detectionStatus": bool(is_detection)
+                }
 
-                    detection_json = json.dumps(detection_dict)
-                    print("Sending broadband detection result to frontend...")
-                    await clients["broadband_client"].send(detection_json)
-                    print("Broadband detection result sent to frontend...")
+                detection_json = json.dumps(detection_dict)
+                print("Sending broadband detection result to frontend...")
+                await clients["broadband_client"].send(detection_json)
+                print("Broadband detection result sent to frontend...")
 
         except websockets.exceptions.ConnectionClosed:
             print("Connection to broadband_client was closed while sending")
