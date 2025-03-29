@@ -14,6 +14,7 @@ import {
 } from '@lightningchart/lcjs';
 import lightningchartLicense from '../lightningchartLicense.json';
 import { DemonSpectrogramPayload } from '../Interfaces/Payloads';
+import { infernoMap } from '../ColorMaps/colorMaps';
 
 interface DemonSpectrogramProps {
   demonSpectrogramData: DemonSpectrogramPayload; // Contains all necessary spectrogram data
@@ -85,11 +86,7 @@ const ScrollingDemonSpectrogram = ({
     if (!theme.examples) return null;
 
     const lut = new LUT({
-      steps: regularColorSteps(
-        maxDb,
-        minDb,
-        Themes.darkGold.examples.intensityColorPalette
-      ),
+      steps: regularColorSteps(minDb, maxDb, infernoMap()),
       units: 'dB',
       interpolate: true,
     });

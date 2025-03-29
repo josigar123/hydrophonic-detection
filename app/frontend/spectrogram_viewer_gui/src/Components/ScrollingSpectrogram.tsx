@@ -14,6 +14,7 @@ import {
 } from '@lightningchart/lcjs';
 import lightningchartLicense from '../lightningchartLicense.json';
 import { SpectrogramPayload } from '../Interfaces/Payloads';
+import { infernoMap } from '../ColorMaps/colorMaps';
 
 interface SpectrogramProps {
   spectrogramData: SpectrogramPayload; // Contains all necessary spectrogram data
@@ -82,11 +83,7 @@ const ScrollingSpectrogram = ({
       .setInterval({ start: minFrequency, end: maxFrequency });
 
     const lut = new LUT({
-      steps: regularColorSteps(
-        maxDb,
-        minDb,
-        Themes.darkGold.examples.intensityColorPalette
-      ),
+      steps: regularColorSteps(minDb, maxDb, infernoMap()),
       units: 'dB',
       interpolate: true,
     });
