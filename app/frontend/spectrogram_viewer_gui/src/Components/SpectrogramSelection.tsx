@@ -4,7 +4,7 @@ import { Button } from '@heroui/button';
 import { Tabs, Tab } from '@heroui/tabs';
 import SpectrogramParameterField from './SpectrogramParameterField';
 import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import DemonSpectrogramParameterField from './DemonSpectrogramParameterField';
 import ScrollingDemonSpectrogram from './ScrollingDemonSpectrogram';
 import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
@@ -33,6 +33,8 @@ const SpectrogramSelection = () => {
   } = useSpectrogramStream(websocketUrl, false);
 
   const [isInvalidConfig, setIsInvalidConfig] = useState(true);
+
+  const [selected, setSelected] = useState('spectrogram');
 
   // Big chunky, clunky function for validating the input, might want to refactor this
   const validateEntireConfiguration = (
@@ -204,12 +206,15 @@ const SpectrogramSelection = () => {
     () => ({
       windowInMin:
         spectrogramConfig.demonSpectrogramConfiguration?.windowInMin ?? 10,
+      // Resolution default to Nyquist frequency
       resolution:
         1 +
         (sampleRate *
           (spectrogramConfig.demonSpectrogramConfiguration?.tperseg ?? 1)) /
           2,
-      heatmapMinTimeStepMs: 500,
+      heatmapMinTimeStepMs:
+        (spectrogramConfig.demonSpectrogramConfiguration
+          ?.horizontalFilterLength ?? 10) * 1000,
       maxFrequency:
         spectrogramConfig.demonSpectrogramConfiguration?.maxFrequency ?? 1000,
       minFrequency:
@@ -219,6 +224,10 @@ const SpectrogramSelection = () => {
     }),
     [spectrogramConfig]
   );
+
+  useEffect(() => {
+    console.log(selected);
+  }, [selected]);
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -285,108 +294,117 @@ const SpectrogramSelection = () => {
 
       {/* Tabs container - taking full remaining height */}
       <div className="flex-1 min-h-0 w-full">
-        <Tabs key="bordered" aria-label="Graph choice" size="sm" radius="sm">
-          <Tab key="spectrogram" title="Spectrogram">
-            <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
-              {/* Spectrogram container - using flex-1 to take available space */}
-              <div
-                className="flex-1 w-full relative"
-                style={{ minHeight: '400px' }}
-              >
-                {spectrogramData ? (
-                  <ScrollingSpectrogram
-                    spectrogramData={spectrogramData}
-                    windowInMin={spectrogramProps.windowInMin}
-                    resolution={spectrogramProps.resolution}
-                    heatmapMinTimeStepMs={spectrogramProps.heatmapMinTimeStepMs}
-                    maxFrequency={spectrogramProps.maxFrequency}
-                    minFrequency={spectrogramProps.minFrequency}
-                    maxDb={spectrogramProps.maxDb}
-                    minDb={spectrogramProps.minDb}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-300">
-                    <div className="text-center">
-                      <svg
-                        className="w-12 h-12 mx-auto mb-3 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                        />
-                      </svg>
-                      <p className="text-lg font-medium">No Spectrogram Data</p>
-                      <p className="text-sm mt-1">
-                        Click Connect to start streaming
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+        <Tabs
+          key="bordered"
+          aria-label="Graph choice"
+          size="md"
+          radius="sm"
+          selectedKey={selected}
+          onSelectionChange={(key) => setSelected(String(key))}
+        >
+          <Tab key="spectrogram" title="Spectrogram"></Tab>
+          <Tab key="demon" title="DEMON"></Tab>
+        </Tabs>
+        <div className={`${selected === 'spectrogram' ? 'block' : 'hidden'}`}>
+          <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
+            {/* Spectrogram container - using flex-1 to take available space */}
 
-              {/* Parameter field with improved spacing */}
-              <div className="mt-4 bg-slate-700 p-3 rounded-md">
-                <SpectrogramParameterField isConnected={isConnected} />
-              </div>
+            <div
+              className="flex-1 w-full relative"
+              style={{ minHeight: '400px' }}
+            >
+              {spectrogramData ? (
+                <ScrollingSpectrogram
+                  spectrogramData={spectrogramData}
+                  windowInMin={spectrogramProps.windowInMin}
+                  resolution={spectrogramProps.resolution}
+                  heatmapMinTimeStepMs={spectrogramProps.heatmapMinTimeStepMs}
+                  maxFrequency={spectrogramProps.maxFrequency}
+                  minFrequency={spectrogramProps.minFrequency}
+                  maxDb={spectrogramProps.maxDb}
+                  minDb={spectrogramProps.minDb}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+                  <div className="text-center">
+                    <svg
+                      className="w-12 h-12 mx-auto mb-3 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    <p className="text-lg font-medium">No Spectrogram Data</p>
+                    <p className="text-sm mt-1">
+                      Click Connect to start streaming
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          </Tab>
-          <Tab key="DEMON" title="DEMON">
-            <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
-              {/* DEMON container - using flex-1 to take available space */}
-              <div
-                className="flex-1 w-full relative"
-                style={{ minHeight: '400px' }}
-              >
-                {demonSpectrogramData ? (
-                  <ScrollingDemonSpectrogram
-                    demonSpectrogramData={demonSpectrogramData}
-                    windowInMin={demonSpectrogramProps.windowInMin}
-                    resolution={demonSpectrogramProps.resolution}
-                    heatmapMinTimeStepMs={
-                      demonSpectrogramProps.heatmapMinTimeStepMs
-                    }
-                    maxFrequency={demonSpectrogramProps.maxFrequency}
-                    minFrequency={demonSpectrogramProps.minFrequency}
-                    maxDb={demonSpectrogramProps.maxDb}
-                    minDb={demonSpectrogramProps.minDb}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-300">
-                    <div className="text-center">
-                      <svg
-                        className="w-12 h-12 mx-auto mb-3 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                        />
-                      </svg>
-                      <p className="text-lg font-medium">No DEMON Data</p>
-                      <p className="text-sm mt-1">
-                        Click Connect to start streaming
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
 
+            {/* Parameter field with improved spacing */}
+            <div className="mt-4 bg-slate-700 p-3 rounded-md">
+              <SpectrogramParameterField isConnected={isConnected} />
+            </div>
+          </div>
+        </div>
+        <div className={`${selected === 'demon' ? 'block' : 'hidden'}`}>
+          <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
+            {/* DEMON container - using flex-1 to take available space */}
+            <div
+              className="flex-1 w-full relative"
+              style={{ minHeight: '400px' }}
+            >
+              {demonSpectrogramData ? (
+                <ScrollingDemonSpectrogram
+                  demonSpectrogramData={demonSpectrogramData}
+                  windowInMin={demonSpectrogramProps.windowInMin}
+                  resolution={demonSpectrogramProps.resolution}
+                  heatmapMinTimeStepMs={
+                    demonSpectrogramProps.heatmapMinTimeStepMs
+                  }
+                  maxFrequency={demonSpectrogramProps.maxFrequency}
+                  minFrequency={demonSpectrogramProps.minFrequency}
+                  maxDb={demonSpectrogramProps.maxDb}
+                  minDb={demonSpectrogramProps.minDb}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+                  <div className="text-center">
+                    <svg
+                      className="w-12 h-12 mx-auto mb-3 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    <p className="text-lg font-medium">No DEMON Data</p>
+                    <p className="text-sm mt-1">
+                      Click Connect to start streaming
+                    </p>
+                  </div>
+                </div>
+              )}
               {/* Parameter field with improved spacing */}
               <div className="mt-4 bg-slate-700 p-3 rounded-md">
                 <DemonSpectrogramParameterField isConnected={isConnected} />
               </div>
             </div>
-          </Tab>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );

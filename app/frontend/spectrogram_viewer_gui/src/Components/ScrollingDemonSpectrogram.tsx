@@ -46,8 +46,6 @@ const ScrollingDemonSpectrogram = ({
   const [containerReady, setContainerReady] = useState(false);
   const dataCountRef = useRef(0);
 
-  const prevTimeStampRef = useRef<number | null>(null);
-
   // Function for memoizing chart creation, preventing unecessary re-renders
   const createChart = useCallback(() => {
     const container = document.getElementById(id) as HTMLDivElement;
@@ -88,8 +86,8 @@ const ScrollingDemonSpectrogram = ({
 
     const lut = new LUT({
       steps: regularColorSteps(
-        minDb,
         maxDb,
+        minDb,
         Themes.darkGold.examples.intensityColorPalette
       ),
       units: 'dB',
