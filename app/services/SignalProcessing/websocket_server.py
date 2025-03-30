@@ -196,9 +196,15 @@ async def handle_connection(websocket, path):
 
                 try:
                     await forward_audio_to_frontend(message)
-                    await forward_signal_processed_data_to_frontend(message)
-                    await forward_demon_data_to_frontend(message)
-                    await forward_broadband_data_to_frontend(message)
+                    
+                    '''Only forward audio data if configurations are valid'''
+                    if spectrogram_client_config:
+                        await forward_signal_processed_data_to_frontend(message)
+                        await forward_demon_data_to_frontend(message)
+                    
+                    if broadband_client_config:
+                        await forward_broadband_data_to_frontend(message)
+                        
                 except Exception as e:
                     print(f"Error processing message: {e}")
                     
@@ -441,7 +447,8 @@ async def forward_broadband_data_to_frontend(data):
 
                     # Buffer is full, we want to remove oldest window_size entry, which will be element at index zero
                     broadband_signal_buffer.pop(0) 
-                    broadband_signal_to_analyze = np.ravel(broadband_signal_buffer) # Flatten matrix
+                    
+                broadband_signal_to_analyze = np.ravel(broadband_signal_buffer) # Flatten matrix
 
                 '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
                 is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold,
