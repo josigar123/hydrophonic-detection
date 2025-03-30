@@ -1,5 +1,6 @@
 import AisDataTable from '../Components/AisDataTable';
 import MapComponent from '../Components/MapComponent';
+import OverrideButton from "../Components/OverrideButton";
 import WaveformSelection from '../Components/WaveformSelection';
 import SpectrogramSelection from '../Components/SpectrogramSelection';
 import BroadbandComponent from '../Components/BroadbandComponent';
@@ -12,6 +13,8 @@ const MainPage = () => {
       </div>
       <div className="overflow-auto p-4 rounded h-full">
         {/* <MapComponent /> */}
+        <OverrideButton />
+        
       </div>
       <div className="overflow-auto p-4 rounded h-full">
         <div className="flex h-full gap-2 lg:gap-4">
@@ -24,7 +27,7 @@ const MainPage = () => {
         </div>
       </div>
       <div className="overflow-auto p-4 rounded h-full">
-        {/* <AisDataTable /> */}
+        <AisDataTable />
       </div>
     </div>
   );

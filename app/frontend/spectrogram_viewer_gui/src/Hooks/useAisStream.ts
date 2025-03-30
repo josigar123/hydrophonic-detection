@@ -22,16 +22,9 @@ interface ShipStoreInterface {
 const shipStore: ShipStoreInterface = {
 
   ships: {},
-  
-
   listeners: [],
-  
-
   ws: null,
-  
-  
   lastConnectionAttempt: 0,
-  
 
   addShip(ship: Ship) {
 

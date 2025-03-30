@@ -57,7 +57,7 @@ clients = {}                   # This dictionary holds a clients websocket and n
 spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
 broadband_client_config = {}
 recording_config = {}          # This dict holds the most recent recording config
-BOOTSTRAP_SERVERS = '10.0.0.24:9092'
+BOOTSTRAP_SERVERS = 'localhost:9092'
 
 # Will be an instantiated SignalProcessingService when the server is running
 signal_processing_service: SignalProcessingService = None
@@ -163,6 +163,25 @@ async def produce_broadband_detection_result(broadband_filo_signal_buffer: np.nd
     
     return is_detection
 
+async def produce_override_message(value: bool):
+    topic = 'override-detection'
+    producer = AIOKafkaProducer(
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        value_serializer=lambda v: (1 if v else 0).to_bytes(1, byteorder='big')
+    )
+    
+    await producer.start()
+    try:
+        await producer.send(topic, value)
+        await producer.flush()
+        print(f"Override value '{value}' sent to Kafka topic '{topic}'")
+        return True
+    except Exception as e:
+        print(f"Error producing override message: {e}")
+        return False
+    finally:
+        await producer.stop()
+
 async def handle_connection(websocket, path):
 
     '''Global variables for tracking relevant sizes'''
@@ -215,6 +234,31 @@ async def handle_connection(websocket, path):
                     print(f"Received message from map_client: {message[:100]}...")
                 except Exception as e:
                     print(f"Error processing message: {e}")
+
+        if client_name == "override_client":
+            async for message in websocket:
+                try:
+                    data = json.loads(message)
+                    if "value" in data:
+                        value = bool(data["value"])
+                        success = await produce_override_message(value)
+                        
+                        if success:
+                            ack = {"status": "delivered", "value": value}
+                            await websocket.send(json.dumps(ack))
+                        else:
+                            error_msg = {"status": "error", "message": "Failed to send override message"}
+                            await websocket.send(json.dumps(error_msg))
+                    else:
+                        error_msg = {"status": "error", "message": "Message must contain 'value' field"}
+                        await websocket.send(json.dumps(error_msg))
+                except json.JSONDecodeError:
+                    error_msg = {"status": "error", "message": "Invalid JSON format"}
+                    await websocket.send(json.dumps(error_msg))
+                except Exception as e:
+                    print(f"Error handling message from override_client: {e}")
+                    error_msg = {"status": "error", "message": str(e)}
+                    await websocket.send(json.dumps(error_msg))
 
 
         if client_name == "spectrogram_client":

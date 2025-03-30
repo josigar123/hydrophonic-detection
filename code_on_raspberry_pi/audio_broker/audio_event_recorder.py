@@ -254,39 +254,49 @@ async def consume_ais_data(recorder):
 
 async def listen_for_events(recorder):
     consumer = AIOKafkaConsumer(
-        "narrowband-detection",
-        "broadband-detection",
-        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
-        auto_offset_reset="latest",
-        value_deserializer=lambda m: bool(int.from_bytes(m, byteorder='big'))
+    "narrowband-detection",
+    "broadband-detection",
+    "override-detection",
+    bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
+    auto_offset_reset="latest",
+    value_deserializer=lambda m: bool(int.from_bytes(m, byteorder='big'))
     )
 
     await consumer.start()
 
     topic_states = {
-        "narrowband-detection": False,
-        "broadband-detection": False
+    "narrowband-detection": False,
+    "broadband-detection": False,
+    "override-detection": False
     }
-    
+
     current_event_id = None
     try:
         print("Started listening for events from narrowband and broadband")
         async for msg in consumer:
-            topic = msg.topic
-            threshold_reached = bool(int(msg.value))
+            try:
+                topic = msg.topic
+                threshold_reached = msg.value
+                topic_states[topic] = threshold_reached
 
-            topic_states[topic] = threshold_reached
-            both_threshold_reached = all(topic_states.values())   
 
-            if both_threshold_reached and current_event_id is None:
-                current_event_id = str(uuid.uuid4())
-                recorder.start_event_detection(current_event_id)
-                print(f"Started recording for threshold event: {current_event_id}")
+                detection_triggered = (
+                    (topic_states["narrowband-detection"] and topic_states["broadband-detection"]) or
+                    topic_states["override-detection"]
+                )
 
-            elif not both_threshold_reached and current_event_id is not None:
-                recorder.stop_event_detection(current_event_id)
-                print(f"Stopped recording for threshold event: {current_event_id}")
-                current_event_id = None
+                if (detection_triggered and current_event_id is None):
+                    current_event_id = str(uuid.uuid4())
+                    recorder.start_event_detection(current_event_id)
+                    print(f"Started recording for threshold event: {current_event_id}")
+
+                elif not detection_triggered and current_event_id is not None:
+                    recorder.stop_event_detection(current_event_id)
+                    print(f"Stopped recording for threshold event: {current_event_id}")
+                    current_event_id = None
+                    
+            except Exception as e:
+                print(f"Error processing message: {e}")
     finally:
         await consumer.stop()
 
