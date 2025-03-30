@@ -59,18 +59,21 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
       .setTickStrategy(AxisTickStrategies.DateTime);
 
     chart.axisY
+      .setTickStrategy(AxisTickStrategies.Empty)
+      .setStrokeStyle(emptyLine)
+      .setAnimationScroll(false)
       .setTitle('Amplitude')
       .setUnits('dB')
-      .setInterval({ start: 0, end: 60 });
+      .setInterval({ start: 0, end: 100 });
 
     const pointLineSeries = chart
       .addPointLineAreaSeries({
         dataPattern: 'ProgressiveX',
+        yAxis: chart.axisY,
       })
       .setAreaFillStyle(emptyFill)
       .setStrokeStyle(emptyLine)
-      .setMaxSampleCount(50000)
-      .setStrokeStyle((style) => style.setThickness(2));
+      .setMaxSampleCount({ mode: 'auto', max: 10_000_000 });
 
     chart
       .addLegendBox(LegendBoxBuilders.HorizontalLegendBox)
@@ -129,12 +132,21 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
       tFirstSampleRef.current = currentTimeStamp;
     }
 
-    dataCountRef.current += 1;
+    const baseTimestamp = tFirstSampleRef.current;
+
+    const actualTimeStamps = broadbandData.times.map((timeValue) => {
+      return baseTimestamp + timeValue * 1000;
+    });
 
     lineSeriesRef.current.appendSamples({
-      xValues: broadbandData.times,
+      xValues: actualTimeStamps,
       yValues: broadbandData.broadbandSignal,
     });
+
+    const lastTimeValue = broadbandData.times[broadbandData.times.length - 1];
+    tFirstSampleRef.current = baseTimestamp + lastTimeValue * 1000 - 10;
+
+    dataCountRef.current += 1;
   }, [broadbandData]);
 
   return (

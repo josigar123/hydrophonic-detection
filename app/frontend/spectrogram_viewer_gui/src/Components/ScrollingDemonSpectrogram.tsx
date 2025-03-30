@@ -110,6 +110,7 @@ const ScrollingDemonSpectrogram = ({
 
     chart
       .addLegendBox(LegendBoxBuilders.HorizontalLegendBox)
+
       .setAutoDispose({
         type: 'max-width',
         maxWidth: 0.8,

@@ -1,6 +1,6 @@
 import BroadbandParameterField from './BroadbandParameterField';
 import ScrollingBroadBand from './ScrollingBroadBand';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { Button } from '@heroui/button';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
 import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
@@ -143,7 +143,7 @@ const BroadbandComponent = () => {
       <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
         <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
           {broadbandData ? (
-            <ScrollingBroadBand broadbandData={broadbandData} windowInMin={5} />
+            <ScrollingBroadBand broadbandData={broadbandData} windowInMin={2} />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-300">
               <div className="text-center">

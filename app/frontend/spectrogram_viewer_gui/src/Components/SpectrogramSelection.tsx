@@ -7,7 +7,10 @@ import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import DemonSpectrogramParameterField from './DemonSpectrogramParameterField';
 import ScrollingDemonSpectrogram from './ScrollingDemonSpectrogram';
-import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
+import {
+  parameterPreset1,
+  SpectrogramConfigurationContext,
+} from '../Contexts/SpectrogramConfigurationContext';
 import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
@@ -22,7 +25,7 @@ const SpectrogramSelection = () => {
     );
   }
 
-  const { spectrogramConfig } = context;
+  const { spectrogramConfig, setSpectrogramConfig } = context;
   const {
     spectrogramData,
     demonSpectrogramData,
@@ -229,6 +232,10 @@ const SpectrogramSelection = () => {
     console.log(selected);
   }, [selected]);
 
+  const handlePreset1 = () => {
+    setSpectrogramConfig(parameterPreset1);
+  };
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
@@ -293,7 +300,11 @@ const SpectrogramSelection = () => {
       </div>
 
       {/* Tabs container - taking full remaining height */}
-      <div className="flex-1 min-h-0 w-full">
+      <div className="relative flex-1 min-h-0 w-full">
+        <Button className="absolute right-2">Preset 2</Button>
+        <Button onPress={handlePreset1} className="absolute right-28">
+          Preset 1
+        </Button>
         <Tabs
           key="bordered"
           aria-label="Graph choice"

@@ -17,14 +17,14 @@ import {
 } from '@heroui/react';
 import { Ship } from './ShipMarker';
 import { useShips } from '../Hooks/useShips';
-import { getHaversineDistance } from '../Utils/distance';
+import { getHaversineDistance } from '../utils/distance';
 
 const MAX_SHIPS = 40;
 
 const AisDataTable = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
-  const { ships, isLoading} = useShips();
+  const { ships, isLoading } = useShips();
 
   const closestMovingShips = useMemo(() => {
     const center: [number, number] = [59.2674, 10.4075];
