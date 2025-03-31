@@ -4,6 +4,8 @@ import { useState } from 'react'
 
 import DataSourceContext, 
 { DataSource } from './Contexts/DataSourceContext';
+import UserPositionContext, { Position, defaultPosition } from './Contexts/UserPositionContext';
+
 import {
   defaultBroadbandConfig,
   BroadbandConfigurationContext,
@@ -26,7 +28,9 @@ function App() {
     useState<SpectrogramNarrowbandAndDemonConfiguration>(
       defaultSpectrogramConfig
     );
+
   const [dataSource, setDataSource] = useState<DataSource>('antenna');
+  const [position, setPosition] = useState<Position>(defaultPosition);
 
   return (
     <BroadbandConfigurationContext.Provider
@@ -37,9 +41,12 @@ function App() {
       >
         <DataSourceContext.Provider value={{ dataSource, setDataSource }}
         >
+          <UserPositionContext.Provider value={{ position, setPosition }}
+          >
           <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
             <MainPage />
           </div>
+          </UserPositionContext.Provider>
         </DataSourceContext.Provider>
       </SpectrogramConfigurationContext.Provider>
     </BroadbandConfigurationContext.Provider>
