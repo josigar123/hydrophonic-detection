@@ -18,6 +18,7 @@ import {
 import { Ship } from './ShipMarker';
 import { useShips } from '../Hooks/useShips';
 import { getHaversineDistance } from '../Utils/distance';
+import { getShipTypeDescription } from '../Utils/shipTypes'
 
 const MAX_SHIPS = 40;
 
@@ -29,7 +30,7 @@ const AisDataTable = () => {
   const closestMovingShips = useMemo(() => {
     const center: [number, number] = [59.2674, 10.4075];
     return ships
-      .filter((ship) => parseFloat(ship.speed) > -1.0)
+      .filter((ship) => parseFloat(ship.speed) > 0.5)
       .map((ship) => ({
         ...ship,
         distance: getHaversineDistance(
@@ -75,7 +76,7 @@ const AisDataTable = () => {
                     <span className="font-bold">Name:</span>{' '}
                     <span>{selectedShip.shipName}</span>
                     <span className="font-bold">Ship Type:</span>{' '}
-                    <span>{selectedShip.shipType}</span>
+                    <span>{getShipTypeDescription(selectedShip.shipType)}</span>
                     <span className="font-bold">AIS Class:</span>{' '}
                     <span>{selectedShip.aisClass}</span>
                     <span className="font-bold">Callsign:</span>{' '}
@@ -136,7 +137,7 @@ const AisDataTable = () => {
                       {ship.mmsi}
                     </Button>
                   </TableCell>
-                  <TableCell>{ship.shipType}</TableCell>
+                  <TableCell>{getShipTypeDescription(ship.shipType)}</TableCell>
                   <TableCell>{ship.speed}</TableCell>
                   <TableCell>{ship.distance.toFixed(1)} km</TableCell>
                 </TableRow>
