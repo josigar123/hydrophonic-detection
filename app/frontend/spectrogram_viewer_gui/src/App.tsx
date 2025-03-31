@@ -1,7 +1,9 @@
 import './App.css';
 import MainPage from './Pages/MainPage';
-import { useState } from 'react';
+import { useState } from 'react'
 
+import DataSourceContext, 
+{ DataSource } from './Contexts/DataSourceContext';
 import {
   defaultBroadbandConfig,
   BroadbandConfigurationContext,
@@ -24,6 +26,7 @@ function App() {
     useState<SpectrogramNarrowbandAndDemonConfiguration>(
       defaultSpectrogramConfig
     );
+  const [dataSource, setDataSource] = useState<DataSource>('antenna');
 
   return (
     <BroadbandConfigurationContext.Provider
@@ -32,9 +35,12 @@ function App() {
       <SpectrogramConfigurationContext.Provider
         value={{ spectrogramConfig, setSpectrogramConfig }}
       >
-        <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
-          <MainPage />
-        </div>
+        <DataSourceContext.Provider value={{ dataSource, setDataSource }}
+        >
+          <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
+            <MainPage />
+          </div>
+        </DataSourceContext.Provider>
       </SpectrogramConfigurationContext.Provider>
     </BroadbandConfigurationContext.Provider>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@heroui/react';
 
 
-const OverrideButton: React.FC = () => {
+const OverrideButton = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [overrideActive, setOverrideActive] = useState<boolean>(false);
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -76,7 +76,9 @@ const OverrideButton: React.FC = () => {
 
   return (
     <Button
-    color="primary"
+    variant = "shadow"
+    color = "primary"
+    size = "sm"
     onPress={() => toggleOverride()}
   >
     Override
