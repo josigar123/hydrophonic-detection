@@ -6,7 +6,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from '@heroui/dropdown';
-import { useContext, useState, useCallback, useRef } from 'react';
+import { useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { validWindowTypes } from '../Interfaces/WindowTypes';
 import { SpectrogramConfigurationContext } from '../Contexts/SpectrogramConfigurationContext';
 
@@ -116,6 +116,40 @@ const DemonSpectrogramParameterField = ({
     },
     [setSpectrogramConfig]
   );
+
+  // Effect for updating fields, when context changes e.g when a preset is selected
+  useEffect(() => {
+    setInputValues({
+      demonSampleFrequency:
+        spectrogramConfig.demonSpectrogramConfiguration?.demonSampleFrequency?.toString() ||
+        '',
+      window: spectrogramConfig.demonSpectrogramConfiguration?.window || '',
+      tperseg:
+        spectrogramConfig.demonSpectrogramConfiguration?.tperseg?.toString() ||
+        '',
+      frequencyFilter:
+        spectrogramConfig.demonSpectrogramConfiguration?.frequencyFilter?.toString() ||
+        '',
+      horizontalFilterLength:
+        spectrogramConfig.demonSpectrogramConfiguration?.horizontalFilterLength?.toString() ||
+        '',
+      windowInMin:
+        spectrogramConfig.demonSpectrogramConfiguration?.windowInMin?.toString() ||
+        '',
+      maxFrequency:
+        spectrogramConfig.demonSpectrogramConfiguration?.maxFrequency?.toString() ||
+        '',
+      minFrequency:
+        spectrogramConfig.demonSpectrogramConfiguration?.minFrequency?.toString() ||
+        '',
+      maxDb:
+        spectrogramConfig.demonSpectrogramConfiguration?.maxDb?.toString() ||
+        '',
+      minDb:
+        spectrogramConfig.demonSpectrogramConfiguration?.minDb?.toString() ||
+        '',
+    });
+  }, [spectrogramConfig]);
 
   return (
     <div className="flex w-full gap-x-4 items-center">

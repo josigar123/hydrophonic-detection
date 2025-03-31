@@ -1,5 +1,5 @@
 import { Input } from '@heroui/input';
-import { useContext, useState, useCallback, useRef } from 'react';
+import { useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
 
 interface BroadbandParameterFieldProps {
@@ -75,6 +75,17 @@ const BroadbandParameterField = ({
     },
     [inputValues, setBroadbandConfig]
   );
+
+  // Effect for updating fields, when context changes e.g when a preset is selected
+  useEffect(() => {
+    setInputValues({
+      broadbandThreshold:
+        broadbandConfiguration.broadbandThreshold?.toString() || '',
+      windowSize: broadbandConfiguration.windowSize?.toString() || '',
+      hilbertWindow: broadbandConfiguration.hilbertWindow?.toString() || '',
+      bufferLength: broadbandConfiguration.bufferLength?.toString() || '',
+    });
+  }, [broadbandConfiguration]);
 
   return (
     <div className="flex w-full gap-x-4 items-center">

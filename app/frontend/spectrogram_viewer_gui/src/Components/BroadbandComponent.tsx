@@ -3,8 +3,13 @@ import ScrollingBroadBand from './ScrollingBroadBand';
 import { useContext, useState } from 'react';
 import { Button } from '@heroui/button';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
-import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
+import {
+  BroadbandConfigurationContext,
+  broadbandPreset1,
+} from '../Contexts/BroadbandConfigurationContext';
 import { BroadbandConfiguration } from '../Interfaces/Configuration';
+import { Tooltip } from '@heroui/tooltip';
+import BroadbandParameterInfoCard from './BroadbandParameterInfoCard';
 
 const websocketUrl = 'ws://localhost:8766?client_name=broadband_client';
 
@@ -17,7 +22,7 @@ const BroadbandComponent = () => {
     );
   }
 
-  const { broadbandConfiguration } = context;
+  const { broadbandConfiguration, setBroadbandConfig } = context;
 
   const {
     broadbandData,
@@ -79,6 +84,10 @@ const BroadbandComponent = () => {
     return true;
   };
 
+  const handlePreset1 = () => {
+    setBroadbandConfig(broadbandPreset1);
+  };
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
@@ -132,14 +141,22 @@ const BroadbandComponent = () => {
           )}
           {isInvalidConfig && (
             <div className="text-red-300">
-              <p className="font-medium">
-                Error: Ensure all fields have valid values
-              </p>
+              <p className="font-medium">Ensure all fields have valid values</p>
             </div>
           )}
         </div>
       </div>
-
+      <div className="flex gap-2 justify-end">
+        <Button onPress={handlePreset1}>Preset</Button>
+        <Tooltip
+          placement="bottom-end"
+          size="lg"
+          closeDelay={10}
+          content={<BroadbandParameterInfoCard />}
+        >
+          <Button>Parameter information</Button>
+        </Tooltip>
+      </div>
       <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
         <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
           {broadbandData ? (

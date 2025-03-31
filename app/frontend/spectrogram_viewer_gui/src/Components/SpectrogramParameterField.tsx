@@ -154,6 +154,37 @@ const SpectrogramParameterField = ({
     };
   }, []);
 
+  // Effect for updating fields, when context changes e.g when a preset is selected
+  useEffect(() => {
+    setInputValues({
+      window: spectrogramConfig.spectrogramConfiguration?.window || '',
+      tperseg:
+        spectrogramConfig.spectrogramConfiguration?.tperseg?.toString() || '',
+      frequencyFilter:
+        spectrogramConfig.spectrogramConfiguration?.frequencyFilter?.toString() ||
+        '',
+      horizontalFilterLength:
+        spectrogramConfig.spectrogramConfiguration?.horizontalFilterLength?.toString() ||
+        '',
+      windowInMin:
+        spectrogramConfig.spectrogramConfiguration?.windowInMin?.toString() ||
+        '',
+      maxFrequency:
+        spectrogramConfig.spectrogramConfiguration?.maxFrequency?.toString() ||
+        '',
+      minFrequency:
+        spectrogramConfig.spectrogramConfiguration?.minFrequency?.toString() ||
+        '',
+      maxDb:
+        spectrogramConfig.spectrogramConfiguration?.maxDb?.toString() || '',
+      minDb:
+        spectrogramConfig.spectrogramConfiguration?.minDb?.toString() || '',
+      narrowbandThreshold:
+        spectrogramConfig.spectrogramConfiguration?.narrowbandThreshold?.toString() ||
+        '',
+    });
+  }, [spectrogramConfig]);
+
   return (
     <div className="flex w-full gap-x-4 items-center">
       {/* Dropdown for Window Selection */}

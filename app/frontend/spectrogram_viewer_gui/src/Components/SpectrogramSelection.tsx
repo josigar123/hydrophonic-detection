@@ -12,6 +12,8 @@ import {
   SpectrogramConfigurationContext,
 } from '../Contexts/SpectrogramConfigurationContext';
 import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
+import { Tooltip } from '@heroui/tooltip';
+import SpectrogramParameterInfoCard from './SpectrogramParameterInfoCard';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
@@ -291,9 +293,7 @@ const SpectrogramSelection = () => {
           )}
           {isInvalidConfig && (
             <div className="text-red-300">
-              <p className="font-medium">
-                Error: Ensure all fields have valid values
-              </p>
+              <p className="font-medium">Ensure all fields have valid values</p>
             </div>
           )}
         </div>
@@ -301,10 +301,17 @@ const SpectrogramSelection = () => {
 
       {/* Tabs container - taking full remaining height */}
       <div className="relative flex-1 min-h-0 w-full">
-        <Button className="absolute right-2">Preset 2</Button>
-        <Button onPress={handlePreset1} className="absolute right-28">
-          Preset 1
+        <Button onPress={handlePreset1} className="absolute right-48 ">
+          Preset
         </Button>
+        <Tooltip
+          placement="bottom-end"
+          size="lg"
+          closeDelay={10}
+          content={<SpectrogramParameterInfoCard />}
+        >
+          <Button className="absolute right-2">Parameter information</Button>
+        </Tooltip>
         <Tabs
           key="bordered"
           aria-label="Graph choice"
