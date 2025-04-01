@@ -15,6 +15,10 @@ import {
 import lightningchartLicense from '../lightningchartLicense.json';
 import { DemonSpectrogramPayload } from '../Interfaces/Payloads';
 import { infernoMap } from '../ColorMaps/colorMaps';
+import recordingConfiguration from '../../../../configs/recording_parameters.json';
+
+const sampleRate = recordingConfiguration['sampleRate'];
+const nyQuistFrequency = sampleRate / 2;
 
 interface DemonSpectrogramProps {
   demonSpectrogramData: DemonSpectrogramPayload; // Contains all necessary spectrogram data
@@ -100,7 +104,7 @@ const ScrollingDemonSpectrogram = ({
       })
       .setStep({
         x: heatmapMinTimeStepMs,
-        y: (maxFrequency - minFrequency) / (resolution - 1),
+        y: nyQuistFrequency / (resolution - 1),
       })
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)
