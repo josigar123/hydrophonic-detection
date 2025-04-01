@@ -147,7 +147,13 @@ const BroadbandComponent = () => {
         </div>
       </div>
       <div className="flex gap-2 justify-end">
-        <Button onPress={handlePreset1}>Preset</Button>
+        <Tooltip
+          content="Apply a preset for the broadband analysis"
+          size="md"
+          closeDelay={10}
+        >
+          <Button onPress={handlePreset1}>Preset</Button>
+        </Tooltip>
         <Tooltip
           placement="bottom-end"
           size="lg"

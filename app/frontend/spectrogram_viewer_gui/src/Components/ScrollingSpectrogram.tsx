@@ -15,6 +15,10 @@ import {
 import lightningchartLicense from '../lightningchartLicense.json';
 import { SpectrogramPayload } from '../Interfaces/Payloads';
 import { infernoMap } from '../ColorMaps/colorMaps';
+import recordinParameters from '../../../../configs/recording_parameters.json';
+
+const sampleRate = recordinParameters['sampleRate'];
+const nyQuistFrequency = sampleRate / 2;
 
 interface SpectrogramProps {
   spectrogramData: SpectrogramPayload; // Contains all necessary spectrogram data
@@ -100,7 +104,7 @@ const ScrollingSpectrogram = ({
       })
       .setStep({
         x: heatmapMinTimeStepMs,
-        y: (maxFrequency - minFrequency) / (resolution - 1),
+        y: nyQuistFrequency / (resolution - 1),
       })
       .setFillStyle(palettedFill)
       .setWireframeStyle(emptyLine)

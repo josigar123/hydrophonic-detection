@@ -271,6 +271,7 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="winLen"
+        isDisabled={isConnected}
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -286,6 +287,7 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="maxFreq"
+        isDisabled={isConnected}
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -301,6 +303,7 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="minFreq"
+        isDisabled={isConnected}
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -316,6 +319,7 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="maxDb"
+        isDisabled={isConnected}
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -331,6 +335,7 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="minDb"
+        isDisabled={isConnected}
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -346,6 +351,7 @@ const SpectrogramParameterField = ({
       <Input
         labelPlacement="inside"
         label="NBThresh"
+        isDisabled={isConnected}
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}

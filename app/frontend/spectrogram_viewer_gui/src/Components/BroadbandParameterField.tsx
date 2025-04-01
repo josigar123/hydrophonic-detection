@@ -1,5 +1,12 @@
 import { Input } from '@heroui/input';
-import { useContext, useState, useCallback, useRef, useEffect } from 'react';
+import {
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from 'react';
 import { BroadbandConfigurationContext } from '../Contexts/BroadbandConfigurationContext';
 
 interface BroadbandParameterFieldProps {
@@ -87,11 +94,51 @@ const BroadbandParameterField = ({
     });
   }, [broadbandConfiguration]);
 
+  const isbroadbandThresholdInvalid = useMemo(() => {
+    const broadbandThreshold = Number(inputValues.broadbandThreshold);
+
+    if (!inputValues.broadbandThreshold || broadbandThreshold === 0)
+      return true;
+
+    return false;
+  }, [inputValues.broadbandThreshold]);
+
+  const isWindowSizeInvalid = useMemo(() => {
+    const windowSize = Number(inputValues.windowSize);
+
+    if (!inputValues.windowSize || windowSize === 0) return true;
+
+    return false;
+  }, [inputValues.windowSize]);
+
+  const isHilbertWindowInvalid = useMemo(() => {
+    const hilbertWindow = Number(inputValues.hilbertWindow);
+
+    if (
+      !inputValues.hilbertWindow ||
+      hilbertWindow === 0 ||
+      hilbertWindow % 1 !== 0
+    )
+      return true;
+
+    return false;
+  }, [inputValues.hilbertWindow]);
+
+  const isBufferLengthInvalid = useMemo(() => {
+    const bufferLength = Number(inputValues.bufferLength);
+
+    if (!inputValues.bufferLength || bufferLength === 0) return true;
+
+    return false;
+  }, [inputValues.bufferLength]);
+
   return (
     <div className="flex w-full gap-x-4 items-center">
       <Input
         labelPlacement="inside"
         label="BBThresh"
+        isInvalid={isbroadbandThresholdInvalid}
+        errorMessage="BBThresh must be non-zero"
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -110,6 +157,8 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="winSize"
+        isInvalid={isWindowSizeInvalid}
+        errorMessage="winSize must be non-zero"
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -126,6 +175,8 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="hilbertWin"
+        isInvalid={isHilbertWindowInvalid}
+        errorMessage="hilbertWin must be non-zero and a whole number"
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
@@ -142,6 +193,8 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="bufferLen"
+        isInvalid={isBufferLengthInvalid}
+        errorMessage={<div>bufferLen must be non-zero</div>}
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}

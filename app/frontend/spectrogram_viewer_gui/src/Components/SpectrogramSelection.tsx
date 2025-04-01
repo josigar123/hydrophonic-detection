@@ -301,9 +301,15 @@ const SpectrogramSelection = () => {
 
       {/* Tabs container - taking full remaining height */}
       <div className="relative flex-1 min-h-0 w-full">
-        <Button onPress={handlePreset1} className="absolute right-48 ">
-          Preset
-        </Button>
+        <Tooltip
+          content="Apply a preset for the spectrogram and DEMON spectrogram"
+          size="md"
+          closeDelay={10}
+        >
+          <Button onPress={handlePreset1} className="absolute right-48 ">
+            Preset
+          </Button>
+        </Tooltip>
         <Tooltip
           placement="bottom-end"
           size="lg"
