@@ -1,18 +1,1 @@
-export const validWindowTypes = [
-  'hann',
-  'hamming',
-  'blackman',
-  'boxcar',
-  'bartlett',
-  'flattop',
-  'parzen',
-  'bohman',
-  'blackmanharris',
-  'nuttall',
-  'barthann',
-  'cosine',
-  'exponential',
-  'tukey',
-  'taylor',
-  'lanczos',
-];
+export const validWindowTypes = ['hann', 'boxcar', 'tukey'];

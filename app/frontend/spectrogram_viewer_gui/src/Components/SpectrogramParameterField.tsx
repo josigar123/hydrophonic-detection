@@ -200,6 +200,7 @@ const SpectrogramParameterField = ({
               {inputValues.window || 'Select window'}
             </Button>
           </DropdownTrigger>
+
           <DropdownMenu
             disallowEmptySelection
             selectionMode="single"

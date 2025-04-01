@@ -4,7 +4,7 @@ import { Button } from '@heroui/button';
 import { Tabs, Tab } from '@heroui/tabs';
 import SpectrogramParameterField from './SpectrogramParameterField';
 import { useSpectrogramStream } from '../Hooks/useSpectrogramStream';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import DemonSpectrogramParameterField from './DemonSpectrogramParameterField';
 import ScrollingDemonSpectrogram from './ScrollingDemonSpectrogram';
 import {
@@ -14,6 +14,19 @@ import {
 import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 import { Tooltip } from '@heroui/tooltip';
 import SpectrogramParameterInfoCard from './SpectrogramParameterInfoCard';
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from '@heroui/dropdown';
+import {
+  infernoMap,
+  magmaMap,
+  viridisMap,
+  cividisMap,
+} from '../ColorMaps/colorMaps';
+import { Color } from '@lightningchart/lcjs';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
@@ -41,6 +54,14 @@ const SpectrogramSelection = () => {
 
   const [selected, setSelected] = useState('spectrogram');
 
+  const colorMaps = ['Inferno', 'Magma', 'Viridis', 'Cividis'];
+
+  const [isColorMapSet, setIsColorMapSet] = useState(false);
+
+  const [colorMap, setColorMap] = useState('');
+
+  const [colorMapValues, setColorMapValues] = useState<Color[]>(infernoMap());
+
   // Big chunky, clunky function for validating the input, might want to refactor this
   const validateEntireConfiguration = (
     spectrogramConfig: SpectrogramNarrowbandAndDemonConfiguration
@@ -54,6 +75,7 @@ const SpectrogramSelection = () => {
       return false;
 
     return (
+      validateColorMap(colorMap ?? '') &&
       validateWindow(spectrogramConfiguration.window ?? '') &&
       validateTperseg(
         spectrogramConfiguration.tperseg ?? 0,
@@ -95,8 +117,20 @@ const SpectrogramSelection = () => {
     );
   };
 
+  const validateColorMap = (map: string) => {
+    if (map === undefined || map === '') {
+      setIsColorMapSet(false);
+      return false;
+    }
+
+    setIsColorMapSet(true);
+    return true;
+  };
+
   const validateWindow = (window: string) => {
-    if (window === undefined || window === '') return false;
+    if (window === undefined || window === '') {
+      return false;
+    }
 
     return true;
   };
@@ -238,6 +272,32 @@ const SpectrogramSelection = () => {
     setSpectrogramConfig(parameterPreset1);
   };
 
+  const handleDropdownChange = useCallback((map: string) => {
+    // Update the local state
+    setColorMap(map);
+    setIsColorMapSet(true);
+
+    if (map === 'Inferno') {
+      const inferno = infernoMap();
+      setColorMapValues(inferno);
+    }
+
+    if (map === 'Magma') {
+      const magma = magmaMap();
+      setColorMapValues(magma);
+    }
+
+    if (map === 'Viridis') {
+      const viridis = viridisMap();
+      setColorMapValues(viridis);
+    }
+
+    if (map === 'Cividis') {
+      const cividis = cividisMap();
+      setColorMapValues(cividis);
+    }
+  }, []);
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
@@ -318,6 +378,44 @@ const SpectrogramSelection = () => {
         >
           <Button className="absolute right-2">Parameter information</Button>
         </Tooltip>
+
+        <Dropdown>
+          <Tooltip
+            placement="top-end"
+            size="lg"
+            closeDelay={10}
+            content="Set the color map for both spectrograms"
+          >
+            <div className="relative">
+              <div
+                className={`${isColorMapSet ? 'hidden' : 'block'} text-red-500 absolute bottom-full mb-1 whitespace-nowrap right-72`}
+              >
+                Color map not set
+              </div>
+              <DropdownTrigger>
+                <Button
+                  isDisabled={isConnected}
+                  className={`absolute right-72 hover:bg-gray-200 truncate ${
+                    isConnected ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {colorMap || 'Select color map'}
+                </Button>
+              </DropdownTrigger>
+            </div>
+          </Tooltip>
+          <DropdownMenu
+            disallowEmptySelection
+            selectionMode="single"
+            aria-label="colorMap"
+            onAction={(map) => handleDropdownChange(map.toString())}
+          >
+            {colorMaps.map((colorMap) => (
+              <DropdownItem key={colorMap}>{colorMap}</DropdownItem>
+            ))}
+          </DropdownMenu>
+        </Dropdown>
+
         <Tabs
           key="bordered"
           aria-label="Graph choice"
@@ -347,6 +445,7 @@ const SpectrogramSelection = () => {
                   minFrequency={spectrogramProps.minFrequency}
                   maxDb={spectrogramProps.maxDb}
                   minDb={spectrogramProps.minDb}
+                  colorMap={colorMapValues}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -398,6 +497,7 @@ const SpectrogramSelection = () => {
                   minFrequency={demonSpectrogramProps.minFrequency}
                   maxDb={demonSpectrogramProps.maxDb}
                   minDb={demonSpectrogramProps.minDb}
+                  colorMap={colorMapValues}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-300">

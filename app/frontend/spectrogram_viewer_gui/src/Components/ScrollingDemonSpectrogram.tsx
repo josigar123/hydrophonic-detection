@@ -3,6 +3,7 @@ import {
   AxisScrollStrategies,
   AxisTickStrategies,
   ChartXY,
+  Color,
   emptyLine,
   HeatmapScrollingGridSeriesIntensityValues,
   LegendBoxBuilders,
@@ -14,7 +15,6 @@ import {
 } from '@lightningchart/lcjs';
 import lightningchartLicense from '../lightningchartLicense.json';
 import { DemonSpectrogramPayload } from '../Interfaces/Payloads';
-import { infernoMap } from '../ColorMaps/colorMaps';
 import recordingConfiguration from '../../../../configs/recording_parameters.json';
 
 const sampleRate = recordingConfiguration['sampleRate'];
@@ -29,6 +29,7 @@ interface DemonSpectrogramProps {
   minFrequency: number;
   maxDb: number;
   minDb: number;
+  colorMap: Color[];
 }
 
 const ScrollingDemonSpectrogram = ({
@@ -40,6 +41,7 @@ const ScrollingDemonSpectrogram = ({
   minFrequency,
   maxDb,
   minDb,
+  colorMap,
 }: DemonSpectrogramProps) => {
   const chartRef = useRef<ChartXY | null>(null);
   const heatmapSeriesRef =
@@ -90,7 +92,7 @@ const ScrollingDemonSpectrogram = ({
     if (!theme.examples) return null;
 
     const lut = new LUT({
-      steps: regularColorSteps(minDb, maxDb, infernoMap()),
+      steps: regularColorSteps(minDb, maxDb, colorMap),
       units: 'dB',
       interpolate: true,
     });
@@ -127,10 +129,11 @@ const ScrollingDemonSpectrogram = ({
     windowInMin,
     minFrequency,
     maxFrequency,
-    resolution,
-    heatmapMinTimeStepMs,
     minDb,
     maxDb,
+    colorMap,
+    resolution,
+    heatmapMinTimeStepMs,
   ]);
 
   // Setting container readiness, lightningchart wont render if its container is not ready (WebGL warning)
