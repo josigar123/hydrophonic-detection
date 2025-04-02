@@ -48,6 +48,7 @@ class MongoDBHandler:
         for data in data_list:
             try:
                 data["log_id"] = str(uuid.uuid4())
+                data["server_timestamp"] = datetime.now()
 
                 if "latitude" in data and "longitude" in data:
                     data["location"] = {
