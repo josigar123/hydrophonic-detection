@@ -3,6 +3,8 @@ import MapComponent from '../Components/MapComponent';
 import WaveformSelection from '../Components/WaveformSelection';
 import SpectrogramSelection from '../Components/SpectrogramSelection';
 import BroadbandComponent from '../Components/BroadbandComponent';
+import OverrideButton from '../Components/OverrideButton';
+import DataSourceSelector from '../Components/DataSourceSelector';
 
 const MainPage = () => {
   return (
@@ -11,6 +13,8 @@ const MainPage = () => {
         <SpectrogramSelection />
       </div>
       <div className="overflow-auto p-4 rounded h-full">
+        <OverrideButton/>
+        <DataSourceSelector/>
         <MapComponent />
       </div>
       <div className="overflow-auto p-4 rounded h-full">
