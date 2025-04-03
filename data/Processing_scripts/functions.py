@@ -472,6 +472,9 @@ def BB_data(sx, fs, sx_buff, hilbert_win, window_size):
     #Cutting end of current
     signal_med = signal_med[:-kernel_size]
 
+    if len(sx_buff) == 0: #Empty buffer
+        signal_med = signal_med[kernel_size//2:] #Kutter første del
+
 
     BB_sig = 10*np.log10(signal_med)
     t = np.linspace(0,len(BB_sig)/DS_Fs,len(BB_sig))
