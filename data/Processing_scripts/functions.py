@@ -83,8 +83,6 @@ def plot_spectrogram_from_file(input_file,Fs,n_segment, f_max, s_min):
     Sx = data_offcet - np.mean(data_offcet)
 
     # Calculate spectrogram
-    #TODO testing
-    #TODO etter sx, del opp i tidssegmenter middle tidssegmentene horisontalt(samme frekvens over tid), danner nye stolper ( Samme for DEMON). Helt til slutt, rett før plotting
     f, t, sx = signal.spectrogram(Sx, Fs, nperseg=n_segment, detrend=False)
     sx = np.square(np.abs(sx))
     sx_db = 10*np.log10(sx/sx.max())   # Convert to dB
@@ -169,11 +167,16 @@ def butter_highpass(cutoff, fs, order=5):
     b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
     return b, a
 
+
 def butter_highpass_filter(data, cutoff, fs, order=5):
     b, a = butter_highpass(cutoff, fs, order=order)
     y = signal.filtfilt(b, a, data)
     return y
 
+def butter_lowpass(sig, fs, cutoff=0.9):  # cutoff som andel av Nyquist
+    nyq = fs / 2
+    b, a = signal.butter(4, cutoff * nyq / nyq, btype='low')
+    return signal.filtfilt(b, a, sig)
 
 def Normalization_BroadBand(x,window_length, window_distance, sample_rate):
     #Tar utgangspunkt i at x[0] er det nyeste sample
@@ -287,12 +290,20 @@ def replace_zeros_with_next_lowest(signal_vals):
 def moving_average_padded(signal, window_size=5):
     pad_size = window_size // 2
     padded_signal = np.pad(signal, pad_size, mode='edge')  # Repeat edge values
+    padded_left_signal = np.pad(signal,(pad_size,0),mode="constant",constant_values=np.mean(signal[:pad_size]))
+    padded_signal = np.pad(padded_left_signal,(0,pad_size),mode="constant",constant_values=np.mean(signal[-pad_size:]))
     kernel = np.ones(window_size) / window_size
-    smoothed = np.convolve(padded_signal, kernel, mode='valid')  # Only keep valid parts
+    smoothed = np.convolve(padded_signal, kernel, mode="valid")  # Only keep valid parts
+    return smoothed
+
+def moving_average_zero_padded(signal, window_size=5):
+    pad_size = window_size // 2
+    padded_signal = np.pad(signal, pad_size, mode="constant",constant_values=0)  # Repeat edge values
+    kernel = np.ones(window_size) / window_size
+    smoothed = np.convolve(padded_signal, kernel, mode="full")  # Only keep valid parts
     return smoothed
 
 def BroadBand_from_file(input_file, Fs:int ,hilbert_win: int, window_size:float, trigger:float, plot:bool):
-
 
     data, Fs = load_audiofile(input_file,Fs,True) #Load the audiofile as well as remove DC-offcet
 
@@ -329,7 +340,7 @@ def BroadBand_from_file(input_file, Fs:int ,hilbert_win: int, window_size:float,
     if plot == True:
         BBnorm_t = np.linspace(0, (len(signal_vals) / DS_Fs), len(signal_vals))  # Time vector for the normalized signal
 
-        plt.figure(figsize=(12, 6))  # Set up the figure for plotting
+        plt.figure(figsize=(16, 4))  # Set up the figure for plotting
         plt.plot(BBnorm_t, signal_vals + trigger)  # Plot the normalized signal
         plt.axhline(y=trigger, color='red', linestyle='--', label="Trigger")  # Plot the trigger threshold
         plt.title("BBnorm")  # Title of the plot
@@ -372,7 +383,7 @@ def BroadBand_from_data(Sx, Fs:int ,hilbert_win: int, window_size:float ,trigger
     if plot == True:
         BBnorm_t = np.linspace(0, (len(signal_vals) / DS_Fs), len(signal_vals))  # Time vector for the normalized signal
 
-        plt.figure(figsize=(12, 6))  # Set up the figure for plotting
+        plt.figure(figsize=(16, 4))  # Set up the figure for plotting
         plt.plot(BBnorm_t, signal_vals + trigger)  # Plot the normalized signal
         plt.axhline(y=trigger, color='red', linestyle='--', label="Trigger")  # Plot the trigger threshold
         plt.title("BBnorm")  # Title of the plot
@@ -381,7 +392,24 @@ def BroadBand_from_data(Sx, Fs:int ,hilbert_win: int, window_size:float ,trigger
         plt.show()  # Show the plot
     return Trigger_time
 
-def BB_data(Sx, Fs, hilbert_win, window_size):
+def BB_data_old(Sx, Fs, hilbert_win, window_size):
+    """
+    PARAMETERS:
+        sx: array of float
+            Audio signal in time domain
+        fs: int
+            samplerate of sx
+        hilbert_win: int
+            No. of samples used for downsamlpling
+        window_size: float
+            No. of seconds used for filtering
+
+    RETURN:
+        BB_sig: array of float
+            Logarithmic representation of power-envelope
+        t: array of float
+            time array corresponding to BB_sig
+    """
     # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
     # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
     envelope = moving_average_padded(np.square(np.abs(hilbert(Sx))),hilbert_win)
@@ -398,30 +426,58 @@ def BB_data(Sx, Fs, hilbert_win, window_size):
     t = np.linspace(0,len(BB_sig)/DS_Fs,len(BB_sig))
     return BB_sig, t
 
-def BB_trigger(sx,fs,Trigger_val,window_size):
+def BB_data(sx, fs, sx_buff, hilbert_win, window_size):
     """
-    INPUT:
-        sx: 1D array of float - signal in time domain
-        fs: samplerate of sx
-        Trigger_val: desired trigger threshold in dB
-        window_size: Seconds of window to analyse
+    PARAMETERS:
+        sx: array of float
+            Audio signal in time domain
+        fs: int
+            samplerate of sx
+        sx_buff: array of float
+            Buffered processed signal from last segment (Live implementation)
+        hilbert_win: int
+            No. of samples used for downsamlpling
+        window_size: float
+            No. of seconds used for filtering
 
-    OUTPUT:
-        Bool: True if last (window_size) seconds surpasses threshold
-
+    RETURN:
+        BB_sig: array of float
+            Logarithmic representation of power-envelope
+        t: array of float
+            time array corresponding to BB_sig
+        sx_buff_out: array of float
+            Buffered processed signal from last segment (Live implementation)
     """
-    min_val = np.min(sx)
-    last_win = sx[-window_size*fs:]
+    # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
+    # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
+    envelope = moving_average_padded(np.square(np.abs(hilbert(sx))),hilbert_win)
 
-    return True in (last_win > min_val+Trigger_val)
+    # Downsample the filtered signal
+    DS_Sx = resample_poly(envelope, 1, hilbert_win)  # Resample by the median filter window size
+    DS_Fs = fs / hilbert_win  # New sampling rate after downsampling
+
+    # Define kernel size for the median filter based on window size
+    kernel_size = int(window_size * DS_Fs) | 1  # Ensure odd size
+    signal_med = moving_average_zero_padded(DS_Sx, kernel_size)  # Apply median filter for further noise removal
+
+    #Removing invalid values
+    signal_med = signal_med[kernel_size//2:-kernel_size//2]
+
+    #Adding last of previous to start
+    signal_med[:len(sx_buff)] += sx_buff
+
+    #Preparing buffer for next segment
+    sx_buff_out = signal_med[-kernel_size:]
+
+    #Cutting end of current
+    signal_med = signal_med[:-kernel_size]
+
+
+    BB_sig = 10*np.log10(signal_med)
+    t = np.linspace(0,len(BB_sig)/DS_Fs,len(BB_sig))
+    return BB_sig, t, sx_buff_out
 
 def DEMON_from_file(input_file, Fs, Fds,freq_filt ,fmax=100, s_max=10, window="hamming"):
-    #DEMON 2
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from scipy.signal import resample_poly, butter, hilbert
-    import librosa
-    import scipy.signal as signal
 
     #input_file = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/Wav_files/41.wav"
 
@@ -514,12 +570,12 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
         sxx_db: 2D array of float
             2D array of intencity for spectrogram (dB)
     """
-    
+
     #RMS data of hilbert
     kernal_size = int(fs/Fds) 
     analytic_signal = np.abs(hilbert(sx))**2
     rms_values = average_filter(analytic_signal, kernal_size)
-
+    
     #hente freq
     nperseg= int(Fds*tperseg) #Number of samples in time axis to use for each vertical spectrogram coloumn
 
@@ -534,6 +590,11 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
     #Normaliserer sxx
     sxx_rms_norm = medfilt_vertcal_norm(spec=sxx_rms,vertical_medfilt_size=freq_filt)
     sxx_db, fd_rms, td_rms = spec_hfilt2(10*np.log10(sxx_rms_norm),fd_rms,td_rms,window_length=hfilt_length)
+
+    #bandpass cut filter
+    fc = 4 #Hz
+    sxx_db[0:int(fc*tperseg+1),:] = 0
+    sxx_db[-int(fc*tperseg+1):,:] = 0
     
     if plot:
         plt.figure(figsize=(9,9))
