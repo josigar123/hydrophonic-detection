@@ -31,7 +31,11 @@ import { Color } from '@lightningchart/lcjs';
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
 
-const SpectrogramSelection = () => {
+interface SpectrogramSelectionProps {
+  isMonitoring: boolean;
+}
+
+const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
   const context = useContext(SpectrogramConfigurationContext);
 
   if (!context) {
@@ -63,59 +67,64 @@ const SpectrogramSelection = () => {
   const [colorMapValues, setColorMapValues] = useState<Color[]>(infernoMap());
 
   // Big chunky, clunky function for validating the input, might want to refactor this
-  const validateEntireConfiguration = (
-    spectrogramConfig: SpectrogramNarrowbandAndDemonConfiguration
-  ): boolean => {
-    if (!spectrogramConfig) return false;
+  const validateEntireConfiguration = useCallback(
+    (
+      spectrogramConfig: SpectrogramNarrowbandAndDemonConfiguration
+    ): boolean => {
+      if (!spectrogramConfig) return false;
 
-    const { spectrogramConfiguration, demonSpectrogramConfiguration } =
-      spectrogramConfig;
+      const { spectrogramConfiguration, demonSpectrogramConfiguration } =
+        spectrogramConfig;
 
-    if (!spectrogramConfiguration || !demonSpectrogramConfiguration)
-      return false;
+      if (!spectrogramConfiguration || !demonSpectrogramConfiguration)
+        return false;
 
-    return (
-      validateColorMap(colorMap ?? '') &&
-      validateWindow(spectrogramConfiguration.window ?? '') &&
-      validateTperseg(
-        spectrogramConfiguration.tperseg ?? 0,
-        spectrogramConfiguration.horizontalFilterLength ?? 0
-      ) &&
-      validateFrequencyFilter(spectrogramConfiguration.frequencyFilter ?? 0) &&
-      validateHorizontalFilterLength(
-        spectrogramConfiguration.tperseg ?? 0,
-        spectrogramConfiguration.horizontalFilterLength ?? 0
-      ) &&
-      validateWindowInMin(spectrogramConfiguration.windowInMin ?? 0) &&
-      validateMaxFrequency(spectrogramConfiguration.maxFrequency ?? 0) &&
-      validateMinFrequency(spectrogramConfiguration.minFrequency ?? 0) &&
-      validateMaxDb(spectrogramConfiguration.maxDb ?? 0) &&
-      validateMinDb(spectrogramConfiguration.minDb ?? 0) &&
-      validateNarrowbandThreshold(
-        spectrogramConfiguration.narrowbandThreshold ?? 0
-      ) &&
-      validateDemonSampleFrequency(
-        demonSpectrogramConfiguration.demonSampleFrequency ?? 0
-      ) &&
-      validateTperseg(
-        demonSpectrogramConfiguration.tperseg ?? 0,
-        demonSpectrogramConfiguration.horizontalFilterLength ?? 0
-      ) &&
-      validateFrequencyFilter(
-        demonSpectrogramConfiguration.frequencyFilter ?? 0
-      ) &&
-      validateHorizontalFilterLength(
-        demonSpectrogramConfiguration.tperseg ?? 0,
-        demonSpectrogramConfiguration.horizontalFilterLength ?? 0
-      ) &&
-      validateWindowInMin(demonSpectrogramConfiguration.windowInMin ?? 0) &&
-      validateMaxFrequency(demonSpectrogramConfiguration.maxFrequency ?? 0) &&
-      validateMinFrequency(demonSpectrogramConfiguration.minFrequency ?? 0) &&
-      validateMaxDb(demonSpectrogramConfiguration.maxDb ?? 0) &&
-      validateMinDb(demonSpectrogramConfiguration.minDb ?? 0) &&
-      validateWindow(demonSpectrogramConfiguration.window ?? '')
-    );
-  };
+      return (
+        validateColorMap(colorMap ?? '') &&
+        validateWindow(spectrogramConfiguration.window ?? '') &&
+        validateTperseg(
+          spectrogramConfiguration.tperseg ?? 0,
+          spectrogramConfiguration.horizontalFilterLength ?? 0
+        ) &&
+        validateFrequencyFilter(
+          spectrogramConfiguration.frequencyFilter ?? 0
+        ) &&
+        validateHorizontalFilterLength(
+          spectrogramConfiguration.tperseg ?? 0,
+          spectrogramConfiguration.horizontalFilterLength ?? 0
+        ) &&
+        validateWindowInMin(spectrogramConfiguration.windowInMin ?? 0) &&
+        validateMaxFrequency(spectrogramConfiguration.maxFrequency ?? 0) &&
+        validateMinFrequency(spectrogramConfiguration.minFrequency ?? 0) &&
+        validateMaxDb(spectrogramConfiguration.maxDb ?? 0) &&
+        validateMinDb(spectrogramConfiguration.minDb ?? 0) &&
+        validateNarrowbandThreshold(
+          spectrogramConfiguration.narrowbandThreshold ?? 0
+        ) &&
+        validateDemonSampleFrequency(
+          demonSpectrogramConfiguration.demonSampleFrequency ?? 0
+        ) &&
+        validateTperseg(
+          demonSpectrogramConfiguration.tperseg ?? 0,
+          demonSpectrogramConfiguration.horizontalFilterLength ?? 0
+        ) &&
+        validateFrequencyFilter(
+          demonSpectrogramConfiguration.frequencyFilter ?? 0
+        ) &&
+        validateHorizontalFilterLength(
+          demonSpectrogramConfiguration.tperseg ?? 0,
+          demonSpectrogramConfiguration.horizontalFilterLength ?? 0
+        ) &&
+        validateWindowInMin(demonSpectrogramConfiguration.windowInMin ?? 0) &&
+        validateMaxFrequency(demonSpectrogramConfiguration.maxFrequency ?? 0) &&
+        validateMinFrequency(demonSpectrogramConfiguration.minFrequency ?? 0) &&
+        validateMaxDb(demonSpectrogramConfiguration.maxDb ?? 0) &&
+        validateMinDb(demonSpectrogramConfiguration.minDb ?? 0) &&
+        validateWindow(demonSpectrogramConfiguration.window ?? '')
+      );
+    },
+    [colorMap]
+  );
 
   const validateColorMap = (map: string) => {
     if (map === undefined || map === '') {
@@ -298,15 +307,40 @@ const SpectrogramSelection = () => {
     }
   }, []);
 
+  // Side effect for connecting to the stream
+  useEffect(() => {
+    if (validateEntireConfiguration(spectrogramConfig)) {
+      setIsInvalidConfig(false);
+    } else {
+      setIsInvalidConfig(true);
+    }
+
+    if (isMonitoring && !isInvalidConfig) {
+      connect(spectrogramConfig);
+    } else {
+      disconnect();
+    }
+  }, [
+    connect,
+    disconnect,
+    isInvalidConfig,
+    isMonitoring,
+    spectrogramConfig,
+    validateEntireConfiguration,
+  ]);
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
       <div className="flex items-center gap-3 mb-4">
-        <Button
+        {/* <Button
           onPress={() => {
             if (validateEntireConfiguration(spectrogramConfig)) {
               setIsInvalidConfig(false);
-              connect(spectrogramConfig);
+              // Config may be valid, but only connect if we want to monitor
+              if (isMonitoring) {
+                connect(spectrogramConfig);
+              }
             } else {
               setIsInvalidConfig(true);
             }
@@ -322,7 +356,7 @@ const SpectrogramSelection = () => {
           disabled={!isConnected}
         >
           Disconnect
-        </Button>
+        </Button> */}
 
         <div className="ml-2">
           {isConnected ? (

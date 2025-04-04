@@ -68,15 +68,10 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
             const data = JSON.parse(event.data);
 
             if ('detectionStatus' in data) {
-              console.log(
-                'RECVD narrowband detection status: ',
-                data.detectionStatus
-              );
               setIsNarrowbandDetection(data.detectionStatus);
             }
 
             if (data.spectrogramDb) {
-              console.log('RECVD spectrogram data: ', data.spectrogramDb);
               setSpectrogramData({
                 frequencies: data.frequencies || [],
                 times: data.times || [],
@@ -85,7 +80,6 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
             }
 
             if (data.demonSpectrogramDb) {
-              console.log('RECVD spectrogram data: ', data.demonSpectrogramDb);
               setDemonSpectrogramData({
                 demonFrequencies: data.demonFrequencies || [],
                 demonTimes: data.demonTimes || [],

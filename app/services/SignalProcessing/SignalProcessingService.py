@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import signal
-from utils import average_filter, spec_hfilt2, medfilt_vertcal_norm, moving_average_padded
+from utils import average_filter, moving_average_zero_padded, spec_hfilt2, medfilt_vertcal_norm, moving_average_padded
 from scipy.signal import hilbert, resample_poly
 
 '''
@@ -42,10 +42,7 @@ class SignalProcessingService:
     
     def generate_demon_spectrogram_data(self, pcm_data: bytes, demon_sample_frequency: int, tperseg: float, freq_filt: int, hfilt_length: int, window: str):
 
-        print("LENGTH OF PCM DATA: ", len(pcm_data))
         channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
-        print("FIRST 100 bytes of PCM DATA: ", pcm_data[:101])
-        print("NUMBER OF CHANNELS: ",len(channels))
         # Frequency data calculation
         nperseg = int(demon_sample_frequency * tperseg)  # Number of samples in time axis to use for each vertical spectrogram column
         
@@ -55,51 +52,108 @@ class SignalProcessingService:
         rms_values = average_filter(analytic_signal, kernal_size)
         # Generate spectrogram
         fd_rms, td_rms, sxx_rms = signal.spectrogram(rms_values, demon_sample_frequency,
-                                                        nperseg=nperseg,
-                                                        noverlap=5 * nperseg // 6,
+                                                        nperseg=nperseg,                                                       
                                                         window=window)
         # Normalize sxx
         sxx_rms_norm = medfilt_vertcal_norm(spec=sxx_rms, vertical_medfilt_size=freq_filt)
         sxx_rms_norm = np.zeros_like(sxx_rms_norm)
-        print("PRE LOOP NORM RMX: ", sxx_rms_norm[:11])
+        
         for channel in channels:
             analytic_signal = np.abs(hilbert(channel))**2
             rms_values = average_filter(analytic_signal, kernal_size)
 
             # Generate spectrogram
             fd_rms, td_rms, sxx_rms = signal.spectrogram(rms_values, demon_sample_frequency,
-                                                        nperseg=nperseg,
-                                                        noverlap=5 * nperseg // 6,
+                                                        nperseg=nperseg,                                                      
                                                         window=window)
             # Normalize sxx
             current_sxx_rms_norm = medfilt_vertcal_norm(spec=sxx_rms, vertical_medfilt_size=freq_filt)
             sxx_rms_norm = np.add(sxx_rms_norm, current_sxx_rms_norm)
 
-        print("td_rms: ", td_rms)
-        print("fd_rms: ", fd_rms)
-        print("10 FIRST NORM RMX: ", sxx_rms_norm[:11])
-        
         sxx_rms_norm_db = 10 * np.log10(sxx_rms_norm)
-        print("SXXRMS DB: ", sxx_rms_norm_db)
+
         # Apply frequency and time-domain filters
         sxx_db, fd_rms, td_rms = spec_hfilt2(sxx_rms_norm_db, fd_rms, td_rms, window_length=hfilt_length)
         # Highpass cut filter
         fc = 5 # Hz
         sxx_db[0:int(fc*tperseg+1),:] = 0
-        print("SXX_DB IN SIGNAL PROCESSING SERVICE: ", sxx_db)
-        print("FD_RMS: ", fd_rms)
-        print("td_rms: ", td_rms)
+
         return fd_rms.tolist(), td_rms.tolist(), sxx_db.tolist()
 
     # Take a spectrogram matrix containing intensities and a threshold in dB
     def narrowband_detection(self, spectrogram_db: np.ndarray, threshold: int) -> bool:
         return np.any(spectrogram_db > threshold)
 
+    def BB_data(self, pcm_data: bytes, pcm_buff: bytes, hilbert_win: int, window_size: int):
+        """
+        PARAMETERS:
+            sx: array of float
+                Audio signal in time domain
+            fs: int
+                samplerate of sx
+            sx_buff: array of float
+                Buffered processed signal from last segment (Live implementation)
+            hilbert_win: int
+                No. of samples used for downsamlpling
+            window_size: float
+                No. of seconds used for filtering
+
+        RETURN:
+            BB_sig: array of float
+                Logarithmic representation of power-envelope
+            t: array of float
+                time array corresponding to BB_sig
+            sx_buff_out: array of float
+                Buffered processed signal from last segment (Live implementation)
+        """
+        
+        channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
+        buffer_channels = self.convert_n_channel_signal_to_n_arrays(pcm_buff)
+        
+        # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
+        # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
+        pre_envelope = moving_average_padded(np.square(np.abs(hilbert(channels[0]))),hilbert_win)
+        envelope = np.zeros_like(pre_envelope)
+        
+        for channel in channels:
+            current_envelope = moving_average_padded(np.square(np.abs(hilbert(channel))),hilbert_win)
+            envelope = np.add(envelope, current_envelope)
+
+        # Downsample the filtered signal
+        downsampled_signal = resample_poly(envelope, 1, hilbert_win)  # Resample by the median filter window size
+        downsampled_sample_rate = self.sample_rate / hilbert_win  # New sampling rate after downsampling
+
+        # Define kernel size for the median filter based on window size
+        kernel_size = int(window_size * downsampled_sample_rate) | 1  # Ensure odd size
+        signal_med = moving_average_zero_padded(downsampled_signal, kernel_size)  # Apply median filter for further noise removal
+
+        #Removing invalid values
+        signal_med = signal_med[kernel_size//2:-kernel_size//2]
+
+        for buffer_channel in buffer_channels:
+            #Adding last of previous to start
+            signal_med[:len(buffer_channel)] += buffer_channel
+
+        #Preparing buffer for next segment
+        sx_buff_out = signal_med[-kernel_size:]
+
+        #Cutting end of current
+        signal_med = signal_med[:-kernel_size]
+
+        if len(buffer_channel) == 0: #Empty buffer
+            signal_med = signal_med[kernel_size//2:] #Kutter første del
+
+
+        BB_sig = 10*np.log10(signal_med)
+        t = np.linspace(0,len(BB_sig)/downsampled_sample_rate,len(BB_sig))
+        return BB_sig, t, sx_buff_out
+    
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
     def generate_broadband_data(self, pcm_data: bytes, hilbert_win, window_size):
 
         try:
             channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
+            
             # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
             # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
             pre_envelope = moving_average_padded(np.square(np.abs(hilbert(channels[0]))), hilbert_win)

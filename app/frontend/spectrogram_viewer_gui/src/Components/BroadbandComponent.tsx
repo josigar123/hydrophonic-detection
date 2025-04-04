@@ -1,6 +1,6 @@
 import BroadbandParameterField from './BroadbandParameterField';
 import ScrollingBroadBand from './ScrollingBroadBand';
-import { useContext, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Button } from '@heroui/button';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
 import {
@@ -13,7 +13,11 @@ import BroadbandParameterInfoCard from './BroadbandParameterInfoCard';
 
 const websocketUrl = 'ws://localhost:8766?client_name=broadband_client';
 
-const BroadbandComponent = () => {
+interface BroadbandComponentProps {
+  isMonitoring: boolean;
+}
+
+const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
   const context = useContext(BroadbandConfigurationContext);
 
   if (!context) {
@@ -35,24 +39,25 @@ const BroadbandComponent = () => {
   const [isInvalidConfig, setIsInvalidConfig] = useState(true);
 
   // Input validator function for broadband config
-  const validateBroadbandConfiguration = (
-    broadbandConfiguration: BroadbandConfiguration
-  ) => {
-    if (!broadbandConfiguration) return false;
+  const validateBroadbandConfiguration = useCallback(
+    (broadbandConfiguration: BroadbandConfiguration) => {
+      if (!broadbandConfiguration) return false;
 
-    const { broadbandThreshold, windowSize, hilbertWindow, bufferLength } =
-      broadbandConfiguration;
+      const { broadbandThreshold, windowSize, hilbertWindow, bufferLength } =
+        broadbandConfiguration;
 
-    if (!broadbandThreshold || !windowSize || !hilbertWindow || !bufferLength)
-      return false;
+      if (!broadbandThreshold || !windowSize || !hilbertWindow || !bufferLength)
+        return false;
 
-    return (
-      validateBroadbandThreshold(broadbandThreshold) &&
-      validateWindowSize(windowSize) &&
-      validateHilbertWindow(hilbertWindow) &&
-      validateBufferLength(bufferLength)
-    );
-  };
+      return (
+        validateBroadbandThreshold(broadbandThreshold) &&
+        validateWindowSize(windowSize) &&
+        validateHilbertWindow(hilbertWindow) &&
+        validateBufferLength(bufferLength)
+      );
+    },
+    []
+  );
 
   const validateBroadbandThreshold = (broadbandThreshold: number) => {
     if (broadbandThreshold === undefined || broadbandThreshold === 0)
@@ -88,11 +93,32 @@ const BroadbandComponent = () => {
     setBroadbandConfig(broadbandPreset1);
   };
 
+  useEffect(() => {
+    if (validateBroadbandConfiguration(broadbandConfiguration)) {
+      setIsInvalidConfig(false);
+    } else {
+      setIsInvalidConfig(true);
+    }
+
+    if (isMonitoring && !isInvalidConfig) {
+      connect(broadbandConfiguration);
+    } else {
+      disconnect();
+    }
+  }, [
+    validateBroadbandConfiguration,
+    broadbandConfiguration,
+    isMonitoring,
+    isInvalidConfig,
+    connect,
+    disconnect,
+  ]);
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Control buttons with improved styling */}
       <div className="flex items-center gap-3 mb-4">
-        <Button
+        {/* <Button
           onPress={() => {
             if (validateBroadbandConfiguration(broadbandConfiguration)) {
               setIsInvalidConfig(false);
@@ -111,7 +137,7 @@ const BroadbandComponent = () => {
           disabled={!isConnected}
         >
           Disconnect
-        </Button>
+        </Button> */}
         <div className="ml-2">
           {isConnected ? (
             <span className="inline-flex items-center">

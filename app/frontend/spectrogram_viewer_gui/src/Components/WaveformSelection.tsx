@@ -1,12 +1,12 @@
-import { Button } from '@heroui/button';
 import { useAudioStream } from '../Hooks/useAudioStream';
 import Waveform from './Waveform';
 import { convert16BitPcmToFloat32Arrays } from '../utils/convert16BitPcmToFloat32Arrays';
 import { useEffect, useState } from 'react';
+import { Button } from '@heroui/button';
 
 /**
  * Audio is recorded constantly with the following parameters:
- * sample rate: 10000 Hz,
+ * sample rate: 44.1 kHz,
  * channels: 4 (testing with 1)
  * chunks: 1024
  * format: 16-bit int
@@ -19,13 +19,18 @@ import { useEffect, useState } from 'react';
  * sample2_ch1, sample2_ch2, sample2_ch3, sample2_ch4, ...]
  * Maybe downsample each signal for less data?
  */
+
 interface WaveformSelectionProps {
   numChannels: number;
+  isMonitoring: boolean;
 }
 
 const websocketUrl = 'ws://localhost:8766?client_name=waveform_client';
 
-const WaveformSelection = ({ numChannels }: WaveformSelectionProps) => {
+const WaveformSelection = ({
+  numChannels,
+  isMonitoring,
+}: WaveformSelectionProps) => {
   // Audiodata is recieved through the websocket as raw 16-bit PCM data
   const { audioData, isConnected, error, connect, disconnect } = useAudioStream(
     websocketUrl,
@@ -43,9 +48,16 @@ const WaveformSelection = ({ numChannels }: WaveformSelectionProps) => {
     setChannels(extractedChannels);
   }, [audioData, isConnected, numChannels]);
 
+  useEffect(() => {
+    if (isMonitoring) {
+      connect();
+    } else {
+      disconnect();
+    }
+  }, [connect, disconnect, isMonitoring]);
+
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Control buttons with improved styling */}
       <div className="flex items-center gap-3 mb-4">
         <Button
           onPress={connect}
@@ -79,9 +91,10 @@ const WaveformSelection = ({ numChannels }: WaveformSelectionProps) => {
       <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
         <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
           {channels.length > 0 ? (
-            <div>
+            <div className="flex flex-col h-full space-y-2">
               {channels.map((channelData, index) => (
-                <div key={index}>
+                <div key={index} className="flex-1">
+                  <span className="text-blue-">Channel {index + 1}</span>
                   <Waveform channelData={channelData} setAutoListen={true} />
                 </div>
               ))}

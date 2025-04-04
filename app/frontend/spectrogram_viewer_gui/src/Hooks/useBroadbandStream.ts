@@ -25,8 +25,6 @@ export function useBroadbandStream(url: string, autoConnect = false) {
         return;
       }
 
-      console.log('Configuration:\n', JSON.stringify(configuration, null, 2));
-
       setError(null);
 
       try {
