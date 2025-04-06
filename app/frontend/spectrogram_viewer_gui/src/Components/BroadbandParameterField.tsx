@@ -33,6 +33,7 @@ const BroadbandParameterField = ({
     windowSize: broadbandConfiguration?.windowSize?.toString() || '',
     hilbertWindow: broadbandConfiguration?.hilbertWindow?.toString() || '',
     bufferLength: broadbandConfiguration?.bufferLength?.toString() || '',
+    windowLength: broadbandConfiguration?.windowLength?.toString() || '',
   });
 
   // Use a ref to track if we need to commit changes
@@ -91,6 +92,7 @@ const BroadbandParameterField = ({
       windowSize: broadbandConfiguration.windowSize?.toString() || '',
       hilbertWindow: broadbandConfiguration.hilbertWindow?.toString() || '',
       bufferLength: broadbandConfiguration.bufferLength?.toString() || '',
+      windowLength: broadbandConfiguration.windowLength?.toString() || '',
     });
   }, [broadbandConfiguration]);
 
@@ -123,6 +125,20 @@ const BroadbandParameterField = ({
 
     return false;
   }, [inputValues.hilbertWindow]);
+
+  const isWindowLengthInvalid = useMemo(() => {
+    const windowLength = Number(inputValues.windowLength);
+
+    if (
+      !inputValues.windowLength ||
+      windowLength === 0 ||
+      !Number.isInteger(windowLength)
+    ) {
+      return true;
+    }
+
+    return false;
+  }, [inputValues.windowLength]);
 
   const isBufferLengthInvalid = useMemo(() => {
     const bufferLength = Number(inputValues.bufferLength);
@@ -170,7 +186,20 @@ const BroadbandParameterField = ({
         onChange={(e) => handleInputChange('windowSize', e.target.value)}
         onBlur={() => handleBlur('windowSize')}
       />
-
+      <Input
+        labelPlacement="inside"
+        label="winLen"
+        isInvalid={isWindowLengthInvalid}
+        errorMessage="winLen must be a non-zero integer"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[min]</span>
+          </div>
+        }
+      />
       <Input
         labelPlacement="inside"
         label="bufferLen"

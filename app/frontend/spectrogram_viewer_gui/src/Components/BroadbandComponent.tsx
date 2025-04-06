@@ -54,17 +54,29 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
     (broadbandConfiguration: BroadbandConfiguration) => {
       if (!broadbandConfiguration) return false;
 
-      const { broadbandThreshold, windowSize, hilbertWindow, bufferLength } =
-        broadbandConfiguration;
+      const {
+        broadbandThreshold,
+        windowSize,
+        hilbertWindow,
+        bufferLength,
+        windowLength,
+      } = broadbandConfiguration;
 
-      if (!broadbandThreshold || !windowSize || !hilbertWindow || !bufferLength)
+      if (
+        !broadbandThreshold ||
+        !windowSize ||
+        !hilbertWindow ||
+        !bufferLength ||
+        !windowLength
+      )
         return false;
 
       return (
         validateBroadbandThreshold(broadbandThreshold) &&
         validateWindowSize(windowSize) &&
         validateHilbertWindow(hilbertWindow) &&
-        validateBufferLength(bufferLength)
+        validateBufferLength(bufferLength) &&
+        validateWindowLength(windowLength)
       );
     },
     []
@@ -96,6 +108,18 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
       !Number.isInteger(bufferLength)
     )
       return false;
+
+    return true;
+  };
+
+  const validateWindowLength = (windowLength: number) => {
+    if (
+      windowLength === undefined ||
+      windowLength === 0 ||
+      !Number.isInteger(windowLength)
+    ) {
+      return false;
+    }
 
     return true;
   };
@@ -181,7 +205,10 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
       <div className="flex flex-col flex-1 bg-slate-800 rounded-lg p-4 shadow-lg overflow-hidden">
         <div className="flex-1 w-full relative overflow-hidden">
           {broadbandData ? (
-            <ScrollingBroadBand broadbandData={broadbandData} windowInMin={2} />
+            <ScrollingBroadBand
+              broadbandData={broadbandData}
+              windowInMin={broadbandConfiguration.windowLength ?? 10}
+            />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-300">
               <div className="text-center">
