@@ -73,11 +73,11 @@ const OverrideButton = () => {
   return (
     <Button
       radius="sm"
-      color={isConnected ? 'success' : 'primary'}
+      color={overrideActive ? 'success' : 'primary'}
       size="md"
       onPress={() => toggleOverride()}
     >
-      {isConnected ? 'Recording' : 'Manual Detection'}
+      {overrideActive ? 'Recording' : 'Manual Detection'}
     </Button>
   );
 };
