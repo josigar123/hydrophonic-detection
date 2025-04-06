@@ -48,7 +48,6 @@ def produce_audio(broker_info: dict, audio_topic: str,  recording_parameters: di
         '''Sends chunks of audio to Kafka in real-time'''
         if status:
             print(f"Error: {status}")
-        print("Sending raw PCM data to broker...")
         producer.send(audio_topic, value=indata.tobytes())
 
     with sd.InputStream(
