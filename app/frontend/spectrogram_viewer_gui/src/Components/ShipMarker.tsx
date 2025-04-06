@@ -46,6 +46,7 @@ const militaryShipIcon = new L.Icon({
 function ShipMarker({ ship }: ShipMarkerProps) {
   const markerRef = useRef<L.Marker>(null);
   const [isTracking, setIsTracking] = useState(false);
+
   useMarkerRotation(
     markerRef.current,
     parseFloat(ship.trueHeading) || ship.course,
@@ -100,19 +101,22 @@ function ShipMarker({ ship }: ShipMarkerProps) {
                     {ship.length}m × {ship.breadth}m
                   </td>
                 </tr>
-                <Button
-                  size="md"
-                  variant="light"
-                  onPress={() => setIsTracking((prev) => !prev)}
-                >
-                  {isTracking ? 'Stop Tracking' : 'Track Ship'}
-                </Button>
+                <tr>
+                  <td colSpan={2} className="text-center pt-2">
+                    <Button
+                      size="md"
+                      variant="light"
+                      onPress={() => setIsTracking((prev) => !prev)}
+                    >
+                      {isTracking ? 'Stop Tracking' : 'Track Ship'}
+                    </Button>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         </Popup>
       </Marker>
-
       {isTracking && ship.path.length > 1 && (
         <Polyline
           positions={ship.path.map((coord) => [coord[1], coord[0]])}
