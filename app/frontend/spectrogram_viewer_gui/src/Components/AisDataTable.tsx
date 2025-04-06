@@ -27,12 +27,12 @@ const AisDataTable = () => {
 
   return (
     <>
-      <ShipDetailsModal 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange} 
-        ship={selectedShip} 
+      <ShipDetailsModal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        ship={selectedShip}
       />
-      
+
       <div className="h-full flex flex-col bg-grey-400 items-justify rounded-lg p-4">
         <div className="h-0 flex-grow overflow-auto">
           <Table aria-label="Live AIS Data Table">

@@ -10,6 +10,7 @@ import {
 import { BroadbandConfiguration } from '../Interfaces/Configuration';
 import { Tooltip } from '@heroui/tooltip';
 import BroadbandParameterInfoCard from './BroadbandParameterInfoCard';
+import { DetectionContext } from '../Contexts/DetectionContext';
 
 const websocketUrl = 'ws://localhost:8766?client_name=broadband_client';
 
@@ -20,13 +21,23 @@ interface BroadbandComponentProps {
 const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
   const context = useContext(BroadbandConfigurationContext);
 
+  const detectionContext = useContext(DetectionContext);
+
   if (!context) {
     throw new Error(
-      'useConfiguration must be used within a SpectrogramConfigurationProvider'
+      'In BroadbandComponent.tsx: BroadbandConfigurationContext must be used within a BroadbandConfigurationProvider'
+    );
+  }
+
+  if (!detectionContext) {
+    throw new Error(
+      'In BroadbandComponent.tsx: DetectionContext must be used within a DetectionContextProvider'
     );
   }
 
   const { broadbandConfiguration, setBroadbandConfig } = context;
+
+  const { setDetection } = detectionContext;
 
   const {
     broadbandData,
@@ -114,83 +125,61 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
     disconnect,
   ]);
 
+  // Effect for updating context if there has been a detection
+  useEffect(() => {
+    setDetection((prev) => ({
+      ...prev,
+      broadbandDetection: isBroadbandDetection,
+    }));
+  }, [isBroadbandDetection, setDetection]);
+
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Control buttons with improved styling */}
-      <div className="flex items-center gap-3 mb-4">
-        {/* <Button
-          onPress={() => {
-            if (validateBroadbandConfiguration(broadbandConfiguration)) {
-              setIsInvalidConfig(false);
-              connect(broadbandConfiguration);
-            } else {
-              setIsInvalidConfig(true);
-            }
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-        >
-          Connect
-        </Button>
-        <Button
-          onPress={disconnect}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-          disabled={!isConnected}
-        >
-          Disconnect
-        </Button> */}
-        <div className="ml-2">
-          {isConnected ? (
-            <span className="inline-flex items-center">
-              <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-              Connected
-            </span>
-          ) : (
-            <span className="inline-flex items-center text-gray-500">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              Disconnected
-            </span>
-          )}
-          {isBroadbandDetection ? (
-            <div>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <div>
+            {isConnected ? (
               <span className="inline-flex items-center">
                 <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                Detection in broadband
+                Connected
               </span>
-            </div>
-          ) : (
-            <div>
+            ) : (
               <span className="inline-flex items-center text-gray-500">
                 <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-                No detection in broadband
+                Disconnected
               </span>
-            </div>
-          )}
-          {isInvalidConfig && (
-            <div className="text-red-300">
-              <p className="font-medium">Ensure all fields have valid values</p>
-            </div>
-          )}
+            )}
+            {isInvalidConfig && (
+              <div className="text-red-300">
+                <p className="font-medium">
+                  Ensure all fields have valid values
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Tooltip
+            content="Apply a preset for the broadband analysis"
+            size="md"
+            closeDelay={10}
+          >
+            <Button onPress={handlePreset1}>Preset</Button>
+          </Tooltip>
+          <Tooltip
+            placement="bottom-end"
+            size="lg"
+            closeDelay={10}
+            content={<BroadbandParameterInfoCard />}
+          >
+            <Button>Parameter information</Button>
+          </Tooltip>
         </div>
       </div>
-      <div className="flex gap-2 justify-end">
-        <Tooltip
-          content="Apply a preset for the broadband analysis"
-          size="md"
-          closeDelay={10}
-        >
-          <Button onPress={handlePreset1}>Preset</Button>
-        </Tooltip>
-        <Tooltip
-          placement="bottom-end"
-          size="lg"
-          closeDelay={10}
-          content={<BroadbandParameterInfoCard />}
-        >
-          <Button>Parameter information</Button>
-        </Tooltip>
-      </div>
-      <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
-        <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
+
+      <div className="flex flex-col flex-1 bg-slate-800 rounded-lg p-4 shadow-lg overflow-hidden">
+        <div className="flex-1 w-full relative overflow-hidden">
           {broadbandData ? (
             <ScrollingBroadBand broadbandData={broadbandData} windowInMin={2} />
           ) : (

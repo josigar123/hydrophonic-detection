@@ -136,23 +136,21 @@ const BroadbandParameterField = ({
     <div className="flex w-full gap-x-4 items-center">
       <Input
         labelPlacement="inside"
-        label="BBThresh"
-        isInvalid={isbroadbandThresholdInvalid}
-        errorMessage="BBThresh must be non-zero"
+        label="hilbertWin"
+        isInvalid={isHilbertWindowInvalid}
+        errorMessage="hilbertWin must be non-zero and a whole number"
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
         endContent={
           <div className="pointer-events-none flex items-center">
-            <span className="text-default-400 text-small">[dB]</span>
+            <span className="text-default-400 text-small">[S]</span>
           </div>
         }
-        value={inputValues.broadbandThreshold}
         isDisabled={isConnected}
-        onChange={(e) =>
-          handleInputChange('broadbandThreshold', e.target.value)
-        }
-        onBlur={() => handleBlur('broadbandThreshold')}
+        value={inputValues.hilbertWindow}
+        onChange={(e) => handleInputChange('hilbertWindow', e.target.value)}
+        onBlur={() => handleBlur('hilbertWindow')}
       />
       <Input
         labelPlacement="inside"
@@ -172,24 +170,7 @@ const BroadbandParameterField = ({
         onChange={(e) => handleInputChange('windowSize', e.target.value)}
         onBlur={() => handleBlur('windowSize')}
       />
-      <Input
-        labelPlacement="inside"
-        label="hilbertWin"
-        isInvalid={isHilbertWindowInvalid}
-        errorMessage="hilbertWin must be non-zero and a whole number"
-        className={`flex-1 min-w-0 h-12 ${
-          isConnected ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-        endContent={
-          <div className="pointer-events-none flex items-center">
-            <span className="text-default-400 text-small">[Hz]</span>
-          </div>
-        }
-        isDisabled={isConnected}
-        value={inputValues.hilbertWindow}
-        onChange={(e) => handleInputChange('hilbertWindow', e.target.value)}
-        onBlur={() => handleBlur('hilbertWindow')}
-      />
+
       <Input
         labelPlacement="inside"
         label="bufferLen"
@@ -207,6 +188,26 @@ const BroadbandParameterField = ({
         value={inputValues.bufferLength}
         onChange={(e) => handleInputChange('bufferLength', e.target.value)}
         onBlur={() => handleBlur('bufferLength')}
+      />
+      <Input
+        labelPlacement="inside"
+        label="BBThresh"
+        isInvalid={isbroadbandThresholdInvalid}
+        errorMessage="BBThresh must be non-zero"
+        className={`flex-1 min-w-0 h-12 ${
+          isConnected ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        endContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">[dB]</span>
+          </div>
+        }
+        value={inputValues.broadbandThreshold}
+        isDisabled={isConnected}
+        onChange={(e) =>
+          handleInputChange('broadbandThreshold', e.target.value)
+        }
+        onBlur={() => handleBlur('broadbandThreshold')}
       />
     </div>
   );

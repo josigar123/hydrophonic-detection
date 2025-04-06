@@ -27,6 +27,9 @@ import {
   cividisMap,
 } from '../ColorMaps/colorMaps';
 import { Color } from '@lightningchart/lcjs';
+import { DetectionContext } from '../Contexts/DetectionContext';
+import SMAUG from '../../public/assets/icons/SMAUGlogo.png';
+import { Image } from '@heroui/image';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
@@ -38,13 +41,23 @@ interface SpectrogramSelectionProps {
 const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
   const context = useContext(SpectrogramConfigurationContext);
 
+  const detectionContext = useContext(DetectionContext);
+
   if (!context) {
     throw new Error(
-      'useConfiguration must be used within a SpectrogramConfigurationProvider'
+      'In SpectrogramSelection.tsx: SpectrogramConfigurationContext must be used within a SpectrogramConfigurationProvider'
+    );
+  }
+
+  if (!detectionContext) {
+    throw new Error(
+      'In SpectrogramSelection.tsx: DetectionContext must be used within a DetectionContextProvider'
     );
   }
 
   const { spectrogramConfig, setSpectrogramConfig } = context;
+  const { setDetection } = detectionContext;
+
   const {
     spectrogramData,
     demonSpectrogramData,
@@ -329,142 +342,125 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     validateEntireConfiguration,
   ]);
 
+  // Effect for updating global context
+  useEffect(() => {
+    setDetection((prev) => ({
+      ...prev,
+      narrowbandDetection: isNarrowbandDetection,
+    }));
+  }, [isNarrowbandDetection, setDetection]);
+
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Control buttons with improved styling */}
-      <div className="flex items-center gap-3 mb-4">
-        {/* <Button
-          onPress={() => {
-            if (validateEntireConfiguration(spectrogramConfig)) {
-              setIsInvalidConfig(false);
-              // Config may be valid, but only connect if we want to monitor
-              if (isMonitoring) {
-                connect(spectrogramConfig);
-              }
-            } else {
-              setIsInvalidConfig(true);
-            }
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-        >
-          Connect
-        </Button>
-
-        <Button
-          onPress={disconnect}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-          disabled={!isConnected}
-        >
-          Disconnect
-        </Button> */}
-
-        <div className="ml-2">
-          {isConnected ? (
-            <span className="inline-flex items-center">
-              <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-              Connected
-            </span>
-          ) : (
-            <span className="inline-flex items-center text-gray-500">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              Disconnected
-            </span>
-          )}
-          {isNarrowbandDetection ? (
-            <div>
+      {/* Top bar with status, tabs and buttons */}
+      <div className="flex items-center justify-between mb-4">
+        {/* Left side: Status and message with separator */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center">
+            {isConnected ? (
               <span className="inline-flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                Detection in narrowband
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse text-green-500"></span>
+                Connected
               </span>
-            </div>
-          ) : (
-            <div>
+            ) : (
               <span className="inline-flex items-center text-gray-500">
                 <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-                No detection in narrowband
+                Disconnected
               </span>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Separator */}
           {isInvalidConfig && (
-            <div className="text-red-300">
-              <p className="font-medium">Ensure all fields have valid values</p>
-            </div>
+            <>
+              <span className="text-gray-400 px-2">|</span>
+              <div className="text-red-300">
+                <p className="font-medium">
+                  Ensure all fields have valid values
+                </p>
+              </div>
+            </>
           )}
+        </div>
+
+        {/* Middle: Tabs */}
+        <div className="flex-1 flex justify-center">
+          <Tabs
+            key="bordered"
+            aria-label="Graph choice"
+            size="md"
+            radius="sm"
+            selectedKey={selected}
+            onSelectionChange={(key) => setSelected(String(key))}
+          >
+            <Tab key="spectrogram" title="Spectrogram"></Tab>
+            <Tab key="demon" title="DEMON"></Tab>
+          </Tabs>
+        </div>
+
+        {/* Right side: Buttons */}
+        <div className="flex items-center gap-2">
+          <Dropdown>
+            <Tooltip
+              placement="top-end"
+              size="lg"
+              closeDelay={10}
+              content="Set the color map for both spectrograms"
+            >
+              <div className="relative">
+                <div
+                  className={`${isColorMapSet ? 'hidden' : 'block'} text-red-500 absolute bottom-full mb-1 whitespace-nowrap right-0`}
+                >
+                  Color map not set
+                </div>
+                <DropdownTrigger>
+                  <Button
+                    isDisabled={isConnected}
+                    className={`hover:bg-gray-200 truncate ${
+                      isConnected ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {colorMap || 'Select color map'}
+                  </Button>
+                </DropdownTrigger>
+              </div>
+            </Tooltip>
+            <DropdownMenu
+              disallowEmptySelection
+              selectionMode="single"
+              aria-label="colorMap"
+              onAction={(map) => handleDropdownChange(map.toString())}
+            >
+              {colorMaps.map((colorMap) => (
+                <DropdownItem key={colorMap}>{colorMap}</DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+
+          <Tooltip
+            content="Apply a preset for the spectrogram and DEMON spectrogram"
+            size="md"
+            closeDelay={10}
+          >
+            <Button onPress={handlePreset1}>Preset</Button>
+          </Tooltip>
+
+          <Tooltip
+            placement="bottom-end"
+            size="lg"
+            closeDelay={10}
+            content={<SpectrogramParameterInfoCard />}
+          >
+            <Button>Parameter information</Button>
+          </Tooltip>
         </div>
       </div>
 
-      {/* Tabs container - taking full remaining height */}
+      {/* Spectrogram area */}
       <div className="relative flex-1 min-h-0 w-full">
-        <Tooltip
-          content="Apply a preset for the spectrogram and DEMON spectrogram"
-          size="md"
-          closeDelay={10}
-        >
-          <Button onPress={handlePreset1} className="absolute right-48 ">
-            Preset
-          </Button>
-        </Tooltip>
-        <Tooltip
-          placement="bottom-end"
-          size="lg"
-          closeDelay={10}
-          content={<SpectrogramParameterInfoCard />}
-        >
-          <Button className="absolute right-2">Parameter information</Button>
-        </Tooltip>
-
-        <Dropdown>
-          <Tooltip
-            placement="top-end"
-            size="lg"
-            closeDelay={10}
-            content="Set the color map for both spectrograms"
-          >
-            <div className="relative">
-              <div
-                className={`${isColorMapSet ? 'hidden' : 'block'} text-red-500 absolute bottom-full mb-1 whitespace-nowrap right-72`}
-              >
-                Color map not set
-              </div>
-              <DropdownTrigger>
-                <Button
-                  isDisabled={isConnected}
-                  className={`absolute right-72 hover:bg-gray-200 truncate ${
-                    isConnected ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {colorMap || 'Select color map'}
-                </Button>
-              </DropdownTrigger>
-            </div>
-          </Tooltip>
-          <DropdownMenu
-            disallowEmptySelection
-            selectionMode="single"
-            aria-label="colorMap"
-            onAction={(map) => handleDropdownChange(map.toString())}
-          >
-            {colorMaps.map((colorMap) => (
-              <DropdownItem key={colorMap}>{colorMap}</DropdownItem>
-            ))}
-          </DropdownMenu>
-        </Dropdown>
-
-        <Tabs
-          key="bordered"
-          aria-label="Graph choice"
-          size="md"
-          radius="sm"
-          selectedKey={selected}
-          onSelectionChange={(key) => setSelected(String(key))}
-        >
-          <Tab key="spectrogram" title="Spectrogram"></Tab>
-          <Tab key="demon" title="DEMON"></Tab>
-        </Tabs>
         <div className={`${selected === 'spectrogram' ? 'block' : 'hidden'}`}>
           <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
-            {/* Spectrogram container - using flex-1 to take available space */}
-
+            {/* Spectrogram content*/}
             <div
               className="flex-1 w-full relative"
               style={{ minHeight: '400px' }}
@@ -505,16 +501,15 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
                 </div>
               )}
             </div>
-
-            {/* Parameter field with improved spacing */}
             <div className="mt-4 bg-slate-700 p-3 rounded-md">
               <SpectrogramParameterField isConnected={isConnected} />
             </div>
           </div>
         </div>
+
+        {/* DEMON*/}
         <div className={`${selected === 'demon' ? 'block' : 'hidden'}`}>
           <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
-            {/* DEMON container - using flex-1 to take available space */}
             <div
               className="flex-1 w-full relative"
               style={{ minHeight: '400px' }}
@@ -561,6 +556,17 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
                 <DemonSpectrogramParameterField isConnected={isConnected} />
               </div>
             </div>
+          </div>
+        </div>
+        <div className="flex justify-center items-center h-[200px]">
+          <div className="bg-gray-200 rounded-2xl p-4 shadow-lg ring-2 ring-blue-200 border border-blue-300 transition-transform hover:scale-105 duration-300 ease-in-out mt-4">
+            <Image
+              alt="EU Horizon SMAUG LOGO"
+              src={SMAUG}
+              height={160}
+              width={160}
+              className="rounded-xl"
+            />
           </div>
         </div>
       </div>

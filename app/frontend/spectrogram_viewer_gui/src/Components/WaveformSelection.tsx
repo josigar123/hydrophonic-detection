@@ -2,7 +2,6 @@ import { useAudioStream } from '../Hooks/useAudioStream';
 import Waveform from './Waveform';
 import { convert16BitPcmToFloat32Arrays } from '../utils/convert16BitPcmToFloat32Arrays';
 import { useEffect, useState } from 'react';
-import { Button } from '@heroui/button';
 
 /**
  * Audio is recorded constantly with the following parameters:
@@ -32,7 +31,7 @@ const WaveformSelection = ({
   isMonitoring,
 }: WaveformSelectionProps) => {
   // Audiodata is recieved through the websocket as raw 16-bit PCM data
-  const { audioData, isConnected, error, connect, disconnect } = useAudioStream(
+  const { audioData, isConnected, connect, disconnect } = useAudioStream(
     websocketUrl,
     false
   );
@@ -59,20 +58,6 @@ const WaveformSelection = ({
   return (
     <div className="flex flex-col h-full w-full">
       <div className="flex items-center gap-3 mb-4">
-        <Button
-          onPress={connect}
-          disabled={isConnected}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-        >
-          Connect
-        </Button>
-        <Button
-          onPress={disconnect}
-          disabled={!isConnected}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-        >
-          Disconnect
-        </Button>
         <div className="ml-2">
           {isConnected ? (
             <span className="inline-flex items-center">
@@ -121,12 +106,6 @@ const WaveformSelection = ({
             </div>
           )}
         </div>
-
-        {error && (
-          <div className="mt-4 bg-slate-700 p-3 rounded-md text-red-300">
-            <p className="font-medium">Error: {error}</p>
-          </div>
-        )}
       </div>
     </div>
   );
