@@ -22,6 +22,11 @@ import {
   SpectrogramNarrowbandAndDemonConfiguration,
 } from './Interfaces/Configuration';
 import { DetectionContext, Detection } from './Contexts/DetectionContext';
+import {
+  Validity,
+  ValidityContext,
+  defaultInputValidity,
+} from './Contexts/InputValidationContext';
 
 function App() {
   const [broadbandConfiguration, setBroadbandConfig] =
@@ -37,27 +42,31 @@ function App() {
     broadbandDetection: false,
   });
 
+  const [validity, setValidity] = useState<Validity>(defaultInputValidity);
+
   const [dataSource, setDataSource] = useState<DataSource>('antenna');
   const [position, setPosition] = useState<Position>(defaultPosition);
 
   return (
-    <DetectionContext.Provider value={{ detection, setDetection }}>
-      <BroadbandConfigurationContext.Provider
-        value={{ broadbandConfiguration, setBroadbandConfig }}
-      >
-        <SpectrogramConfigurationContext.Provider
-          value={{ spectrogramConfig, setSpectrogramConfig }}
+    <ValidityContext.Provider value={{ validity, setValidity }}>
+      <DetectionContext.Provider value={{ detection, setDetection }}>
+        <BroadbandConfigurationContext.Provider
+          value={{ broadbandConfiguration, setBroadbandConfig }}
         >
-          <DataSourceContext.Provider value={{ dataSource, setDataSource }}>
-            <UserPositionContext.Provider value={{ position, setPosition }}>
-              <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
-                <MainPage />
-              </div>
-            </UserPositionContext.Provider>
-          </DataSourceContext.Provider>
-        </SpectrogramConfigurationContext.Provider>
-      </BroadbandConfigurationContext.Provider>
-    </DetectionContext.Provider>
+          <SpectrogramConfigurationContext.Provider
+            value={{ spectrogramConfig, setSpectrogramConfig }}
+          >
+            <DataSourceContext.Provider value={{ dataSource, setDataSource }}>
+              <UserPositionContext.Provider value={{ position, setPosition }}>
+                <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
+                  <MainPage />
+                </div>
+              </UserPositionContext.Provider>
+            </DataSourceContext.Provider>
+          </SpectrogramConfigurationContext.Provider>
+        </BroadbandConfigurationContext.Provider>
+      </DetectionContext.Provider>
+    </ValidityContext.Provider>
   );
 }
 

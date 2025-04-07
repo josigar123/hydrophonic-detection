@@ -23,6 +23,7 @@ import { Color } from '@lightningchart/lcjs';
 import { DetectionContext } from '../Contexts/DetectionContext';
 import SMAUG from '/assets/icons/SMAUGlogo.png';
 import { Image } from '@heroui/image';
+import { ValidityContext } from '../Contexts/InputValidationContext';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
@@ -36,6 +37,8 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
 
   const detectionContext = useContext(DetectionContext);
 
+  const validityContext = useContext(ValidityContext);
+
   if (!context) {
     throw new Error(
       'In SpectrogramSelection.tsx: SpectrogramConfigurationContext must be used within a SpectrogramConfigurationProvider'
@@ -48,8 +51,15 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     );
   }
 
+  if (!validityContext) {
+    throw new Error(
+      'In SpectrogramSelection.tsx: ValidityContext must be used within a ValidityContextProvider'
+    );
+  }
+
   const { spectrogramConfig, setSpectrogramConfig } = context;
   const { setDetection } = detectionContext;
+  const { setValidity } = validityContext;
 
   const {
     spectrogramData,
@@ -283,8 +293,16 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
   useEffect(() => {
     if (validateEntireConfiguration(spectrogramConfig)) {
       setIsInvalidConfig(false);
+      setValidity((prev) => ({
+        ...prev,
+        isSpectrogramConfigValid: true,
+      }));
     } else {
       setIsInvalidConfig(true);
+      setValidity((prev) => ({
+        ...prev,
+        isSpectrogramConfigValid: false,
+      }));
     }
 
     if (isMonitoring && !isInvalidConfig) {
@@ -297,6 +315,7 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     disconnect,
     isInvalidConfig,
     isMonitoring,
+    setValidity,
     spectrogramConfig,
     validateEntireConfiguration,
   ]);

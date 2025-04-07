@@ -11,6 +11,7 @@ import { BroadbandConfiguration } from '../Interfaces/Configuration';
 import { Tooltip } from '@heroui/tooltip';
 import BroadbandParameterInfoCard from './BroadbandParameterInfoCard';
 import { DetectionContext } from '../Contexts/DetectionContext';
+import { ValidityContext } from '../Contexts/InputValidationContext';
 
 const websocketUrl = 'ws://localhost:8766?client_name=broadband_client';
 
@@ -22,6 +23,8 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
   const context = useContext(BroadbandConfigurationContext);
 
   const detectionContext = useContext(DetectionContext);
+
+  const validityContext = useContext(ValidityContext);
 
   if (!context) {
     throw new Error(
@@ -35,9 +38,17 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
     );
   }
 
+  if (!validityContext) {
+    throw new Error(
+      'In BroadbandComponent.tsx: ValidityContext must be used within a ValidityContextProvider'
+    );
+  }
+
   const { broadbandConfiguration, setBroadbandConfig } = context;
 
   const { setDetection } = detectionContext;
+
+  const { setValidity } = validityContext;
 
   const {
     broadbandData,
@@ -138,8 +149,17 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
   useEffect(() => {
     if (validateBroadbandConfiguration(broadbandConfiguration)) {
       setIsInvalidConfig(false);
+
+      setValidity((prev) => ({
+        ...prev,
+        isBroadbandConfigValid: true,
+      }));
     } else {
       setIsInvalidConfig(true);
+      setValidity((prev) => ({
+        ...prev,
+        isBroadbandConfigValid: false,
+      }));
     }
 
     if (isMonitoring && !isInvalidConfig) {
@@ -154,6 +174,7 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
     isInvalidConfig,
     connect,
     disconnect,
+    setValidity,
   ]);
 
   // Effect for updating context if there has been a detection

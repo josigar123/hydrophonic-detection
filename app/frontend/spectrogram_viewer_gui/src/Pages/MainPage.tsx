@@ -9,6 +9,7 @@ import { Button } from '@heroui/button';
 import { useContext, useState } from 'react';
 import { DetectionContext } from '../Contexts/DetectionContext';
 import recordingParameters from '../../../../configs/recording_parameters.json';
+import { ValidityContext } from '../Contexts/InputValidationContext';
 
 const numOfChannels = recordingParameters['channels'];
 
@@ -17,13 +18,22 @@ const MainPage = () => {
 
   const detectionContext = useContext(DetectionContext);
 
+  const validityContext = useContext(ValidityContext);
+
   if (!detectionContext) {
     throw new Error(
       'In MainPage.tsx: DetectionContext must be used within a DetectionContextProvider'
     );
   }
 
+  if (!validityContext) {
+    throw new Error(
+      'In MainPage.tsx: ValidityContext must be used within a ValidityContextProvider'
+    );
+  }
+
   const { detection } = detectionContext;
+  const { validity } = validityContext;
 
   return (
     <div className="flex flex-col w-full h-screen p-2 lg:p-4">
@@ -36,6 +46,10 @@ const MainPage = () => {
         <div className="flex gap-2 lg:gap-4 items-center">
           <Button
             color={isMonitoring ? 'danger' : 'success'}
+            isDisabled={
+              !validity.isSpectrogramConfigValid ||
+              !validity.isBroadbandConfigValid
+            }
             radius="sm"
             onPress={() => setIsMonitoring((prev) => !prev)}
           >
