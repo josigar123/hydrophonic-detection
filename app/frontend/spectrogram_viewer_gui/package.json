@@ -31,8 +31,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
-    "smoothie": "^1.36.1",
-    "wavesurfer.js": "^7.9.3"
+    "smoothie": "^1.36.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

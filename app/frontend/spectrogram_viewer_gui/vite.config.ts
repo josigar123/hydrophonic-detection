@@ -12,9 +12,6 @@ export default defineConfig({
       plugins: [tailwindcss()],
     },
   },
-  optimizeDeps: {
-    include: ['scichart'],
-  },
   build: {
     commonjsOptions: {
       transformMixedEsModules: true,
