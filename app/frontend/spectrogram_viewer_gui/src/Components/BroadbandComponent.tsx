@@ -189,26 +189,29 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
     <div className="flex flex-col h-full w-full">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center">
-          <div>
-            {isConnected ? (
-              <span className="inline-flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                Connected
-              </span>
-            ) : (
-              <span className="inline-flex items-center text-gray-500">
-                <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-                Disconnected
-              </span>
-            )}
-            {isInvalidConfig && (
+          {isConnected ? (
+            <span className="inline-flex items-center">
+              <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+              Connected
+            </span>
+          ) : (
+            <span className="inline-flex items-center text-gray-500">
+              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
+              Disconnected
+            </span>
+          )}
+
+          {/* Separator */}
+          {isInvalidConfig && (
+            <>
+              <span className="text-gray-400 px-2">|</span>
               <div className="text-red-300">
                 <p className="font-medium">
                   Ensure all fields have valid values
                 </p>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
         <div className="flex gap-2">
