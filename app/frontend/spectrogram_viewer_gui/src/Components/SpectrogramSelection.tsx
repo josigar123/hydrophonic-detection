@@ -21,10 +21,10 @@ import {
   DropdownItem,
 } from '@heroui/dropdown';
 import {
-  denomarlizedInfernoData,
+  denormalizedInfernoData,
   denormalizedMagmaData,
   denormalizedViridisData,
-  denornmalizedCividisData,
+  denormalizedCividisData,
 } from '../ColorMaps/colorMaps';
 import { Color } from '@lightningchart/lcjs';
 import { DetectionContext } from '../Contexts/DetectionContext';
@@ -78,7 +78,7 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
   const [colorMap, setColorMap] = useState('');
 
   const [colorMapValues, setColorMapValues] = useState<Color[]>(
-    denomarlizedInfernoData
+    denormalizedInfernoData
   );
 
   // Big chunky, clunky function for validating the input, might want to refactor this
@@ -302,7 +302,7 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     setIsColorMapSet(true);
 
     if (map === 'Inferno') {
-      setColorMapValues(denomarlizedInfernoData);
+      setColorMapValues(denormalizedInfernoData);
     }
 
     if (map === 'Magma') {
@@ -314,7 +314,7 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     }
 
     if (map === 'Cividis') {
-      setColorMapValues(denornmalizedCividisData);
+      setColorMapValues(denormalizedInfernoData);
     }
   }, []);
 

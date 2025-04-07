@@ -3,7 +3,7 @@ import { ColorRGBA } from '@lightningchart/lcjs';
 /* This data is fetched from https://github.com/matplotlib/matplotlib/blob/main/lib/matplotlib/_cm_listed.py*/
 /*These colour maps are denomarlized from the ones on matplotlibs github as such Math.round(normalizedVal) for each element in each matrix row, and wrapped in  LightningchartJSs Color function*/
 
-export const denomarlizedInfernoData = [
+export const denormalizedInfernoData = [
   ColorRGBA(0, 0, 4),
   ColorRGBA(1, 0, 5),
   ColorRGBA(1, 1, 6),
@@ -877,7 +877,7 @@ export const denormalizedViridisData = [
   ColorRGBA(253, 231, 37),
 ];
 
-export const denornmalizedCividisData = [
+export const denormalizedCividisData = [
   ColorRGBA(0, 34, 78),
   ColorRGBA(0, 35, 79),
   ColorRGBA(0, 36, 81),
