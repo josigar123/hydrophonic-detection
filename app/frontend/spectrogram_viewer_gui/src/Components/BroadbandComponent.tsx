@@ -1,6 +1,6 @@
 import BroadbandParameterField from './BroadbandParameterField';
 import ScrollingBroadBand from './ScrollingBroadBand';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Button } from '@heroui/button';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
 import {
@@ -124,6 +124,13 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
     return true;
   };
 
+  const broadbandProps = useMemo(
+    () => ({
+      windowInMin: broadbandConfiguration.windowLength ?? 10,
+    }),
+    [broadbandConfiguration]
+  );
+
   const handlePreset1 = () => {
     setBroadbandConfig(broadbandPreset1);
   };
@@ -207,7 +214,7 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
           {broadbandData ? (
             <ScrollingBroadBand
               broadbandData={broadbandData}
-              windowInMin={broadbandConfiguration.windowLength ?? 10}
+              windowInMin={broadbandProps.windowInMin}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-300">

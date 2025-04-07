@@ -194,6 +194,10 @@ const BroadbandParameterField = ({
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
+        value={inputValues.windowLength}
+        isDisabled={isConnected}
+        onChange={(e) => handleInputChange('windowLength', e.target.value)}
+        onBlur={() => handleBlur('windowLength')}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[min]</span>

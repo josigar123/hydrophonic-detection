@@ -14,17 +14,10 @@ import {
 import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 import { Tooltip } from '@heroui/tooltip';
 import SpectrogramParameterInfoCard from './SpectrogramParameterInfoCard';
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from '@heroui/dropdown';
+
 import {
   denormalizedInfernoData,
-  denormalizedMagmaData,
   denormalizedViridisData,
-  denormalizedCividisData,
 } from '../ColorMaps/colorMaps';
 import { Color } from '@lightningchart/lcjs';
 import { DetectionContext } from '../Contexts/DetectionContext';
@@ -71,11 +64,7 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
 
   const [selected, setSelected] = useState('spectrogram');
 
-  const colorMaps = ['Inferno', 'Magma', 'Viridis', 'Cividis'];
-
-  const [isColorMapSet, setIsColorMapSet] = useState(false);
-
-  const [colorMap, setColorMap] = useState('');
+  const [selectedColormap, setSelectedColormap] = useState('inferno');
 
   const [colorMapValues, setColorMapValues] = useState<Color[]>(
     denormalizedInfernoData
@@ -95,7 +84,7 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
         return false;
 
       return (
-        validateColorMap(colorMap ?? '') &&
+        validateColorMap(selectedColormap ?? '') &&
         validateWindow(spectrogramConfiguration.window ?? '') &&
         validateTperseg(
           spectrogramConfiguration.tperseg ?? 0,
@@ -138,16 +127,14 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
         validateWindow(demonSpectrogramConfiguration.window ?? '')
       );
     },
-    [colorMap]
+    [selectedColormap]
   );
 
   const validateColorMap = (map: string) => {
     if (map === undefined || map === '') {
-      setIsColorMapSet(false);
       return false;
     }
 
-    setIsColorMapSet(true);
     return true;
   };
 
@@ -288,35 +275,9 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     [spectrogramConfig]
   );
 
-  useEffect(() => {
-    console.log(selected);
-  }, [selected]);
-
   const handlePreset1 = () => {
     setSpectrogramConfig(parameterPreset1);
   };
-
-  const handleDropdownChange = useCallback((map: string) => {
-    // Update the local state
-    setColorMap(map);
-    setIsColorMapSet(true);
-
-    if (map === 'Inferno') {
-      setColorMapValues(denormalizedInfernoData);
-    }
-
-    if (map === 'Magma') {
-      setColorMapValues(denormalizedMagmaData);
-    }
-
-    if (map === 'Viridis') {
-      setColorMapValues(denormalizedViridisData);
-    }
-
-    if (map === 'Cividis') {
-      setColorMapValues(denormalizedInfernoData);
-    }
-  }, []);
 
   // Side effect for connecting to the stream
   useEffect(() => {
@@ -398,42 +359,25 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
 
         {/* Right side: Buttons */}
         <div className="flex items-center gap-2">
-          <Dropdown>
-            <Tooltip
-              placement="top-end"
-              size="lg"
-              closeDelay={10}
-              content="Set the color map for both spectrograms"
-            >
-              <div className="relative">
-                <div
-                  className={`${isColorMapSet ? 'hidden' : 'block'} text-red-500 absolute bottom-full mb-1 whitespace-nowrap right-0`}
-                >
-                  Color map not set
-                </div>
-                <DropdownTrigger>
-                  <Button
-                    isDisabled={isConnected}
-                    className={`hover:bg-gray-200 truncate ${
-                      isConnected ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    {colorMap || 'Select color map'}
-                  </Button>
-                </DropdownTrigger>
-              </div>
-            </Tooltip>
-            <DropdownMenu
-              disallowEmptySelection
-              selectionMode="single"
-              aria-label="colorMap"
-              onAction={(map) => handleDropdownChange(map.toString())}
-            >
-              {colorMaps.map((colorMap) => (
-                <DropdownItem key={colorMap}>{colorMap}</DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
+          <Tabs
+            isDisabled={isConnected}
+            radius="sm"
+            selectedKey={selectedColormap}
+            onSelectionChange={(key) => {
+              switch (String(key)) {
+                case 'inferno':
+                  setColorMapValues(denormalizedInfernoData);
+                  break;
+                case 'viridis':
+                  setColorMapValues(denormalizedViridisData);
+                  break;
+              }
+              setSelectedColormap(String(key));
+            }}
+          >
+            <Tab key="inferno" title="Inferno"></Tab>
+            <Tab key="viridis" title="Viridis"></Tab>
+          </Tabs>
 
           <Tooltip
             content="Apply a preset for the spectrogram and DEMON spectrogram"
