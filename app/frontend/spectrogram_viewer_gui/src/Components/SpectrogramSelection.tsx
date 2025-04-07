@@ -21,14 +21,14 @@ import {
   DropdownItem,
 } from '@heroui/dropdown';
 import {
-  infernoMap,
-  magmaMap,
-  viridisMap,
-  cividisMap,
+  denomarlizedInfernoData,
+  denormalizedMagmaData,
+  denormalizedViridisData,
+  denornmalizedCividisData,
 } from '../ColorMaps/colorMaps';
 import { Color } from '@lightningchart/lcjs';
 import { DetectionContext } from '../Contexts/DetectionContext';
-import SMAUG from '../../public/assets/icons/SMAUGlogo.png';
+import SMAUG from '/assets/icons/SMAUGlogo.png';
 import { Image } from '@heroui/image';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
@@ -77,7 +77,9 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
 
   const [colorMap, setColorMap] = useState('');
 
-  const [colorMapValues, setColorMapValues] = useState<Color[]>(infernoMap());
+  const [colorMapValues, setColorMapValues] = useState<Color[]>(
+    denomarlizedInfernoData
+  );
 
   // Big chunky, clunky function for validating the input, might want to refactor this
   const validateEntireConfiguration = useCallback(
@@ -300,23 +302,19 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     setIsColorMapSet(true);
 
     if (map === 'Inferno') {
-      const inferno = infernoMap();
-      setColorMapValues(inferno);
+      setColorMapValues(denomarlizedInfernoData);
     }
 
     if (map === 'Magma') {
-      const magma = magmaMap();
-      setColorMapValues(magma);
+      setColorMapValues(denormalizedMagmaData);
     }
 
     if (map === 'Viridis') {
-      const viridis = viridisMap();
-      setColorMapValues(viridis);
+      setColorMapValues(denormalizedViridisData);
     }
 
     if (map === 'Cividis') {
-      const cividis = cividisMap();
-      setColorMapValues(cividis);
+      setColorMapValues(denornmalizedCividisData);
     }
   }, []);
 
