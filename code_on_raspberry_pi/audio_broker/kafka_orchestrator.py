@@ -31,6 +31,7 @@ if __name__ == "__main__":
         "retention.ms": "86400000", # Retaing config for 24 hrs
         "cleanup.policy": "compact"
     }
+    
     create_topic(broker_info, RECORDING_PARAMETERS_TOPIC, recording_parameters_config)
     create_topic(broker_info, AUDIO_STREAM_TOPIC)
     create_topic(broker_info, NARROWBAND_DETECTION_TOPIC)

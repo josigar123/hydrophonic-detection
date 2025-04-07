@@ -57,7 +57,7 @@ clients = {}                   # This dictionary holds a clients websocket and n
 spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
 broadband_client_config = {}
 recording_config = {}          # This dict holds the most recent recording config
-BOOTSTRAP_SERVERS = 'localhost:9092'
+BOOTSTRAP_SERVERS = '10.0.0.24:9092'
 
 # Will be an instantiated SignalProcessingService when the server is running
 signal_processing_service: SignalProcessingService = None
@@ -68,6 +68,7 @@ demon_spectrogram_audio_buffer = b"" # A byte array to accumulate audio for the 
 broadband_buffer = b"" # Holds window_size seconds of audio data
 broadband_total_buffer = b"" # Hold buffer_length seconds of audio data
 broadband_signal_buffer = [] # An array for holding processed broadband_signal chunks of window_size seconds
+broadband_kernel_buffer = [] # A buffer used for OLA (Overlap-Add method)
 
 '''
     These global variables will hold information for how much data must be collected in a buffer before the spectrogram data can be produced
@@ -134,7 +135,6 @@ async def produce_narrowband_detection_result(spectrogram_db: list[float], thres
         is_detection = signal_processing_service.narrowband_detection(spectrogram_db, threshold)
         await producer.send(topic, value=is_detection)
         await producer.flush()
-        print(f"A value of '{is_detection}' was sent to the kafka topic: '{topic}'")
     except Exception as e:
         print(f"Error producing result in 'produce_narrowband_detection_result': '{e}'")
     finally:
@@ -155,7 +155,6 @@ async def produce_broadband_detection_result(broadband_filo_signal_buffer: np.nd
         is_detection = signal_processing_service.broadband_detection(broadband_filo_signal_buffer, threshold, window_size)
         await producer.send(topic, value=is_detection)
         await producer.flush()
-        print(f"A value of '{is_detection}' was sent to the kafka topic: '{topic}'")
     except Exception as e:
         print(f"Error producing result in 'produce_broadband_detection_result': '{e}'")
     finally:
@@ -174,7 +173,6 @@ async def produce_override_message(value: bool):
     try:
         await producer.send(topic, value)
         await producer.flush()
-        print(f"Override value '{value}' sent to Kafka topic '{topic}'")
         return True
     except Exception as e:
         print(f"Error producing override message: {e}")
@@ -204,7 +202,6 @@ async def handle_connection(websocket, path):
     parsed_url = urlparse(path)
     query_params = parse_qs(parsed_url.query)
 
-    print("Path for connection: " + path)
     client_name = query_params.get('client_name', ['Uknown'])[0]
     print(f"Client {client_name} connected to WebSocket from {websocket.remote_address}")
     clients[client_name] = websocket
@@ -237,7 +234,7 @@ async def handle_connection(websocket, path):
         if client_name == "map_client":
             async for message in websocket:
                 try:
-                    print(f"Received message from map_client: {message[:100]}...")
+                    print(f"Received message from map_client: {message[:10]}...")
                 except Exception as e:
                     print(f"Error processing message: {e}")
 
@@ -325,7 +322,7 @@ async def handle_connection(websocket, path):
         if client_name in clients.keys():
             async for message in websocket:
                 try:
-                    print(f"Received message from {client_name}: {message[:100]}...")
+                    print(f"Received message from {client_name}: {message[:10]}...")
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
 
@@ -340,6 +337,7 @@ async def handle_connection(websocket, path):
                 broadband_total_buffer = b""
                 broadband_buffer = b""
                 broadband_signal_buffer = []
+                broadband_kernel_buffer = []
                 broadband_total_required_buffer_size = None
                 broadband_required_buffer_size = None
                     
@@ -403,15 +401,12 @@ async def forward_audio_to_frontend(data):
     if 'waveform_client' in clients:
         try:
             await clients['waveform_client'].send(data)
-            print("Sending data to waveform_client")
         except websockets.exceptions.ConnectionClosed:
             print("Connection to waveform_client was closed while sending")
             if 'waveform_client' in clients:
                 clients.pop('waveform_client', None)
         except Exception as e:
             print(f"Error sending to waveform_client: {e}")
-    else:
-        print("waveform_client not connected...")
 
 async def forward_ais_to_frontend(data):
     if 'map_client' in clients:
@@ -437,8 +432,6 @@ async def forward_ais_to_frontend(data):
                 clients.pop('map_client', None)
         except Exception as e:
             print(f"Error sending to map_client: {e}")
-    else:
-        print("map_client not connected")
         
 async def forward_broadband_data_to_frontend(data):
     global broadband_client_config
@@ -448,6 +441,7 @@ async def forward_broadband_data_to_frontend(data):
     global broadband_total_required_buffer_size
     global broadband_signal_buffer
     global signal_processing_service
+    global broadband_kernel_buffer
 
     if 'broadband_client' in clients:
         try:
@@ -461,11 +455,12 @@ async def forward_broadband_data_to_frontend(data):
                 adjusted_broadband_buffer, broadband_buffer = broadband_buffer[:broadband_required_buffer_size], \
                                                               broadband_buffer[broadband_required_buffer_size:]
                 
-                print("Broadband buffer filled, generating and sending data...")
-
-                '''Can here produce the data for broadband plot, signal is a 1D NDarray, t is time, can be ignored and plotted against time'''
-                broadband_signal, t = signal_processing_service.generate_broadband_data(adjusted_broadband_buffer, hilbert_window, window_size) 
-
+                '''Can here produce the data for broadband plot, signal is a 1D NDarray, t is time'''
+                broadband_signal, t, broadband_kernel_buffer_out = signal_processing_service.BB_data_crhis(adjusted_broadband_buffer, broadband_kernel_buffer, hilbert_window, window_size)
+                
+                #Adjust the kernel buffer for next iteration
+                broadband_kernel_buffer = broadband_kernel_buffer_out
+                
                 data_dict = {
                     "broadbandSignal": broadband_signal.tolist(), # NDArrays are not JSON serializable, must convert to list
                     "times": t.tolist()
@@ -483,7 +478,6 @@ async def forward_broadband_data_to_frontend(data):
 
                 # If this is true, we want to remove the first window_size seconds of data from broadband_total_buffer and broadband_signal_buffer
                 if len(broadband_total_buffer) >= broadband_total_required_buffer_size:
-                    print("Total broadband buffer filled, performing broadband detection...")
 
                     '''Buffer gets resized such that, only the bytes from window_size and up gets included'''
                     adjusted_broadband_total_buffer = broadband_total_buffer[broadband_required_buffer_size:] # broadband_required_buffer_size represents window_size seconds of data
@@ -511,17 +505,12 @@ async def forward_broadband_data_to_frontend(data):
             if  'broadband_client' in clients:
                 clients.pop('broadband_client', None)
         except Exception as e:
-            print(f"Error sending to broadband_client from 'forward_broadband_data_to_frontend': {e}")
-    else:
-        print('broadband_client not connected')                
+            print(f"Error sending to broadband_client from 'forward_broadband_data_to_frontend': {e}")           
 
 async def perform_broadband_detection(broadband_filo_signal_buffer: bytes, threshold: int, window_size: int):
 
     try:
-        is_detection = await produce_broadband_detection_result(broadband_filo_signal_buffer, threshold, window_size)
-        if is_detection:
-            print("BROADBAND DETECTION IN THE BUFFER")
-        return is_detection
+        return await produce_broadband_detection_result(broadband_filo_signal_buffer, threshold, window_size)
     except Exception as e:
         print(f"Error during broadband detection: {e}")
     
@@ -544,36 +533,28 @@ async def forward_demon_data_to_frontend(data):
             '''Enough audio data for demon spectrogram data gen'''
             if len(demon_spectrogram_audio_buffer) >= demon_required_buffer_size:
 
-                print("Demon spectrogram buffer filled, generating and sending data...")
                 '''Adjusting the audio buffer so the amount of audio processed is always the same relative to required_buffer_size'''
-                print("ADJUSTING DEMON BUFFERS FOR DATA GENERATION")
                 adjusted_demon_spectrogram_audio_buffer, demon_spectrogram_audio_buffer = demon_spectrogram_audio_buffer[:demon_required_buffer_size], demon_spectrogram_audio_buffer[demon_required_buffer_size:]
-                print("GENERATING DEMON DATA FROM SIGNAL PROCESSING SERVICE")
                 demon_frequencies, demon_times, demon_spectrogram_db = signal_processing_service.generate_demon_spectrogram_data(adjusted_demon_spectrogram_audio_buffer,
-                                                                                                                                demon_sample_frequency, demon_tperseg, demon_freq_filter, demon_hfilt_length, demon_window)
-                print("DEMON DATA GENERATED, CONVERTING TO A PYTHON DICT")                                                                             
-
+                                                                                                                                demon_sample_frequency, demon_tperseg, demon_freq_filter, demon_hfilt_length, demon_window)                                                                          
                 '''We flatten the demon_spectrogram_db matrix since it will we a matrix with only one column'''
                 demon_data_dict = {
                     "demonFrequencies": demon_frequencies,
                     "demonTimes": demon_times,
                     "demonSpectrogramDb": np.ravel(demon_spectrogram_db).tolist()
                 }
-                
-                print(f"DEMON INTENSITIES: {demon_data_dict['demonSpectrogramDb']}")
 
                 demon_data_json = json.dumps(demon_data_dict)
                 print("Sending demon spectrogram data...")
                 await clients['spectrogram_client'].send(demon_data_json)
-                print("Demon spectrogram data sent...")                                                                                                                                                                 
+                print("Demon spectrogram data sent...") 
+                                                                                                                                                                                
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
             if 'spectrogram_client' in clients:
                 clients.pop('spectrogram_client', None)
         except Exception as e:
             print(f"Error sending to spectrogram_client from 'forward_demon_data_to_frontend': {e}")
-    else:
-        print("spectrogram_client not connected")
 
 '''Function performs narrowband detection as well produces spectrogram data'''
 async def forward_signal_processed_data_to_frontend(data):
@@ -593,7 +574,6 @@ async def forward_signal_processed_data_to_frontend(data):
             '''Enough audio data for spectrogram data gen, also performs narrowband detection'''
             if len(spectrogram_audio_buffer) >= spectrogram_required_buffer_size:
                 
-                print("Spectrogram buffer filled, generating and sending data...")
                 '''Adjusting the audio buffer so the amount of audio processed is always the same relative to required_buffer_size'''
                 adjusted_spectrogram_audio_buffer, spectrogram_audio_buffer = spectrogram_audio_buffer[:spectrogram_required_buffer_size], \
                                                                               spectrogram_audio_buffer[spectrogram_required_buffer_size:]
@@ -608,7 +588,6 @@ async def forward_signal_processed_data_to_frontend(data):
                     "spectrogramDb": spectrogram_db_flattened.tolist()
                 }
 
-                print("Performing narrowband detection...")
                 '''Function expects an np.ndarray for efficient vectorized numpy calculations'''
                 is_detection = await perform_narrowband_detection(spectrogram_db_flattened, narrowband_threshold)
 
@@ -622,10 +601,7 @@ async def forward_signal_processed_data_to_frontend(data):
                 }
                 
                 detection_json = json.dumps(detection_dict)
-                print("Sending narrowband detection result to frontend...")
                 await clients["spectrogram_client"].send(detection_json)
-                print("Narrowband detection result sent to frontend...")
-
                                                                                                                                                                
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
@@ -633,8 +609,6 @@ async def forward_signal_processed_data_to_frontend(data):
                 clients.pop('spectrogram_client', None)
         except Exception as e:
             print(f"Error sending to spectrogram_client: {e}")
-    else:
-        print("spectrogram_client not connected")
 
 async def perform_narrowband_detection(spectrogram_db_flattened: np.ndarray, narrowband_threshold: int) -> bool:
     """
@@ -642,9 +616,7 @@ async def perform_narrowband_detection(spectrogram_db_flattened: np.ndarray, nar
     Returns True if a narrowband signal is detected, otherwise False.
     """
     try:
-        is_detection = await produce_narrowband_detection_result(spectrogram_db_flattened, narrowband_threshold)
-        if is_detection:
-            print("NARROWBAND DETECTION IN THE SPECTROGRAM DATA")
+        return await produce_narrowband_detection_result(spectrogram_db_flattened, narrowband_threshold)
         return is_detection
     except Exception as e:
         print(f"Error during narrowband detection: {e}")

@@ -1,6 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { SmoothieChart, TimeSeries } from 'smoothie';
-import { Button } from '@heroui/button';
 
 interface WaveformProps {
   channelData: Float32Array;
@@ -12,8 +11,6 @@ const Waveform = ({ channelData, setAutoListen }: WaveformProps) => {
   const smoothieChartRef = useRef<SmoothieChart | null>(null);
   const timeSeriesRef = useRef<TimeSeries | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-
-  const [listening, setListening] = useState(setAutoListen);
 
   const initChart = () => {
     if (!smoothieChartRef.current) {
@@ -49,7 +46,7 @@ const Waveform = ({ channelData, setAutoListen }: WaveformProps) => {
     const updateChart = () => {
       if (!timeSeriesRef.current) return;
 
-      const sampleValue = channelData[0] || 0;
+      const sampleValue = channelData[index] || 0;
       timeSeriesRef.current.append(Date.now(), sampleValue);
 
       index = (index + step) % bufferLength;
@@ -57,12 +54,17 @@ const Waveform = ({ channelData, setAutoListen }: WaveformProps) => {
     };
     updateChart();
   };
+
+  // Buffer data when component mounts
   useEffect(() => {
-    if (!canvasRef.current || !listening) return;
+    if (!channelData || !setAutoListen) return;
 
     try {
-      initChart();
-      startWaveformDisplay(channelData);
+      // Initialize chart
+      if (canvasRef.current) {
+        initChart();
+        startWaveformDisplay(channelData);
+      }
     } catch (err) {
       console.error('Error processing audio:', err);
     }
@@ -72,38 +74,11 @@ const Waveform = ({ channelData, setAutoListen }: WaveformProps) => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [listening, channelData]);
-
-  const handleStartListening = () => {
-    setListening(true);
-  };
-
-  const handleStopListening = () => {
-    setListening(false);
-  };
+  }, [channelData, setAutoListen]);
 
   return (
     <div className="w-full p-2 bg-gray-700 rounded-lg border border-gray-700">
-      <canvas
-        ref={canvasRef}
-        width="800"
-        height="125"
-        className="w-full h-auto max-w-full max-h-[300px] bg-[#232323] rounded-lg shadow-inner mb-6"
-      />
-      {/* <div className="flex justify-center gap-4">
-        <Button
-          onPress={handleStartListening}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-        >
-          Listen
-        </Button>
-        <Button
-          onPress={handleStopListening}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-        >
-          Stop Listening
-        </Button>
-      </div> */}
+      <canvas ref={canvasRef} width="900" height="130" className="max-w-full" />
     </div>
   );
 };

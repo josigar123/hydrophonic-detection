@@ -79,3 +79,10 @@ def calculate_bytes_per_sample(bit_depth: int, channels: int):
         return 4 * channels  # 32-bit is 4 bytes per channel
     else:
         raise ValueError(f"Unsupported bit depth: {bit_depth}")
+
+def moving_average_zero_padded(signal, window_size=5):
+    pad_size = window_size // 2
+    padded_signal = np.pad(signal, pad_size, mode="constant",constant_values=0)  # Repeat edge values
+    kernel = np.ones(window_size) / window_size
+    smoothed = np.convolve(padded_signal, kernel, mode="full")  # Only keep valid parts
+    return smoothed

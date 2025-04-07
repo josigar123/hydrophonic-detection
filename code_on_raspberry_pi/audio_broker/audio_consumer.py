@@ -24,13 +24,10 @@ async def consume_audio(consumer: AIOKafkaConsumer, socket_client: WebSocketClie
     try:
         async for msg in consumer:
             try:
-                print(f"Consumed message, offset: {msg.offset}")
-
                 success = await socket_client.send(msg.value)
-                if success:
-                    print("Successfully sent message to websocket")
-                else:
+                if not success:
                     print("Failed to send message to WebSocket")
+                    
             except Exception as e:
                 print(f"Error processing message: {e}")
     except Exception as e:

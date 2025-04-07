@@ -2,10 +2,14 @@ from kafka.admin import KafkaAdminClient, NewTopic
 
 def create_topic(broker_info, topic_name, config=None):
 
-    admin_client = KafkaAdminClient(
-        bootstrap_servers=f"{broker_info['ip']}:{broker_info['port']}"
-    )
-
+    try:
+        admin_client = KafkaAdminClient(
+            bootstrap_servers=f"{broker_info['ip']}:{broker_info['port']}"
+        )
+    except Exception as e:
+        raise Exception(f"No broker for {broker_info['ip']}:{broker_info['port']}")
+    
+    
     existing_topics = admin_client.list_topics()
     if topic_name in existing_topics:
         print(f"Topic: {topic_name}, already exists, no operation taken")

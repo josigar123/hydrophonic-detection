@@ -1,0 +1,13 @@
+websockets 
+sounddevice
+filelock
+pyyaml
+kafka-python
+aiokafka
+scipy
+cffi
+pyais
+minio
+geosphere
+boto3
+pymongo

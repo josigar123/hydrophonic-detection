@@ -1,1 +1,0 @@
-websockets sounddevice filelock pyyaml kafka-python aiokafka scipy cffi pyais minio mongoclient geosphere boto3

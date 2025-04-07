@@ -1,10 +1,12 @@
 import './App.css';
 import MainPage from './Pages/MainPage';
-import { useState } from 'react'
+import { useState } from 'react';
 
-import DataSourceContext, 
-{ DataSource } from './Contexts/DataSourceContext';
-import UserPositionContext, { Position, defaultPosition } from './Contexts/UserPositionContext';
+import DataSourceContext, { DataSource } from './Contexts/DataSourceContext';
+import UserPositionContext, {
+  Position,
+  defaultPosition,
+} from './Contexts/UserPositionContext';
 
 import {
   defaultBroadbandConfig,
@@ -19,6 +21,7 @@ import {
   BroadbandConfiguration,
   SpectrogramNarrowbandAndDemonConfiguration,
 } from './Interfaces/Configuration';
+import { DetectionContext, Detection } from './Contexts/DetectionContext';
 
 function App() {
   const [broadbandConfiguration, setBroadbandConfig] =
@@ -29,27 +32,32 @@ function App() {
       defaultSpectrogramConfig
     );
 
+  const [detection, setDetection] = useState<Detection>({
+    narrowbandDetection: false,
+    broadbandDetection: false,
+  });
+
   const [dataSource, setDataSource] = useState<DataSource>('antenna');
   const [position, setPosition] = useState<Position>(defaultPosition);
 
   return (
-    <BroadbandConfigurationContext.Provider
-      value={{ broadbandConfiguration, setBroadbandConfig }}
-    >
-      <SpectrogramConfigurationContext.Provider
-        value={{ spectrogramConfig, setSpectrogramConfig }}
+    <DetectionContext.Provider value={{ detection, setDetection }}>
+      <BroadbandConfigurationContext.Provider
+        value={{ broadbandConfiguration, setBroadbandConfig }}
       >
-        <DataSourceContext.Provider value={{ dataSource, setDataSource }}
+        <SpectrogramConfigurationContext.Provider
+          value={{ spectrogramConfig, setSpectrogramConfig }}
         >
-          <UserPositionContext.Provider value={{ position, setPosition }}
-          >
-          <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
-            <MainPage />
-          </div>
-          </UserPositionContext.Provider>
-        </DataSourceContext.Provider>
-      </SpectrogramConfigurationContext.Provider>
-    </BroadbandConfigurationContext.Provider>
+          <DataSourceContext.Provider value={{ dataSource, setDataSource }}>
+            <UserPositionContext.Provider value={{ position, setPosition }}>
+              <div className="min-h-screen h-screen overflow-hidden bg-[#374151]">
+                <MainPage />
+              </div>
+            </UserPositionContext.Provider>
+          </DataSourceContext.Provider>
+        </SpectrogramConfigurationContext.Provider>
+      </BroadbandConfigurationContext.Provider>
+    </DetectionContext.Provider>
   );
 }
 
