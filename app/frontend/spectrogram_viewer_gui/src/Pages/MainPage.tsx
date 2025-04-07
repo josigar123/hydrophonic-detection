@@ -5,8 +5,11 @@ import SpectrogramSelection from '../Components/SpectrogramSelection';
 import BroadbandComponent from '../Components/BroadbandComponent';
 import OverrideButton from '../Components/OverrideButton';
 import DataSourceSelector from '../Components/DataSourceSelector';
+import { usePositionSync } from '../Hooks/usePositionSync';
 
 const MainPage = () => {
+  usePositionSync('ws://localhost:8766?client_name=position_client', 25);
+
   return (
     <div className="grid grid-cols-2 grid-rows-2 gap-2 lg:gap-4 w-full h-screen p-2 lg:p-4">
       <div className="overflow-auto p-4 rounded h-full">

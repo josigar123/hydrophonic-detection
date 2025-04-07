@@ -21,6 +21,7 @@ export interface Ship {
   dateTimeUtc: Date;
   course: number;
   path: [number, number][];
+  dataSource: string;
 }
 
 interface ShipMarkerProps {
