@@ -94,7 +94,7 @@ class SignalProcessingService:
             print(f"Error in narrowband_detection: {e}")
 
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
-    def generate_broadband_data(self, pcm_data: bytes, buff: np.ndarray, hilbert_win: int, window_size: int):
+    def generate_broadband_data(self, pcm_data: bytes, kernel_buff: np.ndarray, hilbert_win: int, window_size: int):
         
         try:
             channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
@@ -126,9 +126,7 @@ class SignalProcessingService:
                 signal_med = np.add(signal_med, current_signal_med)
                     
             #Adding last of previous to start
-            print("Shape of buff: ", np.shape(buff))
-            print("Shape of signal_med: ", np.shape(signal_med))
-            signal_med[:len(buff)] += buff
+            signal_med[:len(kernel_buff)] += kernel_buff
             
             #Preparing buffer for next segment
             sx_buff_out = signal_med[-kernel_size:]
@@ -137,11 +135,12 @@ class SignalProcessingService:
             #Cutting end of current
             signal_med = signal_med[:-kernel_size]
             
-            if len(buff) == 0: #Empty buffer
+            if len(kernel_buff) == 0: #Empty buffer
                 signal_med = signal_med[kernel_size//2:] #Kutter første del
 
             BB_sig = 10*np.log10(signal_med)
             t = np.linspace(0,len(BB_sig)/downsampled_sample_rate,len(BB_sig))
+            
             return BB_sig, t, sx_buff_out
         except Exception as e:
             print(f"Error in generate_broadband_data: {e}")

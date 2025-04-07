@@ -456,7 +456,7 @@ async def forward_broadband_data_to_frontend(data):
                                                               broadband_buffer[broadband_required_buffer_size:]
                 
                 '''Can here produce the data for broadband plot, signal is a 1D NDarray, t is time'''
-                broadband_signal, t, broadband_kernel_buffer_out = signal_processing_service.BB_data_crhis(adjusted_broadband_buffer, broadband_kernel_buffer, hilbert_window, window_size)
+                broadband_signal, t, broadband_kernel_buffer_out = signal_processing_service.generate_broadband_data(adjusted_broadband_buffer, broadband_kernel_buffer, hilbert_window, window_size)
                 
                 #Adjust the kernel buffer for next iteration
                 broadband_kernel_buffer = broadband_kernel_buffer_out
@@ -468,7 +468,6 @@ async def forward_broadband_data_to_frontend(data):
                 data_json = json.dumps(data_dict)
                 print("Sending broadband data...")
                 await clients["broadband_client"].send(data_json)
-                print("Broadband data sent...")
 
                 # Appending window_size seconds of data to the total buffer, this buffer is used to keep track of the total length in seconds
                 broadband_total_buffer += adjusted_broadband_buffer
@@ -496,9 +495,7 @@ async def forward_broadband_data_to_frontend(data):
                 }
 
                 detection_json = json.dumps(detection_dict)
-                print("Sending broadband detection result to frontend...")
                 await clients["broadband_client"].send(detection_json)
-                print("Broadband detection result sent to frontend...")
 
         except websockets.exceptions.ConnectionClosed:
             print("Connection to broadband_client was closed while sending")
@@ -547,7 +544,6 @@ async def forward_demon_data_to_frontend(data):
                 demon_data_json = json.dumps(demon_data_dict)
                 print("Sending demon spectrogram data...")
                 await clients['spectrogram_client'].send(demon_data_json)
-                print("Demon spectrogram data sent...") 
                                                                                                                                                                                 
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
@@ -594,7 +590,6 @@ async def forward_signal_processed_data_to_frontend(data):
                 data_json = json.dumps(data_dict)
                 print("Sending spectrogram data...")
                 await clients['spectrogram_client'].send(data_json)
-                print("Spectrogram data sent...")
 
                 detection_dict = {
                     "detectionStatus": bool(is_detection)
