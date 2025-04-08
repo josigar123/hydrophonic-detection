@@ -1,7 +1,7 @@
 import asyncio
 import json
 from aiokafka import AIOKafkaConsumer
-from websocket_client import  WebSocketClient
+from ServiceUtilities.websocket_client import  WebSocketClient
 
 '''
 
@@ -38,7 +38,7 @@ async def consume_audio(consumer: AIOKafkaConsumer, socket_client: WebSocketClie
 
 async def main():
 
-    with open("broker_info.json", "r") as file:
+    with open("../../configs/broker_info.json", "r") as file:
         broker_info = json.load(file)
 
     broker_ip = broker_info["ip"]
