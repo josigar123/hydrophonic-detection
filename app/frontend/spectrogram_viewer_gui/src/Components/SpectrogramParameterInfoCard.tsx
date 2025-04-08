@@ -1,53 +1,54 @@
 const SpectrogramParameterInfoCard = () => {
   const generalParams = [
-    { name: 'Select window', description: 'The window to be applied?' },
+    { name: 'Select window', description: 'Desired window to use' },
     {
       name: 'tperseg (time per segment [s])',
-      description: 'Seconds per segment?',
+      description:
+        'Time per segment, equivalent to nperseg in spectrogram calculation',
     },
     {
       name: 'freqFilt (frequency filter [S])',
-      description: 'Number of frequency bins to coalesce into one',
+      description:
+        'No. of frequency bins used for vertical smoothing prior to spectrogram normalization',
     },
     {
       name: 'hfilt (horizontal filter length [s])',
       description:
-        'Number of time bins to coalesce into one, also decides how frequently the graph updates?',
+        'Time per segment in processed spectrogram. Determines spectrogram refresh rate',
     },
     {
       name: 'winLen (window length [min])',
-      description: 'Time in minutes that the graph will make room for',
+      description: 'Minutes of data shown on screen',
     },
     {
       name: 'maxFreq (maximum frequency [Hz])',
-      description: 'Upper bound for the frequency on the vertical axis',
+      description: 'Upper bound for the frequency axis',
     },
     {
       name: 'minFreq (minimum frequency [Hz])',
-      description: 'Lower bound for the frequency on the vertical axis',
+      description: 'Lower bound for the frequency axis',
     },
     {
       name: 'maxDb (maximum decibel [dB])',
-      description: 'Upper bound for the intensities',
+      description: 'Upper bound for the decibel axis',
     },
     {
       name: 'minDb (minimum decibel [dB])',
-      description: 'Lower bound for the intensities',
+      description: 'Lower bound for the decibel axis',
     },
   ];
 
   const spectrogramParams = [
     {
       name: 'NBThresh (narrowband threshold [dB])',
-      description:
-        'The threshold for which a narrowband detection will be triggered',
+      description: 'Decibel threshold for triggering a narrowband detection',
     },
   ];
 
   const demonParams = [
     {
       name: 'demonFs (demon sample frequency [Hz]',
-      description: 'The frequency the demon spectrogram gets sampled at?',
+      description: 'Sample frequency of envelope signal',
     },
   ];
 

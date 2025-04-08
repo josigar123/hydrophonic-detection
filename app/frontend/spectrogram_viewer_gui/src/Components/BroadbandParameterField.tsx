@@ -33,7 +33,7 @@ const BroadbandParameterField = ({
     windowSize: broadbandConfiguration?.windowSize?.toString() || '',
     hilbertWindow: broadbandConfiguration?.hilbertWindow?.toString() || '',
     bufferLength: broadbandConfiguration?.bufferLength?.toString() || '',
-    windowLength: broadbandConfiguration?.windowLength?.toString() || '',
+    windowInMin: broadbandConfiguration?.windowInMin?.toString() || '',
   });
 
   // Use a ref to track if we need to commit changes
@@ -92,7 +92,7 @@ const BroadbandParameterField = ({
       windowSize: broadbandConfiguration.windowSize?.toString() || '',
       hilbertWindow: broadbandConfiguration.hilbertWindow?.toString() || '',
       bufferLength: broadbandConfiguration.bufferLength?.toString() || '',
-      windowLength: broadbandConfiguration.windowLength?.toString() || '',
+      windowInMin: broadbandConfiguration.windowInMin?.toString() || '',
     });
   }, [broadbandConfiguration]);
 
@@ -126,19 +126,19 @@ const BroadbandParameterField = ({
     return false;
   }, [inputValues.hilbertWindow]);
 
-  const isWindowLengthInvalid = useMemo(() => {
-    const windowLength = Number(inputValues.windowLength);
+  const iswindowInMinInvalid = useMemo(() => {
+    const windowInMin = Number(inputValues.windowInMin);
 
     if (
-      !inputValues.windowLength ||
-      windowLength === 0 ||
-      !Number.isInteger(windowLength)
+      !inputValues.windowInMin ||
+      windowInMin === 0 ||
+      !Number.isInteger(windowInMin)
     ) {
       return true;
     }
 
     return false;
-  }, [inputValues.windowLength]);
+  }, [inputValues.windowInMin]);
 
   const isBufferLengthInvalid = useMemo(() => {
     const bufferLength = Number(inputValues.bufferLength);
@@ -189,15 +189,15 @@ const BroadbandParameterField = ({
       <Input
         labelPlacement="inside"
         label="winLen"
-        isInvalid={isWindowLengthInvalid}
+        isInvalid={iswindowInMinInvalid}
         errorMessage="winLen must be a non-zero integer"
         className={`flex-1 min-w-0 h-12 ${
           isConnected ? 'opacity-50 cursor-not-allowed' : ''
         }`}
-        value={inputValues.windowLength}
+        value={inputValues.windowInMin}
         isDisabled={isConnected}
-        onChange={(e) => handleInputChange('windowLength', e.target.value)}
-        onBlur={() => handleBlur('windowLength')}
+        onChange={(e) => handleInputChange('windowInMin', e.target.value)}
+        onBlur={() => handleBlur('windowInMin')}
         endContent={
           <div className="pointer-events-none flex items-center">
             <span className="text-default-400 text-small">[min]</span>

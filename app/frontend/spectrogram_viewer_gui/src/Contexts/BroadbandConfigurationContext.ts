@@ -15,7 +15,7 @@ export const defaultBroadbandConfig: BroadbandConfiguration = {};
 export const broadbandPreset1: BroadbandConfiguration = {
   broadbandThreshold: 8,
   windowSize: 5,
-  bufferLength: 50,
+  bufferLength: 300,
   hilbertWindow: 15,
-  windowLength: 10,
+  windowInMin: 5,
 };

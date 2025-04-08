@@ -70,7 +70,7 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
         windowSize,
         hilbertWindow,
         bufferLength,
-        windowLength,
+        windowInMin,
       } = broadbandConfiguration;
 
       if (
@@ -78,7 +78,7 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
         !windowSize ||
         !hilbertWindow ||
         !bufferLength ||
-        !windowLength
+        !windowInMin
       )
         return false;
 
@@ -87,7 +87,7 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
         validateWindowSize(windowSize) &&
         validateHilbertWindow(hilbertWindow) &&
         validateBufferLength(bufferLength) &&
-        validateWindowLength(windowLength)
+        validatewindowInMin(windowInMin)
       );
     },
     []
@@ -123,11 +123,11 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
     return true;
   };
 
-  const validateWindowLength = (windowLength: number) => {
+  const validatewindowInMin = (windowInMin: number) => {
     if (
-      windowLength === undefined ||
-      windowLength === 0 ||
-      !Number.isInteger(windowLength)
+      windowInMin === undefined ||
+      windowInMin === 0 ||
+      !Number.isInteger(windowInMin)
     ) {
       return false;
     }
@@ -137,7 +137,7 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
 
   const broadbandProps = useMemo(
     () => ({
-      windowInMin: broadbandConfiguration.windowLength ?? 10,
+      windowInMin: broadbandConfiguration.windowInMin ?? 10,
     }),
     [broadbandConfiguration]
   );

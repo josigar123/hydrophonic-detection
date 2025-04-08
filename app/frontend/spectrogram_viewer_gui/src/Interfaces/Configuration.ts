@@ -29,7 +29,7 @@ export interface BroadbandConfiguration {
   windowSize?: number;
   hilbertWindow?: number;
   bufferLength?: number;
-  windowLength?: number;
+  windowInMin?: number;
 }
 
 export interface SpectrogramNarrowbandAndDemonConfiguration {
