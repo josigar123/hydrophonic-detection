@@ -2,8 +2,6 @@ from pymongo import MongoClient, GEOSPHERE
 from datetime import datetime
 import uuid
 
-
-
 class MongoDBHandler:
     def __init__(self, connection_string, db_name="hydrophone_data"):
         self.client = MongoClient(connection_string)
@@ -55,6 +53,7 @@ class MongoDBHandler:
                         "type": "Point",
                         "coordinates": [data["longitude"], data["latitude"]]
                     }
+
                 result = self.ais_logs_collection.insert_one(data)
                 self.update_ships_info(data)
 
@@ -94,36 +93,62 @@ class MongoDBHandler:
 
 
     def update_ships_info(self, data):
-        if "mmsi" not in data:
+        mmsi = None
+        if "mmsi" in data:
+            mmsi = data["mmsi"]
+        elif "original_api_data" in data and "mmsi" in data["original_api_data"]:
+            mmsi = data["original_api_data"]["mmsi"]
+            
+        if not mmsi:
             return
-        mmsi = data["mmsi"]
-        msg_type = data.get("message_type")
-
-        if msg_type in [1,2,3,18,19] and "location" in data:
-            update_data = {
+    
+        has_position = "location" in data
+        
+        if has_position:
+            position_update = {
                 "$set": {
                     "last_position": data["location"],
-                    "last_seen": data["server_timestamp"],
-                    "course": data.get("course"),
-                    "speed": data.get("speed"),
-                    "heading": data.get("heading")
+                    "last_seen": data.get("server_timestamp", datetime.now())
                 }
             }
+            
+            for field in ["course", "speed", "heading", "trueHeading"]:
+                if field in data and data[field] is not None:
+                    if field == "trueHeading":
+                        position_update["$set"]["heading"] = float(data[field]) if isinstance(data[field], str) else data[field]
+                    else:
+                        position_update["$set"][field] = float(data[field]) if isinstance(data[field], str) else data[field]
+            
+            self.ships_collection.update_one({"mmsi": mmsi}, position_update, upsert=True)
+            
+        ship_info = {}
+        
+        field_mappings = {
+            "name": ["name", "shipName"],
+            "callsign": ["callsign"],
+            "ship_type": ["ship_type", "shipType"],
+            "destination": ["destination"],
+            "length": ["length"],
+            "breadth": ["breadth"],
+            "ais_class": ["ais_class", "aisClass"]
+        }
+    
+        for target_field, source_fields in field_mappings.items():
+            for source_field in source_fields:
+                if source_field in data and data[source_field]:
+                    ship_info[target_field] = data[source_field]
+                    break
+                    
+                if "original_api_data" in data and source_field in data["original_api_data"]:
+                    ship_info[target_field] = data["original_api_data"][source_field]
+                    break
+        
+        if ship_info:
+            ship_info["last_updated"] = data.get("server_timestamp", datetime.now())
+            ship_info["mmsi"] = mmsi
+            
+            update_data = {"$set": ship_info}
             self.ships_collection.update_one({"mmsi": mmsi}, update_data, upsert=True)
-
-        elif msg_type == 5 :
-            update_data = {
-                "$set": {
-                    "name": data.get("name"),
-                    "mmsi": data.get("mmsi"),
-                    "callsign": data.get("callsign"),
-                    "ship_type": data.get("ship_type"),
-                    "destination": data.get("destination"),
-                    "last_updated": data["server_timestamp"]
-                }
-            }
-            self.ships_collection.update_one({"mmsi": mmsi}, update_data, upsert=True)
-
     
     def get_recordings(self, recording_id):
         try:
@@ -179,4 +204,3 @@ class MongoDBHandler:
     def close(self):
         if self.client:
             self.client.close()
-

@@ -318,6 +318,42 @@ async def handle_connection(websocket, path):
                 except Exception as e:
                     print(f"Error handling message from {client_name}: {e}")
 
+        if client_name == "position_client":
+            async for message in websocket:
+                try:
+                    data = json.loads(message)
+                    if "type" in data and data["type"] == "user-position" and "data" in data:
+                        position_data = data["data"]
+                        
+                        # Validate position data
+                        if (isinstance(position_data, dict) and 
+                            "latitude" in position_data and 
+                            "longitude" in position_data):
+                            
+                            # Publish position to Kafka for AIS fetcher
+                            success = await produce_user_position(position_data)
+                            
+                            if success:
+                                ack = {"status": "delivered", "position": position_data}
+                                await websocket.send(json.dumps(ack))
+                            else:
+                                error_msg = {"status": "error", "message": "Failed to send position data"}
+                                await websocket.send(json.dumps(error_msg))
+                        else:
+                            error_msg = {"status": "error", "message": "Invalid position data format"}
+                            await websocket.send(json.dumps(error_msg))
+                    else:
+                        error_msg = {"status": "error", "message": "Message must contain 'type' and 'data' fields"}
+                        await websocket.send(json.dumps(error_msg))
+                except json.JSONDecodeError:
+                    error_msg = {"status": "error", "message": "Invalid JSON format"}
+                    await websocket.send(json.dumps(error_msg))
+                except Exception as e:
+                    print(f"Error handling message from position_client: {e}")
+                    error_msg = {"status": "error", "message": str(e)}
+                    await websocket.send(json.dumps(error_msg))
+
+
 
         if client_name in clients.keys():
             async for message in websocket:
@@ -411,21 +447,46 @@ async def forward_audio_to_frontend(data):
 async def forward_ais_to_frontend(data):
     if 'map_client' in clients:
         try:
+            # Parse the data
             if isinstance(data, str):
-                json_data = data
+                ais_data = json.loads(data)
             elif isinstance(data, bytes):
                 try:
-                    json_data = data.decode('utf-8')
+                    ais_data = json.loads(data.decode('utf-8'))
                 except UnicodeDecodeError:
                     import base64
-                    json_data = json.dumps({
+                    ais_data = {
                         "type": "binary_data",
                         "data": base64.b64encode(data).decode('ascii')
-                    })
+                    }
             else:
-                json_data = json.dumps(data)
-                
-            await clients['map_client'].send(json_data)
+                ais_data = data
+            
+            # Check for any client parameters
+            query_params = {}
+            for client_name, websocket in clients.items():
+                if client_name == 'map_client':
+                    # Extract query parameters if available
+                    if hasattr(websocket, 'path') and websocket.path:
+                        parsed_url = urlparse(websocket.path)
+                        query_params = parse_qs(parsed_url.query)
+                    break
+            
+            # Check if client specified a data source preference
+            preferred_source = query_params.get('data_source', ['both'])[0]
+            
+            # Only forward if the data matches the preferred source
+            data_source = ais_data.get('data_source', ais_data.get('original_api_data', {}).get('data_source', 'antenna'))
+            
+            if preferred_source == 'both' or preferred_source == data_source:
+                # Forward the data
+                if isinstance(data, str):
+                    json_data = data
+                else:
+                    json_data = json.dumps(ais_data)
+                    
+                await clients['map_client'].send(json_data)
+            
         except websockets.exceptions.ConnectionClosed:
             print("Connection to map_client was closed while sending")
             if 'map_client' in clients:
@@ -512,6 +573,7 @@ async def perform_broadband_detection(broadband_filo_signal_buffer: bytes, thres
         print(f"Error during broadband detection: {e}")
     
     return False
+
 
 async def forward_demon_data_to_frontend(data):
     global demon_spectrogram_audio_buffer
@@ -617,6 +679,27 @@ async def perform_narrowband_detection(spectrogram_db_flattened: np.ndarray, nar
         print(f"Error during narrowband detection: {e}")
     
     return False
+
+async def produce_user_position(position_data):
+    """Publish user position data to Kafka for AIS filtering"""
+    topic = 'user-position'
+    producer = AIOKafkaProducer(
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    )
+    
+    await producer.start()
+    try:
+        await producer.send(topic, position_data)
+        await producer.flush()
+        print(f"User position sent to Kafka topic '{topic}': {position_data}")
+        return True
+    except Exception as e:
+        print(f"Error producing user position message: {e}")
+        return False
+    finally:
+        await producer.stop()
+
 
 async def main():
     global signal_processing_service

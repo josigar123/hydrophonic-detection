@@ -4,7 +4,7 @@ import { useShips } from './useShips';
 import { useUserPosition } from './useUserPosition';
 import { getHaversineDistance } from '../utils/distance';
 
-const MAX_RANGE = 200; // km
+const MAX_RANGE = 40; // km
 
 export function useShipsInRange() {
   const { position } = useUserPosition();
