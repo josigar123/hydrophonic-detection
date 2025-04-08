@@ -8,10 +8,10 @@ RUN apt-get update && \
 RUN mkdir ServiceUtilities
 RUN mkdir configs
 
-COPY ../KafkaServices/ais_api_producer.py .
-COPY ../../code_on_raspberry_pi/requirements.txt .
+COPY services/KafkaServices/ais_api_producer.py .
+COPY services/ProgramsForRPI/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ../ServiceUtilities/ais_fetcher.py /audio_consumer/ServiceUtilities/
+COPY services/ServiceUtilities/ais_fetcher.py /audio_consumer/ServiceUtilities/
 
 CMD [ "python", "ais_api_producer.py" ]

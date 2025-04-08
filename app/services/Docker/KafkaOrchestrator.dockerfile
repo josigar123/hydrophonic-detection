@@ -8,14 +8,14 @@ RUN apt-get update && \
     python3-pyaudio \
     && rm -rf /var/lib/apt/lists/*
 
-COPY ../../code_on_raspberry_pi/requirements.txt .
+COPY services/ProgramsForRPI/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ../../code_on_raspberry_pi/kafka_orchestrator.py \
-     ../../code_on_raspberry_pi/kafka_utils/topic_creator.py \
-     ../../code_on_raspberry_pi/kafka_producers/audio_producer.py \
-     ../../code_on_raspberry_pi/kafka_producers/config_producer.py \
-     ../../code_on_raspberry_pi/configs/recording_parameters.json \
+COPY services/ProgramsForRPI/kafka_orchestrator.py \
+     services/ProgramsForRPI/kafka_utils/topic_creator.py \
+     services/ProgramsForRPI/kafka_producers/audio_producer.py \
+     services/ProgramsForRPI/kafka_producers/config_producer.py \
+     services/ProgramsForRPI/configs/recording_parameters.json \
      /orchestrator/
 
 CMD [ "python", "kafka_orchestrator.py" ]

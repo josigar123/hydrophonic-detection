@@ -7,10 +7,10 @@ RUN apt-get update && \
 
 RUN mkdir ServiceUtilities
 
-COPY ../KafkaServices/ais_consumer.py .
-COPY ../../code_on_raspberry_pi/requirements.txt .
+COPY services/KafkaServices/ais_consumer.py .
+COPY services/ProgramsForRPI/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ../ServiceUtilities/websocket_client.py /audio_consumer/ServiceUtilities/
+COPY services/ServiceUtilities/websocket_client.py /audio_consumer/ServiceUtilities/
 
 CMD [ "python", "ais_consumer.py" ]
