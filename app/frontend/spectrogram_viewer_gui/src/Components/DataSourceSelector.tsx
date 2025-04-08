@@ -1,19 +1,28 @@
-import { useDataSource} from '../Hooks/useDataSource';
-import {Button, ButtonGroup} from '@heroui/react'
+import { useDataSource } from '../Hooks/useDataSource';
+import { Tabs, Tab } from '@heroui/react';
+import { Key } from 'react'; 
 
 const DataSourceSelector = () => {
   const { dataSource, setDataSource } = useDataSource();
+  
+  // Handle tab selection with the correct type
+  const handleSelectionChange = (key: Key) => {
+    // Convert the key to string before passing to setDataSource
+    setDataSource(String(key) as 'antenna' | 'api');
+  };
+  
   return (
-    <ButtonGroup
-    variant = "faded"
-    color = "primary"
-    size = "sm">
-        <Button
-        onPress={() => setDataSource('antenna')}>Local Antenna</Button>
-        <Button
-        onPress={() => setDataSource('api')}>Api</Button>
-    </ButtonGroup>
-  )
+    <div className="flex w-full flex-col">
+      <Tabs 
+        aria-label="Options"
+        selectedKey={dataSource}
+        onSelectionChange={handleSelectionChange}
+      >
+        <Tab key="antenna" title="Antenna" />
+        <Tab key="api" title="Api" />
+      </Tabs>
+    </div>
+  );
 };
 
 export default DataSourceSelector;
