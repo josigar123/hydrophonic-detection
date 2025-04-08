@@ -1,13 +1,12 @@
 import asyncio
 import json
-import time
 from datetime import datetime
 import requests
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from math import radians, cos, sin, asin, sqrt
 
 class AisFetcher:
-    def __init__(self, config_file="ais_fetcher_config.json"):
+    def __init__(self, config_file):
         # Load configuration
         with open(config_file, "r") as file:
             self.config = json.load(file)
@@ -337,7 +336,12 @@ class AisFetcher:
             print("User position listener stopped")
 
 async def main():
-    config_file = "ais_fetcher_config.json"
+    config_file = "../../configs/ais_fetcher_config.json"
+    broker_info = '../../configs/broker_info.json'
+
+    with open(broker_info, "r") as file:
+        broker_config = json.load(file)
+    
     try:
         with open(config_file, "r") as file:
             config = json.load(file)
@@ -346,8 +350,8 @@ async def main():
         config = {
             "api_url": "https://kystdatahuset.no/ws/api/ais/realtime/geojson",
             "broker": {
-                "ip": "localhost",
-                "port": 9092
+                "ip": broker_config['ip'],
+                "port": int(broker_config['port'])
             },
             "kafka_topic": "ais-log",
             "fetch_interval": 10,

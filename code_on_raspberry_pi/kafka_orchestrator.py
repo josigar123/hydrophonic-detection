@@ -1,6 +1,6 @@
-from config_producer import produce_audio_config
-from audio_producer import produce_audio, get_device_index
-from topic_creator import create_topic
+from code_on_raspberry_pi.kafka_producers.config_producer import produce_audio_config
+from code_on_raspberry_pi.kafka_producers.audio_producer import produce_audio, get_device_index
+from code_on_raspberry_pi.kafka_utils.topic_creator import create_topic
 import json
 
 '''
@@ -10,8 +10,8 @@ then produce audio continously
 
 '''
 
-BROKER_INFO_FILE = "broker_info.json"
-RECORDING_PARAMETERS_FILE = "recording_parameters.json"
+BROKER_INFO_FILE = "../configs/broker_info.json"
+RECORDING_PARAMETERS_FILE = "../configs/recording_parameters.json"
 
 RECORDING_PARAMETERS_TOPIC = "recording-parameters"
 AUDIO_STREAM_TOPIC = "audio-stream"

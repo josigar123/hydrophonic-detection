@@ -6,17 +6,8 @@ from datetime import datetime
 import uuid
 from aiokafka import AIOKafkaConsumer
 from datetime import timedelta
-import sys
-# Get the absolute path to the project root
-current_dir = os.path.dirname(os.path.abspath(__file__))  # audio_broker directory
-project_root = os.path.dirname(os.path.dirname(current_dir))  # hydrophonic-detection directory
-
-# Import the modules directly using their absolute file paths
-sys.path.insert(0, os.path.join(project_root, "app", "services", "Database"))
-
-# Now import the modules directly
-from mongodb_handler import MongoDBHandler
-from minio_handler import upload_file
+from Database.mongodb_handler import MongoDBHandler
+from Database.minio_handler import upload_file
 
 
 """
@@ -27,15 +18,13 @@ metadata in MongoDB.
 """
 
 class AudioEventRecorder:
-    def __init__(self, config_file="recording_parameters.json", mongodb_config="mongodb_config.json"):
-        with open(config_file, "r") as file:
-            self.recording_params = json.load(file)
-        
-        with open(mongodb_config, "r") as file:
-            self.mongodb_config = json.load(file)
+    def __init__(self, broker_info: dict, recording_config: dict, mongodb_config: dict):
 
-        with open("broker_info.json", "r") as file:
-            self.broker_info = json.load(file)
+        self.recording_params = recording_config
+
+        self.mongodb_config = mongodb_config
+
+        self.broker_info = broker_info
 
         self.db_handler = MongoDBHandler(self.mongodb_config["connection_string"])
 
@@ -448,7 +437,17 @@ def parse_timestamp(timestamp_value):
     return datetime.now()
 
 async def main():
-    recorder = AudioEventRecorder()
+    
+    with open("../../configs/recording_parameters.json", "r") as file:
+        recording_config = json.load(file)
+    
+    with open("../../configs/broker_info.json", "r") as file:
+        broker_config = json.load(file)
+    
+    with open("../../configs/mongodb_config.json") as file:
+        mongodb_config = json.load(file)
+    
+    recorder = AudioEventRecorder(broker_config, recording_config, mongodb_config)
     
     await asyncio.gather(
         consume_audio(recorder),

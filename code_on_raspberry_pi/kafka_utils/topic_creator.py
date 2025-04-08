@@ -1,6 +1,6 @@
 from kafka.admin import KafkaAdminClient, NewTopic
 
-def create_topic(broker_info, topic_name, config=None):
+def create_topic(broker_info: dict, topic_name, config=None):
 
     try:
         admin_client = KafkaAdminClient(

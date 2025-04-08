@@ -5,8 +5,8 @@ import websockets
 from urllib.parse import parse_qs, urlparse
 import json
 import os
-from utils import calculate_bytes_per_sample, calculate_required_samples
-from SignalProcessingService import SignalProcessingService
+from SignalProcessing.utils import calculate_bytes_per_sample, calculate_required_samples
+from SignalProcessing.SignalProcessingService import SignalProcessingService
 
 '''
 
