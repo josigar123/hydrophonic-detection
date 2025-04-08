@@ -2,35 +2,30 @@ import json
 import time
 from kafka import KafkaProducer
 from pyais.stream import TCPConnection 
+import os
 
-with open("../../configs/aiscatcher_config.json", "r") as file:
-    ais_broker_info = json.load(file)
+BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS") # 'ip:port'
 
-with open("../../configs/broker_info.json", "r") as file:
-    broker_info = json.load(file)
+AIS_HOST = os.getenv("AIS_HOST")
+AIS_PORT = os.getenv("AIS_PORT")
 
-
-broker_ip = broker_info["ip"]
-broker_port = broker_info ["port"]
 topic = "ais-log"
-ais_host = ais_broker_info["ip"]
-ais_port = int(ais_broker_info["port"])
 batch_size = 10
 send_interval = 5
 
 print("##############PRODUCER SETUP##############")
-print(f"Connecting to Kafka broker: {broker_ip}:{broker_port}")
+print(f"Connecting to Kafka broker: {BOOTSTRAP_SERVERS}")
 print(f"Sending to topic: {topic}")
-print(f"AIS source: {ais_host}:{ais_port}")
+print(f"AIS source: {AIS_HOST}:{AIS_PORT}")
 
 
 producer = KafkaProducer(
-    bootstrap_servers=[f"{broker_ip}:{broker_port}"],
+    bootstrap_servers=BOOTSTRAP_SERVERS,
     value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
 try:
-    ais_stream = TCPConnection(host=ais_host, port=ais_port)
+    ais_stream = TCPConnection(host=AIS_HOST, port=AIS_PORT)
     print("Connected to AIS data source")
     print("##############SETUP END##############")
 

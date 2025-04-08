@@ -57,7 +57,8 @@ clients = {}                   # This dictionary holds a clients websocket and n
 spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
 broadband_client_config = {}
 recording_config = {}          # This dict holds the most recent recording config
-BOOTSTRAP_SERVERS = '10.0.0.24:9092'
+
+BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS") # 'ip:port'
 
 # Will be an instantiated SignalProcessingService when the server is running
 signal_processing_service: SignalProcessingService = None
@@ -102,8 +103,8 @@ async def consume_recording_config():
                 message = await consumer.getone()
                 config_data = message.value
                 
-                # Create the target directory two levels up
-                target_directory = os.path.join(os.path.dirname(__file__), "../../../configs")
+                # Writes to configs directory, this is mapped to a host dir in compose
+                target_directory = "/configs"
                 os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
 
                 # Define the file path within the 'configs' directory

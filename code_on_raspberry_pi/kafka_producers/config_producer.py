@@ -15,9 +15,9 @@ import json
 
 '''
 
-def produce_audio_config(broker_info: dict, config_topic: str, recording_parameters: dict, key=None):
+def produce_audio_config(bootstrap_servers: str, config_topic: str, recording_parameters: dict, key=None):
 
-    config_producer = KafkaProducer(bootstrap_servers=[f"{broker_info['ip']}:{broker_info['port']}"],
+    config_producer = KafkaProducer(bootstrap_servers=bootstrap_servers,
                                     value_serializer=lambda m: json.dumps(m).encode("utf-8")
                                     )
     config_producer.send(config_topic, recording_parameters, key=key.encode('utf-8')) # Sends as JSON

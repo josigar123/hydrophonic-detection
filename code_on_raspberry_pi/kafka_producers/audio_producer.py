@@ -37,10 +37,10 @@ def get_device_index():
     print("##############SETUP END##############")
     return int(DEVICE_INDEX)
 
-def produce_audio(broker_info: dict, audio_topic: str,  recording_parameters: dict, device_index: int):
+def produce_audio(bootstrap_servers: str, audio_topic: str,  recording_parameters: dict, device_index: int):
     # INIT OF KAFKA PRODUCER
     producer = KafkaProducer(
-        bootstrap_servers=[f"{broker_info['ip']}:{broker_info['port']}"],
+        bootstrap_servers=bootstrap_servers,
         value_serializer= lambda v: v)
 
     def audio_callback(indata, frames, time, status):

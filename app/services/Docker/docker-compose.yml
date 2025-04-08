@@ -1,5 +1,3 @@
----
-version: "2"
 services:
   broker:
     image: confluentinc/cp-kafka:7.6.1
@@ -30,6 +28,64 @@ services:
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
 
+  kafka-orchestrator:
+    image: kafka_orchestrator
+    depends_on:
+      - websocket-server
+    stdin_open: true
+    tty: true
+    environment:
+      - BOOTSTRAP_SERVERS: "10.0.0.24:9092"
+
+  websocket-server:
+    image: websocket_server
+    ports:
+      - "8766:8766"
+    volumes:
+      - ../../configs:/websocket_server/configs
+    depends_on:
+      - broker
+    environment:
+      - BOOTSTRAP_SERVERS: "10.0.0.24:9092"
+
+  audio-consumer:
+    image: audio_consumer
+    depends_on:
+      - websocket-server
+    environment:
+      - BOOTSTRAP_SERVERS: "10.0.0.24:9092"
+
+  ais-consumer:
+    image: ais_consumer
+    depends_on:
+      - websocket_server
+    environment:
+      - BOOTSTRAP_SERVERS: "10.0.0.24:9092"
+
+  ais-producer:
+    image: ais_producer
+    depends_on:
+      - broker
+    environment:
+      - BOOTSTRAP_SERVERS: "10.0.0.24:9092"
+      - AIS_HOST: "localhost"
+      - AIS_PORT: "8110"
+
+  event-consumer:
+    image: event_consumer
+    depends_on:
+      - broker
+    environment:
+      - BOOTSTRAP_SERVERS: "10.0.0.24:9092"
+
+  ais-api-producer:
+    image: ais_api_producer
+    depends_on:
+      - broker
+    volumes:
+      - ../../configs:/ais_api_producer/configs
+    environment:
+      - BOOTSTRAP_SERVERS": "10.0.0.24:9092"
   minio:
     image: quay.io/minio/minio
     container_name: minio

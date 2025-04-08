@@ -18,13 +18,13 @@ metadata in MongoDB.
 """
 
 class AudioEventRecorder:
-    def __init__(self, broker_info: dict, recording_config: dict, mongodb_config: dict):
+    def __init__(self, bootstrap_servers: str, recording_config: dict, mongodb_config: dict):
 
         self.recording_params = recording_config
 
         self.mongodb_config = mongodb_config
 
-        self.broker_info = broker_info
+        self.bootstrap_servers = bootstrap_servers
 
         self.db_handler = MongoDBHandler(self.mongodb_config["connection_string"])
 
@@ -208,10 +208,10 @@ class AudioEventRecorder:
         return detection_metadata
         
 
-async def consume_audio(recorder):
+async def consume_audio(recorder: AudioEventRecorder):
     consumer = AIOKafkaConsumer(
         "audio-stream",
-        bootstrap_servers=f"{recorder.broker_info['ip']}:{recorder.broker_info['port']}",
+        bootstrap_servers=recorder.bootstrap_servers,
         auto_offset_reset="latest"
     )
 
@@ -438,16 +438,15 @@ def parse_timestamp(timestamp_value):
 
 async def main():
     
-    with open("../../configs/recording_parameters.json", "r") as file:
+    with open("recording_parameters.json", "r") as file:
         recording_config = json.load(file)
     
-    with open("../../configs/broker_info.json", "r") as file:
-        broker_config = json.load(file)
+    BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS")
     
-    with open("../../configs/mongodb_config.json") as file:
+    with open("mongodb_config.json") as file:
         mongodb_config = json.load(file)
     
-    recorder = AudioEventRecorder(broker_config, recording_config, mongodb_config)
+    recorder = AudioEventRecorder(BOOTSTRAP_SERVERS, recording_config, mongodb_config)
     
     await asyncio.gather(
         consume_audio(recorder),

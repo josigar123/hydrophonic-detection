@@ -1,13 +1,13 @@
 from kafka.admin import KafkaAdminClient, NewTopic
 
-def create_topic(broker_info: dict, topic_name, config=None):
+def create_topic(bootstrap_servers: str, topic_name, config=None):
 
     try:
         admin_client = KafkaAdminClient(
-            bootstrap_servers=f"{broker_info['ip']}:{broker_info['port']}"
+            bootstrap_servers=bootstrap_servers
         )
     except Exception as e:
-        raise Exception(f"No broker for {broker_info['ip']}:{broker_info['port']}")
+        raise Exception(f"No broker for {bootstrap_servers}")
     
     
     existing_topics = admin_client.list_topics()

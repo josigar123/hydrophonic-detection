@@ -2,6 +2,7 @@ import asyncio
 import json
 from aiokafka import AIOKafkaConsumer
 from ServiceUtilities.websocket_client import WebSocketClient
+import os
 
 '''
 
@@ -55,11 +56,8 @@ async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient
 
 async def main():
 
-    with open("../../configs/broker_info.json", "r") as file:
-        broker_info = json.load(file)
+    BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS") # 'ip:port'
 
-    broker_ip = broker_info["ip"]
-    broker_port = broker_info["port"]
     broker_topic = "ais-log"
 
     socket_client = WebSocketClient("ws://localhost:8766?client_name=ais_consumer")
@@ -68,7 +66,7 @@ async def main():
         try:
             async_ais_consumer = AIOKafkaConsumer(
                 broker_topic,
-                bootstrap_servers=[f"{broker_ip}:{broker_port}"],
+                bootstrap_servers=BOOTSTRAP_SERVERS,
                 auto_offset_reset='latest',
                 enable_auto_commit=True
             )
