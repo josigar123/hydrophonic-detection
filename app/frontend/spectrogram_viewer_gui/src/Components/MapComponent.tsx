@@ -1,8 +1,17 @@
 import { useRef, useEffect } from 'react';
-import { MapContainer, TileLayer, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents, useMap, Marker, Popup } from 'react-leaflet';
 import ShipMarker from './ShipMarker';
 import { useShipsInRange } from '../Hooks/useShipsInRange';
 import { useMapInteraction } from '../Hooks/useMapInteraction';
+import L from 'leaflet';
+
+const userPositionIcon = new L.Icon({
+  iconUrl: '/assets/icons/flag.svg',
+  iconSize: [40, 40],
+  iconAnchor: [15, 15],
+  popupAnchor: [0, -10],
+  className: 'user-icon',
+});
 
 function MapClickHandler({ onPositionChange }: { onPositionChange: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -13,6 +22,7 @@ function MapClickHandler({ onPositionChange }: { onPositionChange: (lat: number,
   
   return null;
 }
+
 
 function MapViewSynchronizer({ position }: { position: { latitude: number, longitude: number } }) {
   const map = useMap();
@@ -47,6 +57,12 @@ const MapComponent = () => {
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" //url="http://localhost:8080/styles/basic-preview/512/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
+        <Marker position = {[position.latitude, position.longitude]}
+         icon={userPositionIcon}>
+          <Popup>
+            User Position
+          </Popup>
+        </Marker>
         {shipsInRange.map((ship) => (
           <ShipMarker key={ship.mmsi} ship={ship} />
         ))}

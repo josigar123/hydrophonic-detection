@@ -13,8 +13,12 @@ import { ValidityContext } from '../Contexts/InputValidationContext';
 
 const numOfChannels = recordingParameters['channels'];
 
+import { usePositionSync } from '../Hooks/usePositionSync';
+
 const MainPage = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
+
+  usePositionSync('ws://localhost:8766?client_name=position_client', 25);
 
   const detectionContext = useContext(DetectionContext);
 

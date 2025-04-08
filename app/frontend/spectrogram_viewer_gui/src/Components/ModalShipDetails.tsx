@@ -22,7 +22,7 @@ import {
         onOpenChange={onOpenChange}
         backdrop={'transparent'}
         size={'xs'}
-        placement={'top'}
+        placement={'auto'}
         classNames={{
           backdrop: 'z-[1000]',
           wrapper: 'z-[1000]',

@@ -27,7 +27,7 @@ export const useShips = (): UseShipsResult => {
       setLastUpdate(new Date());
       
 
-      shipStore.connect();
+      shipStore.connect(dataSource);
       
       const unsubscribe = shipStore.subscribe((updatedShips) => {
         setAntennaShips(updatedShips);

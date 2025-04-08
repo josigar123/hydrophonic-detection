@@ -156,7 +156,7 @@ class AudioEventRecorder:
         print(f"Buffered time range for AIS data: {buffer_start_time} to {buffer_end_time}")
 
       
-        relevant_ais_data = [] 
+        relevant_ais_data = []
         for ais_entry in self.ais_buffer:
             try:
             
