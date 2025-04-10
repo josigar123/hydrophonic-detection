@@ -343,7 +343,20 @@ def NB_detect(spec,Threshold):
  
 # The Smoothed Coherence Transform (SCOT)
 # Code is simplfied from https://github.com/SiggiGue/gccestimating
-def scot(signal_1, signal_2):
+def scot(signal_1, signal_2, fs):
+    """
+    INPUT:
+        signal_1, signal_2 : array of float
+            Audio data in time domain. (Best 512 samples)
+        fs: int
+            Samplerate of audio signal
+    
+    OUTPUT:
+        graph_line: array of float
+            Line segment of correlation graph
+        corr_lags_t: array of float
+            y-axis values, correlation time shift
+    """
     lenght = len(signal_1) + len(signal_2) -1
     fftlen = int(2**np.ceil(np.log2(lenght)))
 
@@ -372,4 +385,7 @@ def scot(signal_1, signal_2):
     line = np.roll(line, len(line)//2)
     start = (len(line)-lenght)//2 + 1
     
-    return line[start:start+lenght]
+    graph_line = line[start:start+lenght]
+    corr_lags_t = signal.correlation_lags(len(signal_1),len(signal_2))/fs
+
+    return graph_line, corr_lags_t
