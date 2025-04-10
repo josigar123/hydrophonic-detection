@@ -69,6 +69,9 @@ broadband_buffer = b"" # Holds window_size seconds of audio data
 broadband_total_buffer = b"" # Hold buffer_length seconds of audio data
 broadband_signal_buffer = [] # An array for holding processed broadband_signal chunks of window_size seconds
 broadband_kernel_buffer = [] # A buffer used for OLA (Overlap-Add method)
+broadband_kernel_buffers_for_each_channel = [] # Used for OLA on each individual channel
+broadband_signal_buffers_for_each_channel = []
+
 
 '''
     These global variables will hold information for how much data must be collected in a buffer before the spectrogram data can be produced
@@ -503,7 +506,9 @@ async def forward_broadband_data_to_frontend(data):
     global broadband_signal_buffer
     global signal_processing_service
     global broadband_kernel_buffer
-
+    global broadband_kernel_buffers_for_each_channel
+    global broadband_signal_buffers_for_each_channel
+    
     if 'broadband_client' in clients:
         try:
             broadband_threshold, window_size, hilbert_window, _ = get_broadband_config(broadband_client_config)
@@ -517,15 +522,19 @@ async def forward_broadband_data_to_frontend(data):
                                                               broadband_buffer[broadband_required_buffer_size:]
                 
                 '''Can here produce the data for broadband plot, signal is a 1D NDarray, t is time, also a kernel buffer is returned as well as each individual channels broadband signal'''
-                broadband_signal, t, broadband_kernel_buffer_out, broadband_signals = signal_processing_service.generate_broadband_data(adjusted_broadband_buffer, broadband_kernel_buffer, hilbert_window, window_size)
+                broadband_signal, t, broadband_kernel_buffer_out = signal_processing_service.generate_broadband_data(adjusted_broadband_buffer, broadband_kernel_buffer, hilbert_window, window_size)
+                '''Produce broadband data for each channel, ONLY used for analysis and detection, No visualization'''
+                broadband_signals, broadband_kernel_buffers_for_each_channel_out = signal_processing_service.generate_broadband_data_for_each_channel(adjusted_broadband_buffer, broadband_kernel_buffers_for_each_channel, hilbert_window, window_size)
                 
                 #Adjust the kernel buffer for next iteration
                 broadband_kernel_buffer = broadband_kernel_buffer_out
+                broadband_kernel_buffers_for_each_channel = broadband_kernel_buffers_for_each_channel_out
                 
                 data_dict = {
                     "broadbandSignal": broadband_signal.tolist(), # NDArrays are not JSON serializable, must convert to list
                     "times": t.tolist()
                 }
+                
                 data_json = json.dumps(data_dict)
                 print("Sending broadband data...")
                 await clients["broadband_client"].send(data_json)
@@ -536,6 +545,10 @@ async def forward_broadband_data_to_frontend(data):
                 # Appending the signal to the FILO broadband_signal_buffer, this buffer is purely used for analysis
                 broadband_signal_buffer.append(broadband_signal)
 
+                # Appendig all signal data to the buffer
+                for index, broadband_signal in enumerate(broadband_signals):
+                    broadband_signal_buffers_for_each_channel[index].append(broadband_signal)
+                
                 # If this is true, we want to remove the first window_size seconds of data from broadband_total_buffer and broadband_signal_buffer
                 if len(broadband_total_buffer) >= broadband_total_required_buffer_size:
 
@@ -546,15 +559,24 @@ async def forward_broadband_data_to_frontend(data):
                     # Buffer is full, we want to remove oldest window_size entry, which will be element at index zero
                     broadband_signal_buffer.pop(0) 
                     
+                    # For each channel, we want to remove first element
+                    for index, _ in enumerate(broadband_signal_buffers_for_each_channel):
+                        broadband_signal_buffers_for_each_channel[index].pop(0)
+                    
                 broadband_signal_to_analyze = np.ravel(broadband_signal_buffer) # Flatten matrix
 
+                broadband_signals_to_analyze = []
+                for index, broadband_signal in enumerate(broadband_signal_buffers_for_each_channel):
+                    broadband_signals_to_analyze.append(np.ravel(broadband_signal))
+                
+                
                 '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
                 is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold,
                                                                             window_size)
                 
                 '''Also want to perform a detection for each channel, these results are only for the frontend'''
                 detections_dict = {"detections": {}}
-                for index, broadband_sig in enumerate(broadband_signals):
+                for index, broadband_sig in enumerate(broadband_signals_to_analyze):
                     is_detection_in_broadband_signal = signal_processing_service.broadband_detection(broadband_sig, broadband_threshold, window_size)
 
                     detections_dict["detections"][f'channel{index + 1}'] = bool(is_detection_in_broadband_signal)
@@ -722,6 +744,9 @@ async def main():
     global signal_processing_service
     global recording_config
 
+    global broadband_kernel_buffers_for_each_channel
+    global broadband_signal_buffers_for_each_channel
+    
     try:
         print("Loading configuration from Kafka...")
         recording_config = await consume_recording_config()
@@ -738,6 +763,10 @@ async def main():
             bit_depth=recording_config["bitDepth"]
         )
 
+        '''Initialize per channel broadband buffers with config'''
+        broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
+        broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
+        
         async with websockets.serve(
             handle_connection, 
             "localhost",

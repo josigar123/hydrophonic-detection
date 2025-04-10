@@ -93,6 +93,55 @@ class SignalProcessingService:
         except Exception as e:
             print(f"Error in narrowband_detection: {e}")
     
+    def generate_broadband_data_for_each_channel(self, pcm_data: bytes, kernel_buffers: list[np.ndarray], hilbert_win: int, window_size: int):
+        try:
+            channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
+
+            # Holds each channels broadband data
+            broadband_signals = []
+            sx_buffers_out = [np.array([]) for _ in range(len(channels))]
+            
+            for index, channel in enumerate(channels):
+                # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
+                # to smooth the squared analytic signal. The window size for the median filter is defined by `medfilt_window`.
+                envelope = moving_average_padded(np.square(np.abs(hilbert(channel))),hilbert_win)
+                # Downsample the filtered signal
+                downsampled_signal = resample_poly(envelope, 1, hilbert_win)  # Resample by the median filter window size
+
+                downsampled_sample_rate = self.sample_rate / hilbert_win  # New sampling rate after downsampling
+                
+                # Define kernel size for the median filter based on window size
+                kernel_size = int(window_size * downsampled_sample_rate) 
+                kernel_size = kernel_size - 1 if kernel_size % 2 == 0 else kernel_size
+                
+                signal_med = moving_average_zero_padded(downsampled_signal, kernel_size)  # Apply median filter for further noise removal
+
+                #Removing invalid values
+                signal_med = signal_med[kernel_size//2:-kernel_size//2]
+                
+                if index < len(kernel_buffers) and len(kernel_buffers[index]) > 0:
+                    
+                    #Adding last of previous to start
+                    signal_med[:len(kernel_buffers[index])] += kernel_buffers[index]
+                
+                    #Preparing buffer for next segment
+                    sx_buffers_out[index] = signal_med[-kernel_size:]
+                    
+                    #Cutting end of current
+                    signal_med = signal_med[:-kernel_size]  
+            
+                else:
+                    signal_med = signal_med[kernel_size//2:] #Kutter første del
+                    sx_buffers_out[index] = signal_med[-kernel_size:] if len(signal_med) >= kernel_size else np.array([])
+
+                broadband_signal = 10*np.log(signal_med)
+                broadband_signals.append(broadband_signal)
+            
+            return broadband_signals, sx_buffers_out
+        except Exception as e:
+            print(f"Error in generate_broadband_data: {e}")
+            return [], []
+    
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
     def generate_broadband_data(self, pcm_data: bytes, kernel_buff: np.ndarray, hilbert_win: int, window_size: int):
         
@@ -100,9 +149,6 @@ class SignalProcessingService:
             channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
             
             signal_med = []
-
-            # Holds each channels broadband data
-            broadband_signals = []
 
             for channel in channels:
                 # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
@@ -126,8 +172,6 @@ class SignalProcessingService:
                 if(len(signal_med) == 0):
                     signal_med = np.zeros_like(current_signal_med)
                 
-                broadband_signals.append(current_signal_med)
-                
                 signal_med = np.add(signal_med, current_signal_med)
                     
             #Adding last of previous to start
@@ -142,15 +186,11 @@ class SignalProcessingService:
             
             if len(kernel_buff) == 0: #Empty buffer
                 signal_med = signal_med[kernel_size//2:] #Kutter første del
-
-            # Transform each broadband signal to decibel
-            for broadband_signal in broadband_signals:
-                broadband_signal = 10*np.log(broadband_signal)
             
             broadband_sig = 10*np.log10(signal_med)
             t = np.linspace(0,len(broadband_sig)/downsampled_sample_rate,len(broadband_sig))
             
-            return broadband_sig, t, sx_buff_out, broadband_signals
+            return broadband_sig, t, sx_buff_out
         except Exception as e:
             print(f"Error in generate_broadband_data: {e}")
     
