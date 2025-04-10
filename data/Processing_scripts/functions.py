@@ -40,6 +40,7 @@ def plot_spectrogram(x, fs, tperseg, freq_filt, hfilt_length, f_max, s_min,s_max
         frequency array for spectrogram
     sx_db: 2D-array of floats
         Spectrogram values in dB
+        
     """
 
     # Calculate spectrogram
