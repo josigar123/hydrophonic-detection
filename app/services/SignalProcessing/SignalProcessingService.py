@@ -134,7 +134,7 @@ class SignalProcessingService:
                     signal_med = signal_med[kernel_size//2:] #Kutter første del
                     sx_buffers_out[index] = signal_med[-kernel_size:] if len(signal_med) >= kernel_size else np.array([])
 
-                broadband_signal = 10*np.log(signal_med)
+                broadband_signal = 10*np.log10(signal_med)
                 broadband_signals.append(broadband_signal)
             
             return broadband_signals, sx_buffers_out

@@ -565,19 +565,22 @@ async def forward_broadband_data_to_frontend(data):
                 broadband_signal_to_analyze = np.concatenate(broadband_signal_buffer) # Flatten matrix
 
                 broadband_signals_to_analyze = []
+                # each 'broadband_signal' is a matrix [[...], [...], ...]
                 for index, broadband_signal in enumerate(broadband_signal_buffers_for_each_channel):
                     broadband_signals_to_analyze.append(np.concatenate(broadband_signal))
                 
                 
                 '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
-                is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold,
-                                                                            window_size)
+                is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold, window_size)
+                print(f"For the summarized bb detection is: {is_detection}")  
                 
+                print(f"crom channel 1: {broadband_signals_to_analyze[0][:10]}")
+                print(f"From summarized: {broadband_signal_to_analyze[:10]}")
                 '''Also want to perform a detection for each channel, these results are only for the frontend'''
                 detections_dict = {"detections": {}}
                 for index, broadband_sig in enumerate(broadband_signals_to_analyze):
                     is_detection_in_broadband_signal = signal_processing_service.broadband_detection(broadband_sig, broadband_threshold, window_size)
-
+                    print(f"For Channel {index + 1} detection is: {is_detection_in_broadband_signal}")
                     detections_dict["detections"][f'channel{index + 1}'] = bool(is_detection_in_broadband_signal)
                 
                 # This detection is based upon all the channels, calculated in the broadband_detection function
@@ -592,8 +595,10 @@ async def forward_broadband_data_to_frontend(data):
                         }
                 '''
                 
+                
                 # Send detectino for each channel
-                detections_json = json.dumps(detections_dict)
+                detections_json = json.dumps(detections_dict, indent=2)
+                print(detections_json)
                 await clients["broadband_client"].send(detections_json)
 
         except websockets.exceptions.ConnectionClosed:
@@ -609,8 +614,6 @@ async def perform_broadband_detection(broadband_filo_signal_buffer: bytes, thres
         return await produce_broadband_detection_result(broadband_filo_signal_buffer, threshold, window_size)
     except Exception as e:
         print(f"Error during broadband detection: {e}")
-    
-    return False
 
 
 async def forward_demon_data_to_frontend(data):
