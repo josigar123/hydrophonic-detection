@@ -92,7 +92,7 @@ class SignalProcessingService:
             return np.any(spectrogram_db > threshold)
         except Exception as e:
             print(f"Error in narrowband_detection: {e}")
-
+    
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
     def generate_broadband_data(self, pcm_data: bytes, kernel_buff: np.ndarray, hilbert_win: int, window_size: int):
         
@@ -100,6 +100,9 @@ class SignalProcessingService:
             channels = self.convert_n_channel_signal_to_n_arrays(pcm_data)
             
             signal_med = []
+
+            # Holds each channels broadband data
+            broadband_signals = []
 
             for channel in channels:
                 # Apply Hilbert transform to the signal, take the absolute value, square the result (power envelope), and then apply a median filter
@@ -122,7 +125,9 @@ class SignalProcessingService:
                 #Summing all channels
                 if(len(signal_med) == 0):
                     signal_med = np.zeros_like(current_signal_med)
-                    
+                
+                broadband_signals.append(current_signal_med)
+                
                 signal_med = np.add(signal_med, current_signal_med)
                     
             #Adding last of previous to start
@@ -138,10 +143,14 @@ class SignalProcessingService:
             if len(kernel_buff) == 0: #Empty buffer
                 signal_med = signal_med[kernel_size//2:] #Kutter første del
 
-            BB_sig = 10*np.log10(signal_med)
-            t = np.linspace(0,len(BB_sig)/downsampled_sample_rate,len(BB_sig))
+            # Transform each broadband signal to decibel
+            for broadband_signal in broadband_signals:
+                broadband_signal = 10*np.log(broadband_signal)
             
-            return BB_sig, t, sx_buff_out
+            broadband_sig = 10*np.log10(signal_med)
+            t = np.linspace(0,len(broadband_sig)/downsampled_sample_rate,len(broadband_sig))
+            
+            return broadband_sig, t, sx_buff_out, broadband_signals
         except Exception as e:
             print(f"Error in generate_broadband_data: {e}")
     
