@@ -339,3 +339,37 @@ def spec_hfilt2(spec, freq, time, window_length: float):
 
 def NB_detect(spec,Threshold):
     return True in (spec > Threshold)
+
+ 
+# The Smoothed Coherence Transform (SCOT)
+# Code is simplfied from https://github.com/SiggiGue/gccestimating
+def scot(signal_1, signal_2):
+    lenght = len(signal_1) + len(signal_2) -1
+    fftlen = int(2**np.ceil(np.log2(lenght)))
+
+    # Spectrum of inputsignal
+    spectrum_1 = np.fft.rfft(signal_1, fftlen)
+    spectrum_2 = np.fft.rfft(signal_2, fftlen)
+
+    # Auto power spectrum
+    G_11 = np.real(spectrum_1*np.conj(spectrum_1))
+    G_22 = np.real(spectrum_2*np.conj(spectrum_2))
+
+    # cross power spectrum
+    G_12 = spectrum_1*np.conj(spectrum_2)
+
+    # 
+    denominator = np.sqrt(G_11*G_22)
+
+    # To prevent devision by zero
+    denominator[np.logical_and(denominator < 1e-12, denominator > -1e-12)] = 1e12
+
+    # coherence function
+    gamma = G_12 / denominator
+
+    # inverse fft of gamma
+    line = np.fft.irfft(gamma, fftlen)
+    line = np.roll(line, len(line)//2)
+    start = (len(line)-lenght)//2 + 1
+    
+    return line[start:start+lenght]
