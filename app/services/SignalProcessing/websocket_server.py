@@ -72,7 +72,6 @@ broadband_kernel_buffer = [] # A buffer used for OLA (Overlap-Add method)
 broadband_kernel_buffers_for_each_channel = [] # Used for OLA on each individual channel
 broadband_signal_buffers_for_each_channel = []
 
-
 '''
     These global variables will hold information for how much data must be collected in a buffer before the spectrogram data can be produced
     They will be set when 'spectrogram_client connects'
@@ -563,11 +562,11 @@ async def forward_broadband_data_to_frontend(data):
                     for index, _ in enumerate(broadband_signal_buffers_for_each_channel):
                         broadband_signal_buffers_for_each_channel[index].pop(0)
                     
-                broadband_signal_to_analyze = np.ravel(broadband_signal_buffer) # Flatten matrix
+                broadband_signal_to_analyze = np.concatenate(broadband_signal_buffer) # Flatten matrix
 
                 broadband_signals_to_analyze = []
                 for index, broadband_signal in enumerate(broadband_signal_buffers_for_each_channel):
-                    broadband_signals_to_analyze.append(np.ravel(broadband_signal))
+                    broadband_signals_to_analyze.append(np.concatenate(broadband_signal))
                 
                 
                 '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
