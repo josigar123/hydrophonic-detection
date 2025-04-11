@@ -244,6 +244,7 @@ WAStorageEmulatorDb*.*
 *.png
 *.m4a
 *.mbtiles
+*.csv
 
 *kafka_2.13-3.9.0*
 
