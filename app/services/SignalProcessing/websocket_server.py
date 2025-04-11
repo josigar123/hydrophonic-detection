@@ -455,6 +455,9 @@ async def handle_connection(websocket, path):
     global spectrogram_audio_buffer
     global demon_spectrogram_audio_buffer
     global broadband_signal_buffer
+    global broadband_signal_buffers_for_each_channel
+    global broadband_kernel_buffers_for_each_channel
+    global broadband_kernel_buffer
     
     parsed_url = urlparse(path)
     query_params = parse_qs(parsed_url.query)
@@ -668,6 +671,8 @@ async def handle_connection(websocket, path):
                 broadband_buffer = b""
                 broadband_signal_buffer = []
                 broadband_kernel_buffer = []
+                broadband_kernel_buffers_for_each_channel = []
+                broadband_signal_buffers_for_each_channel = []
                 broadband_total_required_buffer_size = None
                 broadband_required_buffer_size = None
                     
