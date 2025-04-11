@@ -5,8 +5,11 @@ import websockets
 from urllib.parse import parse_qs, urlparse
 import json
 import os
+import uuid
+import datetime
 from utils import calculate_bytes_per_sample, calculate_required_samples
 from SignalProcessingService import SignalProcessingService
+from AudioEventRecorder import AudioEventRecorder
 
 '''
 
@@ -58,7 +61,7 @@ clients = {}                   # This dictionary holds a clients websocket and n
 spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
 broadband_client_config = {}
 recording_config = {}          # This dict holds the most recent recording config
-BOOTSTRAP_SERVERS = '10.0.0.24:9092'
+BOOTSTRAP_SERVERS = 'localhost:9092'
 
 # Will be an instantiated SignalProcessingService when the server is running
 signal_processing_service: SignalProcessingService = None
@@ -83,6 +86,7 @@ demon_required_buffer_size = None
 spectrogram_required_buffer_size = None
 broadband_required_buffer_size = None # This represents window_size seconds of data to be added to the broadband_buffer
 broadband_total_required_buffer_size = None # This represents the WHOLE buffer of N seconds of audio-data to be analyzed
+current_recording_status = False
 
 ################## GLOBAL VARIABLES END #####################
 
@@ -125,6 +129,254 @@ async def consume_recording_config():
         except Exception as e:
             print(f"Error consuming configuration: {e}. Retrying in 5 seconds...")
             await asyncio.sleep(5)
+
+
+async def consume_audio(recorder):
+    consumer = AIOKafkaConsumer(
+        "audio-stream",
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        auto_offset_reset="latest"
+    )
+
+    await consumer.start()
+    try:
+        print(f"Started consuming audio from audio-stream")
+        async for msg in consumer:
+            recorder.add_audio_chunk(msg.value)
+    finally:
+        await consumer.stop()
+
+async def consume_ais_data(recorder):
+    consumer = AIOKafkaConsumer(
+        "ais-log",
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        auto_offset_reset="latest",
+        value_deserializer=lambda m: json.loads(m.decode("utf-8"))
+    )
+    
+    await consumer.start()
+    try:
+        print("Started consuming AIS data from ais-data")
+        async for msg in consumer:
+            recorder.add_ais_data(msg.value)
+    finally:
+        await consumer.stop()
+
+async def listen_for_events(recorder):
+    """
+    Listen for detection events and manage recording lifecycle with debounce logic.
+    
+    This function:
+    1. Consumes messages from narrowband, broadband and override detection topics
+    2. Starts recordings when threshold conditions are met
+    3. Implements debounce logic to prevent premature recording stops
+    4. Handles override mode for manual control
+    5. Manages state transitions between different recording states
+    """
+    consumer = AIOKafkaConsumer(
+        "narrowband-detection",
+        "broadband-detection",
+        "override-detection",
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        auto_offset_reset="latest",
+        value_deserializer=lambda m: bool(int.from_bytes(m, byteorder='big'))
+    )
+    await consumer.start()
+
+    topic_states = {
+        "narrowband-detection": False,
+        "broadband-detection": False,
+        "override-detection": False
+    }
+    prev_auto_detection = False
+    debounce_task = None
+    in_debounce_period = False
+    debounce_cancelled = False
+
+    async def do_debounce_stop(event_id, delay_seconds):
+        """
+        Inner function to handle debounce timer logic.
+        Stops recording if signal remains below threshold for the debounce period.
+        """
+        nonlocal in_debounce_period, debounce_cancelled
+        try:
+
+            await asyncio.sleep(delay_seconds)
+            
+            if event_id in recorder.active_events:
+                print(f"Signal remained below threshold for {delay_seconds}s, stopping recording")
+                recorder.stop_event_detection(event_id)
+                print("Debounce period completed normally, recording saved")
+                await produce_recording_status(False)
+            else:
+                print(f"Event {event_id} is no longer active, debounce timer ignored")
+            
+        except asyncio.CancelledError:
+            print(f"Debounce timer cancelled for event {event_id}")
+            debounce_cancelled = True
+            raise
+        finally:
+            in_debounce_period = False
+            
+            if not debounce_cancelled:
+                print("State reset, ready for new events")
+            debounce_cancelled = False
+
+    try:
+        print("Started listening for events from narrowband and broadband")
+        async for msg in consumer:
+            try:
+                # Get current message info
+                topic, threshold_reached = msg.topic, msg.value
+                
+                # Store previous states for comparison
+                was_override_active = topic_states["override-detection"]
+                
+                # Update topic state
+                topic_states[topic] = threshold_reached
+                
+                # Calculate current detection states
+                auto_detection_triggered = (topic_states["narrowband-detection"] and 
+                                          topic_states["broadband-detection"])
+                override_active = topic_states["override-detection"]
+                detection_triggered = auto_detection_triggered or override_active
+                old_prev_auto_detection = prev_auto_detection
+                
+                # Get current recording state
+                is_recording = len(recorder.active_events) > 0
+                current_event_id = list(recorder.active_events.keys())[0] if is_recording else None
+                
+                # Check if current recording is an override
+                is_override_event = False
+                if current_event_id and current_event_id in recorder.active_events:
+                    is_override_event = recorder.active_events[current_event_id].get("metadata", {}).get("is_override", False)
+
+                # Update state for next iteration
+                prev_auto_detection = auto_detection_triggered
+
+                # --- STATE TRANSITIONS ---
+                
+                # Start new recording when conditions are met
+                if detection_triggered and not is_recording and not in_debounce_period:
+                    start_new_recording(recorder, topic_states)
+                    await produce_recording_status(True)
+                    # Cancel any lingering debounce task
+                    if debounce_task and not debounce_task.done():
+                        debounce_task.cancel()
+                        debounce_task = None
+                    in_debounce_period = False
+
+                # Override deactivation - stop immediately 
+                elif (topic == "override-detection" and was_override_active and 
+                      not threshold_reached and is_recording and is_override_event):
+                    print(f"Override deactivated - stopping recording immediately")
+                    recorder.stop_event_detection(current_event_id)
+                    await produce_recording_status(False)
+                    
+                    # Clean up debounce state
+                    if debounce_task and not debounce_task.done():
+                        debounce_task.cancel()
+                        debounce_task = None
+                    in_debounce_period = False
+                    print("Recording saved, state reset and ready for new events")
+                    
+                # Auto-detection going below threshold - start debounce
+                elif (is_recording and not is_override_event and 
+                      old_prev_auto_detection and not auto_detection_triggered and 
+                      not override_active):
+                    # Only start debounce timer if not already in debounce period
+                    if not in_debounce_period and (debounce_task is None or debounce_task.done()):
+                        in_debounce_period = True
+                        debounce_task = asyncio.create_task(
+                            do_debounce_stop(current_event_id, recorder.debounce_seconds)
+                        )
+                        print(f"Signal below threshold, starting {recorder.debounce_seconds}s debounce timer")
+
+                # Override activation during auto-detection
+                elif is_recording and not is_override_event and override_active:
+                    if debounce_task and not debounce_task.done():
+                        debounce_task.cancel()
+                        debounce_task = None
+                        print(f"Override activated, cancelling debounce timer")
+                    
+                    # Update metadata to indicate this is now an override
+                    if current_event_id in recorder.active_events:
+                        recorder.active_events[current_event_id]["metadata"]["is_override"] = True
+                        print(f"Event {current_event_id} converted to override")
+                    in_debounce_period = False
+                
+                # Auto-detection retriggered during debounce period
+                elif (is_recording and not is_override_event and 
+                      auto_detection_triggered and in_debounce_period):
+                    if debounce_task and not debounce_task.done():
+                        debounce_task.cancel()
+                        debounce_task = None
+                        in_debounce_period = False
+                        print(f"Signal above threshold again, cancelling debounce timer")
+                        print(f"Recording continuing, debounce reset")
+                
+            except Exception as e:
+                print(f"Error processing message: {e}", exc_info=True)
+    finally:
+        await consumer.stop()
+
+def start_new_recording(recorder, topic_states):
+    """Helper function to start a new recording with proper metadata"""
+    new_event_id = str(uuid.uuid4())
+    is_new_override = topic_states["override-detection"]
+    recorder.start_event_detection(new_event_id, {"is_override": is_new_override})
+    print(f"Started recording for {'override' if is_new_override else 'threshold'} event: {new_event_id}")
+    return new_event_id
+
+async def produce_recording_status(is_recording):
+    """
+    Produce recording status to Kafka and forward to connected clients.
+    
+    This function:
+    1. Updates the global recording status
+    2. Publishes status to Kafka topic for other services
+    3. Forwards status to any connected frontend clients
+    
+    Args:
+        is_recording: Boolean indicating if recording is in progress
+        
+    Returns:
+        bool: Success of the operation
+    """
+    global current_recording_status
+    
+    # Convert to boolean to ensure consistency
+    is_recording = bool(is_recording)
+    current_recording_status = is_recording
+    
+    topic = 'recording-status'
+    producer = AIOKafkaProducer(
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        value_serializer = lambda v: (1 if v else 0).to_bytes(1, byteorder='big')
+    )
+    
+    await producer.start()
+    try:
+        kafka_message = {
+            "is_recording": is_recording,
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        
+        await producer.send(topic, kafka_message)
+        await producer.flush()
+    except Exception as e:
+        print(f"Error producing recording status: {e}")
+        await producer.stop()
+        return False
+    finally:
+        await producer.stop()
+        
+    try:
+        success = await forward_recording_status_to_frontend(is_recording)
+        return success
+    except Exception as e:
+        print(f"Error forwarding recording status to frontend: {e}")
+        return False
         
 
 '''Function will produce a narrowband detection on the intensities passed and write it to the appropriate kafka topic'''
@@ -228,6 +480,7 @@ async def handle_connection(websocket, path):
                         
                 except Exception as e:
                     print(f"Error processing message: {e}")
+            
                     
         if client_name == "ais_consumer":
             async for message in websocket:
@@ -358,7 +611,43 @@ async def handle_connection(websocket, path):
                     error_msg = {"status": "error", "message": str(e)}
                     await websocket.send(json.dumps(error_msg))
 
-
+        if client_name == "status_client":
+            # When status client connects, send the current recording status
+            try:   
+                status_update = {
+                    "value": current_recording_status
+                }
+                status_json = json.dumps(status_update)
+                await websocket.send(status_json)
+            except Exception as e:
+                print(f"Error sending initial status to status_client: {e}")
+            
+            # Then handle any incoming messages
+            async for message in websocket:
+                try:
+                    data = json.loads(message)
+                    if "value" in data:
+                        value = bool(data["value"])
+                        
+                        # Update recording status with the new boolean value
+                        success = await produce_recording_status(value)
+                        
+                        if success:
+                            ack = {"status": "delivered", "value": value}
+                            await websocket.send(json.dumps(ack))
+                        else:
+                            error_msg = {"status": "error", "message": "Failed to send status message"}
+                            await websocket.send(json.dumps(error_msg))
+                    else:
+                        error_msg = {"status": "error", "message": "Message must contain 'value' field"}
+                        await websocket.send(json.dumps(error_msg))
+                except json.JSONDecodeError:
+                    error_msg = {"status": "error", "message": "Invalid JSON format"}
+                    await websocket.send(json.dumps(error_msg))
+                except Exception as e:
+                    print(f"Error handling message from status_client: {e}")
+                    error_msg = {"status": "error", "message": str(e)}
+                    await websocket.send(json.dumps(error_msg))
 
         if client_name in clients.keys():
             async for message in websocket:
@@ -392,6 +681,39 @@ async def handle_connection(websocket, path):
             clients.pop(client_name, None)
                 
             print(f"Removed {client_name} from active clients")
+
+async def forward_recording_status_to_frontend(is_recording):
+    """
+    Forwards recording status to any connected status clients.
+    
+    Args:
+        is_recording: Boolean indicating if recording is in progress
+        
+    Returns:
+        bool: True if status was successfully sent to at least one client
+    """
+    if 'status_client' in clients:
+        try:
+            # Create simple status update message
+            status_update = {
+                "value": bool(is_recording)
+            }
+            
+            status_json = json.dumps(status_update)
+            
+            await clients['status_client'].send(status_json)
+            return True
+        except websockets.exceptions.ConnectionClosed:
+            print("Connection to status_client was closed while sending")
+            if 'status_client' in clients:
+                clients.pop('status_client', None)
+            return False
+        except Exception as e:
+            print(f"Error sending to status_client: {e}")
+            return False
+    else:
+        print("No status_client connected")
+        return False
 
 def get_demon_spectrogram_config(spectrogram_client_config):
     demon_spectrogram_config = spectrogram_client_config.get("spectrogram_client").get("demonSpectrogramConfiguration")
@@ -498,6 +820,7 @@ async def forward_ais_to_frontend(data):
                 clients.pop('map_client', None)
         except Exception as e:
             print(f"Error sending to map_client: {e}")
+
         
 async def forward_broadband_data_to_frontend(data):
     global broadband_client_config
@@ -734,7 +1057,6 @@ async def produce_user_position(position_data):
     try:
         await producer.send(topic, position_data)
         await producer.flush()
-        print(f"User position sent to Kafka topic '{topic}': {position_data}")
         return True
     except Exception as e:
         print(f"Error producing user position message: {e}")
@@ -766,19 +1088,32 @@ async def main():
             bit_depth=recording_config["bitDepth"]
         )
 
+        recorder = AudioEventRecorder(
+            sample_rate=recording_config["sampleRate"],
+            num_channels=recording_config["channels"],
+            bit_depth=recording_config["bitDepth"]
+        )
+        
+
         '''Initialize per channel broadband buffers with config'''
         broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
         broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
         
-        async with websockets.serve(
+
+        websocket_server = websockets.serve(
             handle_connection, 
             "localhost",
             8766,
             ping_interval=30,
             ping_timeout=10
-        ) as server:
-            print("WebSocket server running on ws://localhost:8766")
-            await server.wait_closed()
+        )
+
+        await asyncio.gather(
+        consume_audio(recorder),
+        consume_ais_data(recorder),
+        listen_for_events(recorder),
+        websocket_server
+            )
     except Exception as e:
         print(f"Error during startup: {e}")
         raise
