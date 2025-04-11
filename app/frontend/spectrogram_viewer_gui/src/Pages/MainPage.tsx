@@ -76,7 +76,6 @@ const MainPage = () => {
               No detection in narrowband
             </span>
           )}
-
           <span className="text-gray-400">|</span>
 
           {detection.broadbandDetections?.detections.summarizedDetection ? (

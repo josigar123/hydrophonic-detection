@@ -291,21 +291,15 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
 
   // Side effect for connecting to the stream
   useEffect(() => {
-    if (validateEntireConfiguration(spectrogramConfig)) {
-      setIsInvalidConfig(false);
-      setValidity((prev) => ({
-        ...prev,
-        isSpectrogramConfigValid: true,
-      }));
-    } else {
-      setIsInvalidConfig(true);
-      setValidity((prev) => ({
-        ...prev,
-        isSpectrogramConfigValid: false,
-      }));
-    }
+    const isValid = validateEntireConfiguration(spectrogramConfig);
 
-    if (isMonitoring && !isInvalidConfig) {
+    setIsInvalidConfig(!isValid);
+    setValidity((prev) => ({
+      ...prev,
+      isSpectrogramConfigValid: isValid,
+    }));
+
+    if (isMonitoring && isValid) {
       connect(spectrogramConfig);
     } else {
       disconnect();

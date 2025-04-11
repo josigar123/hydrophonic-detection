@@ -147,22 +147,15 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
   };
 
   useEffect(() => {
-    if (validateBroadbandConfiguration(broadbandConfiguration)) {
-      setIsInvalidConfig(false);
+    const isValid = validateBroadbandConfiguration(broadbandConfiguration);
 
-      setValidity((prev) => ({
-        ...prev,
-        isBroadbandConfigValid: true,
-      }));
-    } else {
-      setIsInvalidConfig(true);
-      setValidity((prev) => ({
-        ...prev,
-        isBroadbandConfigValid: false,
-      }));
-    }
+    setIsInvalidConfig(!isValid);
+    setValidity((prev) => ({
+      ...prev,
+      isBroadbandConfigValid: isValid,
+    }));
 
-    if (isMonitoring && !isInvalidConfig) {
+    if (isMonitoring && isValid) {
       connect(broadbandConfiguration);
     } else {
       disconnect();
