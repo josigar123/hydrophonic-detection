@@ -123,23 +123,20 @@ class SignalProcessingService:
                     
                     #Adding last of previous to start
                     signal_med[:len(kernel_buffers[index])] += kernel_buffers[index]
-                
-                    #Preparing buffer for next segment
-                    sx_buffers_out[index] = signal_med[-kernel_size:]
-                    
-                    #Cutting end of current
-                    signal_med = signal_med[:-kernel_size]  
-            
                 else:
                     signal_med = signal_med[kernel_size//2:] #Kutter første del
-                    sx_buffers_out[index] = signal_med[-kernel_size:] if len(signal_med) >= kernel_size else np.array([])
+                    
+                #Preparing buffer for next segment
+                sx_buffers_out[index] = signal_med[-kernel_size:] if len(signal_med) >= kernel_size else np.array([])
+                    
+                #Cutting end of current
+                signal_med = signal_med[:-kernel_size]  
 
                 broadband_signal = 10*np.log10(signal_med)
                 broadband_signals.append(broadband_signal)
-            
             return broadband_signals, sx_buffers_out
         except Exception as e:
-            print(f"Error in generate_broadband_data: {e}")
+            print(f"Error in generate_broadband_data_for_each_channel: {e}")
             return [], []
     
     '''Function for generating the broadband plot, returns the broadband signal in time domain, and time bins'''
@@ -189,7 +186,7 @@ class SignalProcessingService:
             
             broadband_sig = 10*np.log10(signal_med)
             t = np.linspace(0,len(broadband_sig)/downsampled_sample_rate,len(broadband_sig))
-            
+
             return broadband_sig, t, sx_buff_out
         except Exception as e:
             print(f"Error in generate_broadband_data: {e}")

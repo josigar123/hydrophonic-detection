@@ -47,7 +47,8 @@ This function will read the current recording config from a Kafka topic
                 "broadbandThreshold": int,
                 "windowSize": int,
                 "hilbertWindow": int,
-                "bufferLength": int
+                "bufferLength": int,
+                "windowInMin": int,
             }
 '''
 
@@ -67,10 +68,12 @@ spectrogram_audio_buffer = b"" # A byte array to accumulate audio for the spectr
 demon_spectrogram_audio_buffer = b"" # A byte array to accumulate audio for the demon spectrogram
 broadband_buffer = b"" # Holds window_size seconds of audio data
 broadband_total_buffer = b"" # Hold buffer_length seconds of audio data
-broadband_signal_buffer = [] # An array for holding processed broadband_signal chunks of window_size seconds
+broadband_signal_buffer = [] # An array for holding processed broadband_signal chunks of window_size seconds, a matrix
 broadband_kernel_buffer = [] # A buffer used for OLA (Overlap-Add method)
 broadband_kernel_buffers_for_each_channel = [] # Used for OLA on each individual channel
-broadband_signal_buffers_for_each_channel = []
+# Holds an entry of entries, each entry represents a channels broadband sig, each entries entry represents
+# window_size seconds of data
+broadband_signal_buffers_for_each_channel = [] 
 
 '''
     These global variables will hold information for how much data must be collected in a buffer before the spectrogram data can be produced
@@ -137,12 +140,12 @@ async def produce_narrowband_detection_result(spectrogram_db: list[float], thres
         is_detection = signal_processing_service.narrowband_detection(spectrogram_db, threshold)
         await producer.send(topic, value=is_detection)
         await producer.flush()
+        return is_detection
     except Exception as e:
         print(f"Error producing result in 'produce_narrowband_detection_result': '{e}'")
+        return False
     finally:
         await producer.stop()
-
-    return is_detection
 
 '''Function will produce a broadband detection on the buffer passed and write it to the appropriate kafka topic'''
 async def produce_broadband_detection_result(broadband_filo_signal_buffer: np.ndarray, threshold: int, window_size: int) -> bool:
@@ -157,12 +160,12 @@ async def produce_broadband_detection_result(broadband_filo_signal_buffer: np.nd
         is_detection = signal_processing_service.broadband_detection(broadband_filo_signal_buffer, threshold, window_size)
         await producer.send(topic, value=is_detection)
         await producer.flush()
+        return is_detection
     except Exception as e:
         print(f"Error producing result in 'produce_broadband_detection_result': '{e}'")
+        return False
     finally:
         await producer.stop()
-    
-    return is_detection
 
 async def produce_override_message(value: bool):
     topic = 'override-detection'
@@ -215,12 +218,12 @@ async def handle_connection(websocket, path):
                 try:
                     await forward_audio_to_frontend(message)
                     
-                    '''Only forward audio data if configurations are valid'''
-                    if spectrogram_client_config:
+                    '''Only forward audio data if configurations are valid and appropriate buffers are set'''
+                    if spectrogram_client_config and spectrogram_required_buffer_size and demon_required_buffer_size:
                         await forward_signal_processed_data_to_frontend(message)
                         await forward_demon_data_to_frontend(message)
                     
-                    if broadband_client_config:
+                    if broadband_client_config and broadband_required_buffer_size and broadband_total_required_buffer_size:
                         await forward_broadband_data_to_frontend(message)
                         
                 except Exception as e:
@@ -522,7 +525,10 @@ async def forward_broadband_data_to_frontend(data):
                 
                 '''Can here produce the data for broadband plot, signal is a 1D NDarray, t is time, also a kernel buffer is returned as well as each individual channels broadband signal'''
                 broadband_signal, t, broadband_kernel_buffer_out = signal_processing_service.generate_broadband_data(adjusted_broadband_buffer, broadband_kernel_buffer, hilbert_window, window_size)
-                '''Produce broadband data for each channel, ONLY used for analysis and detection, No visualization'''
+                ''' Produce broadband data for each channel, ONLY used for analysis and detection, No visualization
+                    Both values are matrices, each row in broadband_signals represents a channels bb data (A 1D array each channel)
+                    Each row i broadband_kernel_buffers_for_each_channel_out represents each channels kernel (A 1D array each channel)
+                '''
                 broadband_signals, broadband_kernel_buffers_for_each_channel_out = signal_processing_service.generate_broadband_data_for_each_channel(adjusted_broadband_buffer, broadband_kernel_buffers_for_each_channel, hilbert_window, window_size)
                 
                 #Adjust the kernel buffer for next iteration
@@ -544,7 +550,7 @@ async def forward_broadband_data_to_frontend(data):
                 # Appending the signal to the FILO broadband_signal_buffer, this buffer is purely used for analysis
                 broadband_signal_buffer.append(broadband_signal)
 
-                # Appendig all signal data to the buffer
+                # Appending all signal data to the buffer
                 for index, broadband_signal in enumerate(broadband_signals):
                     broadband_signal_buffers_for_each_channel[index].append(broadband_signal)
                 
@@ -569,18 +575,14 @@ async def forward_broadband_data_to_frontend(data):
                 for index, broadband_signal in enumerate(broadband_signal_buffers_for_each_channel):
                     broadband_signals_to_analyze.append(np.concatenate(broadband_signal))
                 
-                
+                detections_dict = {"detections": {}}
+            
                 '''Can now perform broadband detection on the buffer and produce the result to Kafka'''
                 is_detection = await perform_broadband_detection(broadband_signal_to_analyze, broadband_threshold, window_size)
-                print(f"For the summarized bb detection is: {is_detection}")  
-                
-                print(f"crom channel 1: {broadband_signals_to_analyze[0][:10]}")
-                print(f"From summarized: {broadband_signal_to_analyze[:10]}")
-                '''Also want to perform a detection for each channel, these results are only for the frontend'''
-                detections_dict = {"detections": {}}
+
+                '''Also want to perform a detection for each channel, these results are only for the frontend to use'''
                 for index, broadband_sig in enumerate(broadband_signals_to_analyze):
                     is_detection_in_broadband_signal = signal_processing_service.broadband_detection(broadband_sig, broadband_threshold, window_size)
-                    print(f"For Channel {index + 1} detection is: {is_detection_in_broadband_signal}")
                     detections_dict["detections"][f'channel{index + 1}'] = bool(is_detection_in_broadband_signal)
                 
                 # This detection is based upon all the channels, calculated in the broadband_detection function
@@ -594,7 +596,6 @@ async def forward_broadband_data_to_frontend(data):
                             summarizedDetection: true
                         }
                 '''
-                
                 
                 # Send detectino for each channel
                 detections_json = json.dumps(detections_dict, indent=2)
