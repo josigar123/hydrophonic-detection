@@ -36,7 +36,6 @@ def upload_file(file_path, session_id=None, detection_id=None):
         file_path,
         tags=tags,
     )
-    print(f"{file_name} successfully uploaded as object {object_name} to bucket {bucket_name}")
 
     return {
         "bucket": bucket_name,
