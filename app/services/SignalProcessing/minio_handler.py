@@ -6,7 +6,7 @@ import os
 
 
 def upload_file(file_path, session_id=None, detection_id=None):
-    client  = Minio("localhost:9000",
+    client  = Minio("10.0.0.24:9000",
                 access_key="admin",
                 secret_key="password",
                 secure=False)
