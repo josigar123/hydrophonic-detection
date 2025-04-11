@@ -342,11 +342,8 @@ async def produce_recording_status(is_recording):
     
     # Convert to boolean to ensure consistency
     is_recording = bool(is_recording)
-    
-    # Update our global tracking (even if unchanged, to ensure consistency)
     current_recording_status = is_recording
     
-    # Produce to Kafka
     topic = 'recording-status'
     producer = AIOKafkaProducer(
         bootstrap_servers=BOOTSTRAP_SERVERS,
@@ -369,9 +366,7 @@ async def produce_recording_status(is_recording):
     finally:
         await producer.stop()
         
-    # Try to forward to any connected clients
     try:
-        # Import here to avoid circular imports
         success = await forward_recording_status_to_frontend(is_recording)
         return success
     except Exception as e:
@@ -480,16 +475,6 @@ async def handle_connection(websocket, path):
                         
                 except Exception as e:
                     print(f"Error processing message: {e}")
-
-        if client_name == "status_client":
-            async for message in websocket:
-                try:
-                    data = json.loads(message)
-                    if "value" in data:
-                        value = bool(data["value"])
-                        success = await produce_recording_status(value)
-                except Exception as e:
-                    print(f"Error processing message {e}")
             
                     
         if client_name == "ais_consumer":
@@ -629,7 +614,6 @@ async def handle_connection(websocket, path):
                 }
                 status_json = json.dumps(status_update)
                 await websocket.send(status_json)
-                print(f"Sent initial recording status: {current_recording_status}")
             except Exception as e:
                 print(f"Error sending initial status to status_client: {e}")
             
