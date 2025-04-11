@@ -39,7 +39,15 @@ function App() {
 
   const [detection, setDetection] = useState<Detection>({
     narrowbandDetection: false,
-    broadbandDetection: false,
+    broadbandDetections: {
+      detections: {
+        channel1: false,
+        channel2: false,
+        channel3: false,
+        channel4: false,
+        summarizedDetection: false,
+      },
+    },
   });
 
   const [validity, setValidity] = useState<Validity>(defaultInputValidity);
