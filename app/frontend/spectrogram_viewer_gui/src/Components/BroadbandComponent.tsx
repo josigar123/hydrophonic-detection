@@ -52,7 +52,7 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
 
   const {
     broadbandData,
-    isBroadbandDetection,
+    isBroadbandDetections,
     isConnected,
     connect,
     disconnect,
@@ -181,9 +181,9 @@ const BroadbandComponent = ({ isMonitoring }: BroadbandComponentProps) => {
   useEffect(() => {
     setDetection((prev) => ({
       ...prev,
-      broadbandDetection: isBroadbandDetection,
+      broadbandDetections: isBroadbandDetections,
     }));
-  }, [isBroadbandDetection, setDetection]);
+  }, [isBroadbandDetections, setDetection]);
 
   return (
     <div className="flex flex-col h-full w-full">

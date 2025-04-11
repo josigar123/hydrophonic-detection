@@ -10,7 +10,7 @@ import { useContext, useState } from 'react';
 import { DetectionContext } from '../Contexts/DetectionContext';
 import recordingParameters from '../../../../configs/recording_parameters.json';
 import { ValidityContext } from '../Contexts/InputValidationContext';
-import RecordingStatusIndicator from "../Components/RecordingStatusIndicator"
+//import RecordingStatusIndicator from '../Components/RecordingStatusIndicator';
 
 const numOfChannels = recordingParameters['channels'];
 
@@ -62,8 +62,6 @@ const MainPage = () => {
           </Button>
 
           <OverrideButton />
-
-
         </div>
 
         <div className="flex items-center justify-end gap-2 w-1/4">
@@ -81,7 +79,7 @@ const MainPage = () => {
 
           <span className="text-gray-400">|</span>
 
-          {detection.broadbandDetection ? (
+          {detection.broadbandDetections?.detections.summarizedDetection ? (
             <span className="inline-flex items-center text-green-500">
               <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
               Detection in broadband
@@ -102,9 +100,10 @@ const MainPage = () => {
         </div>
         <div className="relative overflow-auto rounded bg-slate-700">
           <MapComponent />
-          <div className="absolute top-2 right-2 z-[1000]"> {/* Adjust top-?, right-?, z-? as needed */}
-
-          <DataSourceSelector />
+          <div className="absolute top-2 right-2 z-[1000]">
+            {' '}
+            {/* Adjust top-?, right-?, z-? as needed */}
+            <DataSourceSelector />
           </div>
         </div>
         <div className="overflow-auto rounded bg-slate-700">

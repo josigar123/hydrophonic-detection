@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Ship } from '../Components/ShipMarker';
-import { fetchAisData } from '../Api/aisApi';
+import { fetchAisData } from '../api/aisApi';
 
 const REFRESH_INTERVAL = 10000;
 
@@ -13,17 +13,17 @@ export const useShips = () => {
 
   const deduplicateShips = (shipData: Ship[]): Ship[] => {
     const uniqueShipsMap = new Map<number | string, Ship>();
-    
-    shipData.forEach(ship => {
+
+    shipData.forEach((ship) => {
       const mmsi = ship.mmsi;
-      
+
       if (!uniqueShipsMap.has(mmsi)) {
         uniqueShipsMap.set(mmsi, ship);
         return;
       }
-      
+
       const existingShip = uniqueShipsMap.get(mmsi)!;
-      
+
       if (ship.dateTimeUtc && existingShip.dateTimeUtc) {
         if (ship.dateTimeUtc > existingShip.dateTimeUtc) {
           uniqueShipsMap.set(mmsi, ship);
@@ -32,7 +32,7 @@ export const useShips = () => {
         uniqueShipsMap.set(mmsi, ship);
       }
     });
-  
+
     return Array.from(uniqueShipsMap.values());
   };
 
@@ -43,15 +43,15 @@ export const useShips = () => {
       const data = await fetchAisData();
       const uniqueShips = deduplicateShips(data);
       setShips(uniqueShips);
-      
+
       setLastUpdate(new Date());
       setNextUpdateIn(REFRESH_INTERVAL);
-    }
-    catch (error) {
+    } catch (error) {
       console.error('Error fetching ship data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch ship data');
-    }
-    finally {
+      setError(
+        error instanceof Error ? error.message : 'Failed to fetch ship data'
+      );
+    } finally {
       setIsLoading(false);
     }
   }, []);
@@ -60,9 +60,9 @@ export const useShips = () => {
     fetchShips();
     const intervalId = setInterval(fetchShips, REFRESH_INTERVAL);
     const countdownId = setInterval(() => {
-      setNextUpdateIn(prev => Math.max(0, prev - 1000));
+      setNextUpdateIn((prev) => Math.max(0, prev - 1000));
     }, 1000);
-    
+
     return () => {
       clearInterval(intervalId);
       clearInterval(countdownId);

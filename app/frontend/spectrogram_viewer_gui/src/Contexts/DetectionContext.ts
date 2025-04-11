@@ -1,7 +1,8 @@
 import { createContext, Dispatch, SetStateAction } from 'react';
+import { BroadbandDetections } from '../Interfaces/Payloads';
 
 export interface Detection {
-  broadbandDetection: boolean;
+  broadbandDetections: BroadbandDetections;
   narrowbandDetection: boolean;
 }
 

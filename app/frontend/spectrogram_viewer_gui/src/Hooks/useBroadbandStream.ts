@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { BroadbandPayload } from '../Interfaces/Payloads';
+import { BroadbandPayload, BroadbandDetections } from '../Interfaces/Payloads';
 import { BroadbandConfiguration } from '../Interfaces/Configuration';
 
 export function useBroadbandStream(url: string, autoConnect = false) {
@@ -8,7 +8,16 @@ export function useBroadbandStream(url: string, autoConnect = false) {
     times: [],
   });
 
-  const [isBroadbandDetection, setIsBroadbandDetection] = useState(false);
+  const [isBroadbandDetections, setIsBroadbandDetections] =
+    useState<BroadbandDetections>({
+      detections: {
+        channel1: false,
+        channel2: false,
+        channel3: false,
+        channel4: false,
+        summarizedDetection: false,
+      },
+    });
 
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,8 +55,13 @@ export function useBroadbandStream(url: string, autoConnect = false) {
           try {
             const data = JSON.parse(event.data);
 
-            if ('detectionStatus' in data) {
-              setIsBroadbandDetection(data.detectionStatus);
+            if ('detections' in data) {
+              setIsBroadbandDetections((prevState) => ({
+                detections: {
+                  ...prevState.detections,
+                  ...(data.detections || {}),
+                },
+              }));
             }
 
             if ('broadbandSignal' in data) {
@@ -121,7 +135,7 @@ export function useBroadbandStream(url: string, autoConnect = false) {
 
   return {
     broadbandData,
-    isBroadbandDetection,
+    isBroadbandDetections,
     isConnected,
     error,
     connect,

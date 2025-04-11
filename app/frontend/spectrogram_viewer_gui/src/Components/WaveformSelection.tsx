@@ -1,7 +1,8 @@
 import { useAudioStream } from '../Hooks/useAudioStream';
 import Waveform from './Waveform';
 import { convert16BitPcmToFloat32Arrays } from '../utils/convert16BitPcmToFloat32Arrays';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { DetectionContext } from '../Contexts/DetectionContext';
 
 /**
  * Audio is recorded constantly with the following parameters:
@@ -37,6 +38,16 @@ const WaveformSelection = ({
   );
 
   const [channels, setChannels] = useState<Float32Array[]>([]);
+
+  const detectionContext = useContext(DetectionContext);
+
+  if (!detectionContext) {
+    throw new Error(
+      'In WaveformSelection.tsx: DetectionContext must be used within a DetectionContextProvider'
+    );
+  }
+
+  const { detection } = detectionContext;
 
   useEffect(() => {
     if (!audioData || !isConnected) return;
@@ -77,12 +88,30 @@ const WaveformSelection = ({
         <div className="flex-1 w-full relative" style={{ minHeight: '400px' }}>
           {channels.length > 0 ? (
             <div className="flex flex-col h-full space-y-2">
-              {channels.map((channelData, index) => (
-                <div key={index} className="flex-1">
-                  <span className="text-blue-">Channel {index + 1}</span>
-                  <Waveform channelData={channelData} setAutoListen={true} />
-                </div>
-              ))}
+              {channels.map((channelData, index) => {
+                const channelKey =
+                  `channel${index + 1}` as keyof typeof detection.broadbandDetections.detections;
+                return (
+                  <div key={index} className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-white">Channel {index + 1}</span>
+                      <span className="text-gray-400">|</span>
+                      {detection.broadbandDetections.detections[channelKey] ? (
+                        <span className="inline-flex items-center text-green-500">
+                          <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                          Detection in channel's broadband
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-gray-500">
+                          <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
+                          No detection in channel's broadband
+                        </span>
+                      )}
+                    </div>
+                    <Waveform channelData={channelData} setAutoListen={true} />
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-300">

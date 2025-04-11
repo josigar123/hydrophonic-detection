@@ -346,7 +346,7 @@ async def main():
         config = {
             "api_url": "https://kystdatahuset.no/ws/api/ais/realtime/geojson",
             "broker": {
-                "ip": "localhost",
+                "ip": "10.0.0.24",
                 "port": 9092
             },
             "kafka_topic": "ais-log",

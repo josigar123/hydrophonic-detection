@@ -1,0 +1,20 @@
+{
+  "api_url": "https://kystdatahuset.no/ws/api/ais/realtime/geojson",
+  "broker": {
+    "ip": "localhost",
+    "port": 9092
+  },
+  "kafka_topic": "ais-log",
+  "fetch_interval": 10,
+  "event_fetch_interval": 5,
+  "event_only": false,
+  "geographic_filter": {
+    "enabled": true,
+    "default_center": {
+      "latitude": 59.412598788251344,
+      "longitude": 10.4901256300511
+    },
+    "default_radius_km": 10,
+    "user_position_topic": "user-position"
+  }
+}
