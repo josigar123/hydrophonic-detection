@@ -26,6 +26,10 @@ const Waveform = ({ channelData, setAutoListen }: WaveformProps) => {
         maxValue: 1,
         minValue: -1,
       });
+
+      // Will always be false, only here to remove TS error
+      if (!canvasRef.current) return;
+
       smoothieChartRef.current.streamTo(canvasRef.current);
     }
 

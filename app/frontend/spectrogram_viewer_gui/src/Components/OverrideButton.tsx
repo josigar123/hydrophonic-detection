@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@heroui/react';
+import { Button, Tooltip } from '@heroui/react';
 
-const OverrideButton = () => {
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+interface OverrideButtonProps {
+  recordingStatus: boolean;
+  isMonitoring: boolean;
+}
+
+const OverrideButton = ({
+  recordingStatus,
+  isMonitoring,
+}: OverrideButtonProps) => {
   const [overrideActive, setOverrideActive] = useState<boolean>(false);
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
+  // Only conntect to the socket if we are monitoring
   useEffect(() => {
+    if (!isMonitoring) return;
     const ws = new WebSocket('ws://localhost:8766?client_name=override_client');
-
-    ws.onopen = () => {
-      setIsConnected(true);
-    };
 
     ws.onmessage = (event: MessageEvent) => {
       try {
-        console.log(`Raw response: ${event.data}`);
         const response = JSON.parse(event.data);
 
         if (response.status === 'delivered') {
@@ -33,7 +37,6 @@ const OverrideButton = () => {
     };
 
     ws.onclose = () => {
-      setIsConnected(false);
       setTimeout(() => setSocket(null), 3000);
     };
 
@@ -48,7 +51,7 @@ const OverrideButton = () => {
         ws.close();
       }
     };
-  }, []);
+  }, [isMonitoring]);
 
   const toggleOverride = (): void => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -56,7 +59,13 @@ const OverrideButton = () => {
       return;
     }
 
-    const newValue = !overrideActive;
+    let newValue: boolean;
+    if (recordingStatus) {
+      // If we are already recording, then pressing the buttson should end it
+      newValue = false;
+    } else {
+      newValue = !overrideActive;
+    }
 
     try {
       const message = JSON.stringify({ value: newValue ? 1 : 0 });
@@ -70,15 +79,27 @@ const OverrideButton = () => {
     }
   };
 
+  useEffect(() => {
+    setOverrideActive(recordingStatus);
+  }, [recordingStatus]);
+
   return (
-    <Button
-      radius="sm"
-      color={overrideActive ? 'success' : 'primary'}
-      size="md"
-      onPress={() => toggleOverride()}
-    >
-      {overrideActive ? 'Recording' : 'Manual Detection'}
-    </Button>
+    <Tooltip content="Bypass detection mechanism and start/stop recording manually">
+      <Button
+        radius="sm"
+        color={
+          recordingStatus && isMonitoring && overrideActive
+            ? 'danger'
+            : 'warning'
+        }
+        onPress={() => toggleOverride()}
+        isDisabled={!isMonitoring}
+      >
+        {recordingStatus && isMonitoring && overrideActive
+          ? 'Stop Recording'
+          : 'Manual Detection'}
+      </Button>
+    </Tooltip>
   );
 };
 
