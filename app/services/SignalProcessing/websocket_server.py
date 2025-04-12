@@ -459,6 +459,9 @@ async def handle_connection(websocket, path):
     global broadband_kernel_buffers_for_each_channel
     global broadband_kernel_buffer
     
+    '''Dict holding the recording config, get set after the server has been served'''
+    global recording_config
+    
     parsed_url = urlparse(path)
     query_params = parse_qs(parsed_url.query)
 
@@ -479,7 +482,12 @@ async def handle_connection(websocket, path):
                         await forward_demon_data_to_frontend(message)
                     
                     if broadband_client_config and broadband_required_buffer_size and broadband_total_required_buffer_size:
-                        await forward_broadband_data_to_frontend(message)
+                        if recording_config:
+                            '''Initialize per channel broadband buffers with config'''
+                            '''Need to be set upon a reconnect since they are emptied when client disconnects'''
+                            broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
+                            broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
+                            await forward_broadband_data_to_frontend(message)
                         
                 except Exception as e:
                     print(f"Error processing message: {e}")
