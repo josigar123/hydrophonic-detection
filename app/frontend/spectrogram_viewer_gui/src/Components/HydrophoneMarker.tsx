@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect, Fragment } from 'react';
-import { Marker, Popup, Circle, Polyline } from 'react-leaflet';
+import { Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { DetectionContext } from '../Contexts/DetectionContext';
 import { useBroadbandStream } from '../Hooks/useBroadbandStream';
@@ -14,6 +14,10 @@ const hydroPhoneIcon = new L.Icon({
   popupAnchor: [0, -10],
   className: 'hydrophone-icon',
 });
+
+interface HydrophoneMarkerProps {
+  isMonitoring: boolean;
+}
 
 type ChannelId = 'channel1' | 'channel2' | 'channel3' | 'channel4';
 
@@ -53,11 +57,11 @@ const RadiationEffect = ({ position }: { position: [number, number] }) => {
   );
 };
 
-export function HydrophoneMarker() {
+export function HydrophoneMarker({ isMonitoring }: HydrophoneMarkerProps) {
   const context = useContext(DetectionContext);
   if (!context) return null;
      
-  const { isConnected } = useBroadbandStream(websocketUrl, false);
+  const { isConnected } = useBroadbandStream(websocketUrl, isMonitoring);
 
   return (
     <>

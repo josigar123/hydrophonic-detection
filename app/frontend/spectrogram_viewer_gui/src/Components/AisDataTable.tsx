@@ -11,14 +11,19 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { Ship } from './ShipMarker';
-import { getShipTypeDescription } from '../Utils/shipTypes';
+import { getShipTypeDescription } from '../utils/shipTypes';
 import { useClosestMovingShips } from '../Hooks/useClosestMovingShips';
 import ShipDetailsModal from '../Components/ModalShipDetails';
 
-const AisDataTable = () => {
+interface AisDataTableProps {
+  isMonitoring: boolean;
+}
+
+const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
-  const { closestMovingShips, isLoading } = useClosestMovingShips();
+  const { closestMovingShips, isLoading } = useClosestMovingShips(isMonitoring);
+  
 
   const handleOpenModal = (ship: Ship) => {
     setSelectedShip(ship);
