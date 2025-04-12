@@ -121,17 +121,17 @@ const MainPage = () => {
 
         <div className="flex items-center justify-end gap-2 w-1/4">
           {detection.narrowbandDetection && isMonitoring ? (
-            <span className="inline-flex items-center text-green-500">
+            <span className="inline-flex items-center text-green-500 text-lg">
               <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse "></span>
               Detection in narrowband
             </span>
           ) : !isMonitoring ? (
-            <span className="inline-flex items-center text-gray-50">
+            <span className="inline-flex items-center text-gray-50 text-lg">
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               No narrowband data
             </span>
           ) : (
-            <span className="inline-flex items-center text-gray-500">
+            <span className="inline-flex items-center text-gray-500 text-lg">
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               No detection in narrowband
             </span>
@@ -140,36 +140,36 @@ const MainPage = () => {
 
           {detection.broadbandDetections?.detections.summarizedDetection &&
           isMonitoring ? (
-            <span className="inline-flex items-center text-green-500">
+            <span className="inline-flex items-center text-green-500 text-lg">
               <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
               Detection in broadband
             </span>
           ) : !isMonitoring ? (
-            <span className="inline-flex items-center text-gray-50">
+            <span className="inline-flex items-center text-gray-50 text-lg">
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               No broadband data
             </span>
           ) : (
-            <span className="inline-flex items-center text-gray-500">
+            <span className="inline-flex items-center text-gray-500 text-lg">
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               No detection in broadband
             </span>
           )}
           <span className="text-gray-400">|</span>
           {isRecording && isMonitoring ? (
-            <span className="inline-flex items-center text-green-500">
+            <span className="inline-flex items-center text-green-500 text-lg">
               <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse"></span>
               Recording started at:{' '}
               {recordingStart && formatTime(recordingStart)}
             </span>
           ) : !isMonitoring ||
             recordingState === RecordingState.NotRecording ? (
-            <span className="inline-flex items-center text-gray-50">
+            <span className="inline-flex items-center text-gray-50 text-lg">
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               No audio data
             </span>
           ) : (
-            <span className="inline-flex items-center text-red-500">
+            <span className="inline-flex items-center text-red-500 text-lg">
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
               Recording stopped at: {recordingStop && formatTime(recordingStop)}
               , duration:{' '}
