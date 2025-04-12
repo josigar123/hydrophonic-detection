@@ -49,13 +49,13 @@ const MapComponent = ({ isMonitoring }: MapComponentProps)=> {
   const { shipsInRange } = useShipsInRange(isMonitoring);
 
   return (
-    <div className="h-full">
+    <div className="h-full w-full rounded-lg overflow-hidden">
       <MapContainer
         center={[position.latitude, position.longitude]}
         zoom={13}
-        maxZoom={25}
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
+        className="rounded-lg"
       >
         <MapClickHandler onPositionChange={handlePositionChange} />
         <MapViewSynchronizer position={position} />
