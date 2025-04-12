@@ -19,6 +19,8 @@ AIS_MESSAGE_TOPIC = "ais-log"
 NARROWBAND_DETECTION_TOPIC = "narrowband-detection"
 BROADBAND_DETECTION_TOPIC = "broadband-detection"
 OVERRIDE_DETECTION_TOPIC = "override-detection"
+RECORDING_STATUS_TOPIC = "recording-status"
+USER_POSITION_TOPIC ="user-position"
 
 if __name__ == "__main__":
     with open(BROKER_INFO_FILE, "r") as file:
@@ -38,6 +40,8 @@ if __name__ == "__main__":
     create_topic(broker_info, BROADBAND_DETECTION_TOPIC)
     create_topic(broker_info, AIS_MESSAGE_TOPIC)
     create_topic(broker_info, OVERRIDE_DETECTION_TOPIC)
+    create_topic(broker_info, RECORDING_STATUS_TOPIC)
+    create_topic(broker_info, USER_POSITION_TOPIC)
 
     # Produce the config to the topic before all else
     produce_audio_config(broker_info, "recording-parameters", recording_parameters, key="config")
