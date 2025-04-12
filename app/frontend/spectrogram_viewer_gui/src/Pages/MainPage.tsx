@@ -13,7 +13,6 @@ import { ValidityContext } from '../Contexts/InputValidationContext';
 import { useRecordingStatus } from '../Hooks/useRecordingStatus';
 import { RecordingState } from '../enums/States';
 import { usePositionSync } from '../Hooks/usePositionSync';
-//import RecordingStatusIndicator from '../Components/RecordingStatusIndicator';
 
 const numOfChannels = recordingParameters['channels'];
 
@@ -31,6 +30,7 @@ const MainPage = () => {
   const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [recordingStop, setRecordingStop] = useState<number | null>(null);
 
+  // The default state of recording, this state is only active on first render
   const [recordingState, setRecordingState] = useState<RecordingState>(
     RecordingState.NotRecording
   );
@@ -52,14 +52,18 @@ const MainPage = () => {
   const { detection } = detectionContext;
   const { validity } = validityContext;
 
+  // effect for handling connection to recording status useRecordingStatus hook
   useEffect(() => {
     if (isMonitoring) {
       connect();
     } else {
+      // When no longer monitoring, reset state
+      setRecordingState(RecordingState.NotRecording);
       disconnect();
     }
   }, [connect, disconnect, isMonitoring]);
 
+  // Effect for handling timestamps and recording states
   useEffect(() => {
     if (isRecording && !prevRecordingRef.current) {
       setRecordingState(RecordingState.Recording);
@@ -109,14 +113,22 @@ const MainPage = () => {
             {isMonitoring ? 'Stop Monitoring' : 'Start Monitoring'}
           </Button>
 
-          <OverrideButton />
+          <OverrideButton
+            recordingStatus={isRecording}
+            isMonitoring={isMonitoring}
+          />
         </div>
 
         <div className="flex items-center justify-end gap-2 w-1/4">
-          {detection.narrowbandDetection ? (
+          {detection.narrowbandDetection && isMonitoring ? (
             <span className="inline-flex items-center text-green-500">
               <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse "></span>
               Detection in narrowband
+            </span>
+          ) : !isMonitoring ? (
+            <span className="inline-flex items-center text-gray-50">
+              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
+              No narrowband data
             </span>
           ) : (
             <span className="inline-flex items-center text-gray-500">
@@ -126,10 +138,16 @@ const MainPage = () => {
           )}
           <span className="text-gray-400">|</span>
 
-          {detection.broadbandDetections?.detections.summarizedDetection ? (
+          {detection.broadbandDetections?.detections.summarizedDetection &&
+          isMonitoring ? (
             <span className="inline-flex items-center text-green-500">
               <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
               Detection in broadband
+            </span>
+          ) : !isMonitoring ? (
+            <span className="inline-flex items-center text-gray-50">
+              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
+              No broadband data
             </span>
           ) : (
             <span className="inline-flex items-center text-gray-500">
@@ -138,16 +156,17 @@ const MainPage = () => {
             </span>
           )}
           <span className="text-gray-400">|</span>
-          {isRecording ? (
+          {isRecording && isMonitoring ? (
             <span className="inline-flex items-center text-green-500">
               <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse"></span>
               Recording started at:{' '}
               {recordingStart && formatTime(recordingStart)}
             </span>
-          ) : recordingState === RecordingState.NotRecording ? (
-            <span className="inline-flex items-center text-gray-500">
+          ) : !isMonitoring ||
+            recordingState === RecordingState.NotRecording ? (
+            <span className="inline-flex items-center text-gray-50">
               <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              Not recording
+              No audio data
             </span>
           ) : (
             <span className="inline-flex items-center text-red-500">

@@ -50,18 +50,22 @@ const WaveformSelection = ({
   const { detection } = detectionContext;
 
   useEffect(() => {
-    if (!audioData || !isConnected) return;
+    if (!audioData || !isConnected || !isMonitoring) return;
     const extractedChannels: Float32Array[] = convert16BitPcmToFloat32Arrays(
       audioData,
       numChannels
     );
     setChannels(extractedChannels);
-  }, [audioData, isConnected, numChannels]);
+  }, [audioData, isConnected, isMonitoring, numChannels]);
 
   useEffect(() => {
     if (isMonitoring) {
       connect();
     } else {
+      // channels will have some data, that will be old, wipe it
+      setChannels((prev) =>
+        prev.map((channel) => new Float32Array(channel.length))
+      );
       disconnect();
     }
   }, [connect, disconnect, isMonitoring]);
@@ -96,10 +100,16 @@ const WaveformSelection = ({
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-white">Channel {index + 1}</span>
                       <span className="text-gray-400">|</span>
-                      {detection.broadbandDetections.detections[channelKey] ? (
+                      {detection.broadbandDetections.detections[channelKey] &&
+                      isMonitoring ? (
                         <span className="inline-flex items-center text-green-500">
                           <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
                           Detection in channel's broadband
+                        </span>
+                      ) : !isMonitoring ? (
+                        <span className="inline-flex items-center text-gray-50">
+                          <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
+                          No broadband data for channel
                         </span>
                       ) : (
                         <span className="inline-flex items-center text-gray-500">
