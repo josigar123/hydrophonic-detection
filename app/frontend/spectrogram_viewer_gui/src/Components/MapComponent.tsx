@@ -1,14 +1,15 @@
 import { useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, useMap, Marker, Popup } from 'react-leaflet';
 import ShipMarker from './ShipMarker';
+import { HydrophoneMarker } from './HydrophoneMarker';
 import { useShipsInRange } from '../Hooks/useShipsInRange';
 import { useMapInteraction } from '../Hooks/useMapInteraction';
 import L from 'leaflet';
 
 const userPositionIcon = new L.Icon({
-  iconUrl: '/assets/icons/flag.svg',
+  iconUrl: '/assets/icons/classic-marker.svg',
   iconSize: [40, 40],
-  iconAnchor: [15, 15],
+  iconAnchor: [10, 10],
   popupAnchor: [0, -10],
   className: 'user-icon',
 });
@@ -48,6 +49,7 @@ const MapComponent = () => {
       <MapContainer
         center={[position.latitude, position.longitude]}
         zoom={13}
+        maxZoom={25}
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
       >
@@ -57,10 +59,17 @@ const MapComponent = () => {
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" //url="http://localhost:8080/styles/basic-preview/512/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
+        <HydrophoneMarker/>
         <Marker position = {[position.latitude, position.longitude]}
          icon={userPositionIcon}>
-          <Popup>
-            User Position
+          <Popup className="min-w-[200px]">
+            <div className="text-base font-semibold">
+              <h3 className="text-lg text-blue-600 border-b pb-1 mb-2 text-center">Current Position</h3>
+              <div>
+                <p className="mb-1">Latitude: {position.latitude}°</p>
+                <p>Longitude: {position.longitude}°</p>
+              </div>
+            </div>
           </Popup>
         </Marker>
         {shipsInRange.map((ship) => (
