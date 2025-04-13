@@ -1,7 +1,7 @@
 import asyncio
 import json
 from aiokafka import AIOKafkaConsumer
-from websocket_client import  WebSocketClient
+from ServiceUtils.websocket_client import  WebSocketClient
 
 '''
 
@@ -16,6 +16,8 @@ Second: for each message received from the broker, have a ws connection where th
 MUST SUPPLY client_name query param when connecting to websocket
 
 '''
+
+BROKER_INFO_RELATIVE_PATH = '../../configs/broker_info.json'
 
 async def consume_audio(consumer: AIOKafkaConsumer, socket_client: WebSocketClient):
     
@@ -38,7 +40,7 @@ async def consume_audio(consumer: AIOKafkaConsumer, socket_client: WebSocketClie
 
 async def main():
 
-    with open("broker_info.json", "r") as file:
+    with open(BROKER_INFO_RELATIVE_PATH, "r") as file:
         broker_info = json.load(file)
 
     broker_ip = broker_info["ip"]

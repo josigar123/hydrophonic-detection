@@ -2,8 +2,22 @@ import asyncio
 import json
 from ServiceUtils.ais_fetcher import AisFetcher
 
+AIS_FETCHER_CONFIG_RELATIVE_PATH = '../../configs/ais_fetcher_config.json'
+BROKER_INFO_RELATIVE_PATH = '../../configs/broker_info.json'
+
 async def main():
-    config_file = "ais_fetcher_config.json"
+    config_file = AIS_FETCHER_CONFIG_RELATIVE_PATH
+    
+    # Read broker info
+    try:
+        with open(BROKER_INFO_RELATIVE_PATH, "r") as file:
+            broker_info = json.loads(file)
+    except Exception as e:
+        print(f"Error in ais_api_producer.py: {e}")
+    
+    ip = broker_info["ip"]
+    port = broker_info["port"]
+    
     try:
         with open(config_file, "r") as file:
             config = json.load(file)
@@ -12,8 +26,8 @@ async def main():
         config = {
             "api_url": "https://kystdatahuset.no/ws/api/ais/realtime/geojson",
             "broker": {
-                "ip": "10.0.0.24",
-                "port": 9092
+                "ip": ip,
+                "port": int(port)
             },
             "kafka_topic": "ais-log",
             "fetch_interval": 10,
