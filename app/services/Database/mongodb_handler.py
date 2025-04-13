@@ -33,7 +33,6 @@ class MongoDBHandler:
         self.detections_collection.create_index("timestamp")
         self.detections_collection.create_index("type")
         self.detections_collection.create_index("ais_logs")
-        
 
     def store_ais_data(self, data_list):
         if not data_list:
@@ -90,7 +89,6 @@ class MongoDBHandler:
         except Exception as e:
             print(f"Error storing Detection data: {e}")
             return None
-
 
     def update_ships_info(self, data):
         mmsi = None

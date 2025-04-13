@@ -6,13 +6,16 @@ from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, ConnectionFailure
 
+MONGODB_CONFIG_RELATIVE_PATH = '../../configs/mongodb_config.json'
+MONGODB_ATLAS_CONFIG_RELATIVE_PATH = '../../configs/mongodb_atlas_config.json' # File does not exist as of now
+
 class MongoDBSyncHandler:
 
-    def __init__(self, local_config_file="mongodb_config.json", atlas_config_file="mongodb_atlas_config.json"):
+    def __init__(self, local_config_file=MONGODB_CONFIG_RELATIVE_PATH, atlas_config_file=MONGODB_ATLAS_CONFIG_RELATIVE_PATH):
+        
         with open(local_config_file, "r") as file:
             self.local_config = json.load(file)
-
-            
+    
         with open(atlas_config_file, "r") as file:
             self.atlas_config = json.load(file)
    
