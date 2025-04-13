@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, useMapEvents, useMap, Marker, Popup } from 'react-leaflet';
 import ShipMarker from './ShipMarker';
 import { HydrophoneMarker } from './HydrophoneMarker';
@@ -28,7 +28,6 @@ function MapClickHandler({ onPositionChange }: { onPositionChange: (lat: number,
   return null;
 }
 
-
 function MapViewSynchronizer({ position }: { position: { latitude: number, longitude: number } }) {
   const map = useMap();
   const prevPositionRef = useRef(position);
@@ -44,9 +43,70 @@ function MapViewSynchronizer({ position }: { position: { latitude: number, longi
   return null;
 }
 
+// Component to handle map resize events
+function MapResizeHandler() {
+  const map = useMap();
+  
+  // Set up a resize observer to detect container size changes
+  useEffect(() => {
+    // Force map to update its size
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    
+    // Invalidate size once on mount
+    handleResize();
+    
+    // Set up a resize observer to detect container size changes, including from scaling
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    
+    // Get the container element
+    const container = map.getContainer();
+    resizeObserver.observe(container);
+    
+    // Add a small delay for initial render
+    const timeoutId = setTimeout(() => {
+      handleResize();
+    }, 200);
+    
+    // Clean up
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timeoutId);
+    };
+  }, [map]);
+  
+  return null;
+}
+
+// Component to capture the map reference using useMap hook
+function MapRefCapture({ setMapRef }: { setMapRef: (map: L.Map) => void }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    setMapRef(map);
+  }, [map, setMapRef]);
+  
+  return null;
+}
+
 const MapComponent = ({ isMonitoring }: MapComponentProps)=> {
   const { position, handlePositionChange } = useMapInteraction();
   const { shipsInRange } = useShipsInRange(isMonitoring);
+  const mapRef = useRef<L.Map | null>(null);
+
+  const setMapRefFromChild = useCallback((map: L.Map) => {
+    mapRef.current = map;
+  }, []);
+
+  // Handle resize when component updates
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.invalidateSize();
+    }
+  }, []);
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden">
@@ -56,9 +116,13 @@ const MapComponent = ({ isMonitoring }: MapComponentProps)=> {
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
+        whenReady={() => {
+        }}
       >
         <MapClickHandler onPositionChange={handlePositionChange} />
         <MapViewSynchronizer position={position} />
+        <MapResizeHandler />
+        <MapRefCapture setMapRef={setMapRefFromChild} />
         <TileLayer
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" //url="http://localhost:8080/styles/basic-preview/512/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
