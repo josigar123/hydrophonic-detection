@@ -6,7 +6,7 @@ from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from math import radians, cos, sin, asin, sqrt
 
 class AisFetcher:
-    def __init__(self, config_file="ais_fetcher_config.json"):
+    def __init__(self, config_file):
         # Load configuration
         with open(config_file, "r") as file:
             self.config = json.load(file)

@@ -15,7 +15,7 @@ metadata in MongoDB.
 """
 
 class AudioEventRecorder:
-    def __init__(self, sample_rate, num_channels, bit_depth, chunk_size=1024, mongodb_config="mongodb_config.json"):
+    def __init__(self, sample_rate, num_channels, bit_depth, chunk_size, mongodb_config):
         
         with open(mongodb_config, "r") as file:
             self.mongodb_config = json.load(file)
