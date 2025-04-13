@@ -32,6 +32,9 @@ const MainPage = () => {
   const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [recordingStop, setRecordingStop] = useState<number | null>(null);
 
+  const [recordingElapsed, setRecordingElapsed] = useState(0);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // The default state of recording, this state is only active on first render
   const [recordingState, setRecordingState] = useState<RecordingState>(
     RecordingState.NotRecording
@@ -53,6 +56,33 @@ const MainPage = () => {
 
   const { detection } = detectionContext;
   const { validity } = validityContext;
+
+  // Effect for handling elapsing time when a recording starts to inform user of how long recording has gone
+  useEffect(() => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+
+    if (isRecording && isMonitoring && recordingStart) {
+      setRecordingElapsed(Math.floor((Date.now() - recordingStart) / 1000));
+
+      recordingTimerRef.current = setInterval(() => {
+        if (recordingStart) {
+          setRecordingElapsed(Math.floor((Date.now() - recordingStart) / 1000));
+        }
+      }, 1000);
+    } else {
+      setRecordingElapsed(0);
+    }
+
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    };
+  }, [isRecording, isMonitoring, recordingStart]);
 
   // effect for handling connection to recording status useRecordingStatus hook
   useEffect(() => {
@@ -78,6 +108,13 @@ const MainPage = () => {
 
     prevRecordingRef.current = isRecording;
   }, [isRecording, recordingState]);
+
+  // Function is only used for formatting elapsed time
+  const formatElapsedTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const formatTime = (timestamp: number) =>
     new Date(timestamp).toLocaleTimeString([], {
@@ -231,7 +268,8 @@ const MainPage = () => {
                     }`}
                   >
                     {isRecording && isMonitoring
-                      ? recordingStart && formatTime(recordingStart)
+                      ? recordingStart &&
+                        `${formatTime(recordingStart)} (${formatElapsedTime(recordingElapsed)})`
                       : !isMonitoring ||
                           recordingState === RecordingState.NotRecording
                         ? 'No audio'
