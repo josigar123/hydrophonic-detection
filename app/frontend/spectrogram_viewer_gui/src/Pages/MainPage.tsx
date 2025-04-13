@@ -23,7 +23,8 @@ const MainPage = () => {
   const [scale, setScale] = useState(1); // Add state for UI scaling
   const [mapKey, setMapKey] = useState(Date.now()); // Add key to force map re-render
 
-  const { connect: connectPositionSync, disconnect: disconnectPositionSync } = usePositionSync();
+  const { connect: connectPositionSync, disconnect: disconnectPositionSync } =
+    usePositionSync();
 
   const detectionContext = useContext(DetectionContext);
 
@@ -97,17 +98,23 @@ const MainPage = () => {
       disconnect();
       disconnectPositionSync();
     }
-  }, [connect, disconnect, isMonitoring]);
+  }, [
+    connect,
+    connectPositionSync,
+    disconnect,
+    disconnectPositionSync,
+    isMonitoring,
+  ]);
 
-    // Effect to handle map resize when scale changes
-    useEffect(() => {
-      // Use a small timeout to allow the scaling to complete before refreshing the map
-      const timerId = setTimeout(() => {
-        setMapKey(Date.now()); // Change key to force complete re-render of map
-      }, 300);
-      
-      return () => clearTimeout(timerId);
-    }, [scale]);
+  // Effect to handle map resize when scale changes
+  useEffect(() => {
+    // Use a small timeout to allow the scaling to complete before refreshing the map
+    const timerId = setTimeout(() => {
+      setMapKey(Date.now()); // Change key to force complete re-render of map
+    }, 300);
+
+    return () => clearTimeout(timerId);
+  }, [scale]);
 
   // Effect for handling timestamps and recording states
   useEffect(() => {
@@ -147,27 +154,27 @@ const MainPage = () => {
 
   // Handle zooming in and out
   const handleZoomOut = () => {
-    setScale(prev => Math.max(0.7, prev - 0.1));
+    setScale((prev) => Math.max(0.7, prev - 0.1));
   };
 
   const handleZoomIn = () => {
-    setScale(prev => Math.min(1.3, prev + 0.1));
+    setScale((prev) => Math.min(1.3, prev + 0.1));
   };
   return (
-    <div 
+    <div
       className="flex flex-col w-full h-screen overflow-hidden"
-      style={{ 
-        transform: `scale(${scale})`, 
+      style={{
+        transform: `scale(${scale})`,
         transformOrigin: 'top left',
         height: `${100 / scale}vh`, // Adjust height to compensate for scaling
-        width: `${100 / scale}%`,   // Adjust width to compensate for scaling
-        padding: `${scale < 1 ? 2 / scale : 2}px ${scale < 1 ? 4 / scale : 4}px` // Scale padding inversely
+        width: `${100 / scale}%`, // Adjust width to compensate for scaling
+        padding: `${scale < 1 ? 2 / scale : 2}px ${scale < 1 ? 4 / scale : 4}px`, // Scale padding inversely
       }}
     >
       {/* Zoom Controls */}
       <div className="absolute top-2 left-2 z-50 flex items-center gap-2 bg-slate-800 rounded-lg p-2 shadow-md">
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           color="default"
           onPress={handleZoomOut}
           className="px-2 py-1"
@@ -175,9 +182,9 @@ const MainPage = () => {
           <span className="text-lg">−</span>
         </Button>
         <span className="text-white text-xs">{Math.round(scale * 100)}%</span>
-        <Button 
+        <Button
           size="sm"
-          color="default" 
+          color="default"
           onPress={handleZoomIn}
           className="px-2 py-1"
         >
@@ -186,10 +193,7 @@ const MainPage = () => {
       </div>
 
       {/* Header with buttons and detection status */}
-      <div className="flex justify-between w-full mb-2 lg:mb-4 bg-slate-800 shadow-md shadow-slate-900 rounded-xl p-2 lg:p-4">
-        {/* Empty div for flex alignment */}
-        <div className="w-1/4"></div>
-
+      <div className="flex justify-center w-full mb-2 lg:mb-4 bg-slate-800 shadow-md shadow-slate-900 rounded-xl p-2 lg:p-4">
         {/* Centered buttons */}
         <div className="flex gap-2 lg:gap-4 items-center">
           <Button
@@ -208,67 +212,6 @@ const MainPage = () => {
             recordingStatus={isRecording}
             isMonitoring={isMonitoring}
           />
-        </div>
-
-        <div className="flex items-center justify-end gap-2 w-1/4">
-          {detection.narrowbandDetection && isMonitoring ? (
-            <span className="inline-flex items-center text-green-500 text-lg">
-              <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse "></span>
-              Detection in narrowband
-            </span>
-          ) : !isMonitoring ? (
-            <span className="inline-flex items-center text-gray-50 text-lg">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              No narrowband data
-            </span>
-          ) : (
-            <span className="inline-flex items-center text-gray-500 text-lg">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              No detection in narrowband
-            </span>
-          )}
-          <span className="text-gray-400">|</span>
-
-          {detection.broadbandDetections?.detections.summarizedDetection &&
-          isMonitoring ? (
-            <span className="inline-flex items-center text-green-500 text-lg">
-              <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-              Detection in broadband
-            </span>
-          ) : !isMonitoring ? (
-            <span className="inline-flex items-center text-gray-50 text-lg">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              No broadband data
-            </span>
-          ) : (
-            <span className="inline-flex items-center text-gray-500 text-lg">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              No detection in broadband
-            </span>
-          )}
-          <span className="text-gray-400">|</span>
-          {isRecording && isMonitoring ? (
-            <span className="inline-flex items-center text-green-500 text-lg">
-              <span className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse"></span>
-              Recording started at:{' '}
-              {recordingStart && formatTime(recordingStart)}
-            </span>
-          ) : !isMonitoring ||
-            recordingState === RecordingState.NotRecording ? (
-            <span className="inline-flex items-center text-gray-50 text-lg">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              No audio data
-            </span>
-          ) : (
-            <span className="inline-flex items-center text-red-500 text-lg">
-              <span className="h-2 w-2 rounded-full bg-gray-400 mr-2"></span>
-              Recording stopped at: {recordingStop && formatTime(recordingStop)}
-              , duration:{' '}
-              {recordingStart &&
-                recordingStop &&
-                formatDuration(recordingStart, recordingStop)}
-            </span>
-          )}
         </div>
       </div>
 
@@ -400,9 +343,9 @@ const MainPage = () => {
           </div>
         </div>
         <div className="relative overflow-auto rounded bg-slate-700">
-          <MapComponent 
+          <MapComponent
             key={mapKey} // Force re-render when scale changes
-            isMonitoring={isMonitoring} 
+            isMonitoring={isMonitoring}
           />
           <div className="absolute top-2 right-2 z-[1000]">
             <DataSourceSelector />
