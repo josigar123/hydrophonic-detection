@@ -20,11 +20,8 @@ const numOfChannels = recordingParameters['channels'];
 
 const MainPage = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
-  const [scale, setScale] = useState(1); // Add state for UI scaling
-  const [mapKey, setMapKey] = useState(Date.now()); // Add key to force map re-render
 
-  const { connect: connectPositionSync, disconnect: disconnectPositionSync } =
-    usePositionSync();
+  const { connect: connectPositionSync, disconnect: disconnectPositionSync } = usePositionSync();
 
   const detectionContext = useContext(DetectionContext);
 
@@ -98,23 +95,7 @@ const MainPage = () => {
       disconnect();
       disconnectPositionSync();
     }
-  }, [
-    connect,
-    connectPositionSync,
-    disconnect,
-    disconnectPositionSync,
-    isMonitoring,
-  ]);
-
-  // Effect to handle map resize when scale changes
-  useEffect(() => {
-    // Use a small timeout to allow the scaling to complete before refreshing the map
-    const timerId = setTimeout(() => {
-      setMapKey(Date.now()); // Change key to force complete re-render of map
-    }, 300);
-
-    return () => clearTimeout(timerId);
-  }, [scale]);
+  }, [connect, disconnect, connectPositionSync,disconnectPositionSync, isMonitoring]);
 
   // Effect for handling timestamps and recording states
   useEffect(() => {
@@ -152,46 +133,8 @@ const MainPage = () => {
     return `${minutes}m ${seconds}s`;
   };
 
-  // Handle zooming in and out
-  const handleZoomOut = () => {
-    setScale((prev) => Math.max(0.7, prev - 0.1));
-  };
-
-  const handleZoomIn = () => {
-    setScale((prev) => Math.min(1.3, prev + 0.1));
-  };
   return (
-    <div
-      className="flex flex-col w-full h-screen overflow-hidden"
-      style={{
-        transform: `scale(${scale})`,
-        transformOrigin: 'top left',
-        height: `${100 / scale}vh`, // Adjust height to compensate for scaling
-        width: `${100 / scale}%`, // Adjust width to compensate for scaling
-        padding: `${scale < 1 ? 2 / scale : 2}px ${scale < 1 ? 4 / scale : 4}px`, // Scale padding inversely
-      }}
-    >
-      {/* Zoom Controls */}
-      <div className="absolute top-2 left-2 z-50 flex items-center gap-2 bg-slate-800 rounded-lg p-2 shadow-md">
-        <Button
-          size="sm"
-          color="default"
-          onPress={handleZoomOut}
-          className="px-2 py-1"
-        >
-          <span className="text-lg">−</span>
-        </Button>
-        <span className="text-white text-xs">{Math.round(scale * 100)}%</span>
-        <Button
-          size="sm"
-          color="default"
-          onPress={handleZoomIn}
-          className="px-2 py-1"
-        >
-          <span className="text-lg">+</span>
-        </Button>
-      </div>
-
+    <div className="flex flex-col w-full h-screen p-2 lg:p-4">
       {/* Header with buttons and detection status */}
       <div className="flex justify-center w-full mb-2 lg:mb-4 bg-slate-800 shadow-md shadow-slate-900 rounded-xl p-2 lg:p-4">
         {/* Centered buttons */}
@@ -215,7 +158,6 @@ const MainPage = () => {
         </div>
       </div>
 
-      {/* Main grid layout that fills remaining space */}
       <div className="grid grid-cols-2 grid-rows-2 gap-2 lg:gap-4 w-full flex-1 mt-4">
         <div className="overflow-auto rounded bg-slate-700 flex flex-col">
           <div className="flex-1">
@@ -342,11 +284,10 @@ const MainPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Rest of your grid remains the same */}
         <div className="relative overflow-auto rounded bg-slate-700">
-          <MapComponent
-            key={mapKey} // Force re-render when scale changes
-            isMonitoring={isMonitoring}
-          />
+        <MapComponent isMonitoring={isMonitoring} />
           <div className="absolute top-2 right-2 z-[1000]">
             <DataSourceSelector />
           </div>
@@ -365,7 +306,7 @@ const MainPage = () => {
           </div>
         </div>
         <div className="overflow-auto rounded bg-slate-700">
-          <AisDataTable isMonitoring={isMonitoring} />
+        <AisDataTable isMonitoring={isMonitoring} />
         </div>
       </div>
     </div>
