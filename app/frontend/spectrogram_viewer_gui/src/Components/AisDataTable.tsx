@@ -23,7 +23,6 @@ const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
   const { closestMovingShips, isLoading } = useClosestMovingShips(isMonitoring);
-  
 
   const handleOpenModal = (ship: Ship) => {
     setSelectedShip(ship);
@@ -44,18 +43,21 @@ const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
             isVirtualized
             isHeaderSticky
             classNames={{
-              wrapper: "h-full max-h-full w-full overflow-auto scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent",
-              table: "w-full h-full",
-              base: "rounded-lg overflow-hidden w-full h-full",
-              tbody: "w-full",
-              tr: "w-full",
+              wrapper:
+                'h-full max-h-full w-full overflow-auto scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent',
+              table: 'w-full h-full',
+              base: 'rounded-lg overflow-hidden w-full h-full',
+              tbody: 'w-full',
+              tr: 'w-full',
             }}
           >
             <TableHeader>
               <TableColumn key="MMSI">MMSI</TableColumn>
               <TableColumn key="SHIP_TYPE">Type</TableColumn>
               <TableColumn key="Knots">Knots</TableColumn>
-              <TableColumn key="Distance">Distance: Closest Moving Ships</TableColumn>
+              <TableColumn key="Distance">
+                Distance: Closest Moving Ships
+              </TableColumn>
             </TableHeader>
             <TableBody
               isLoading={isLoading}
