@@ -1093,13 +1093,14 @@ async def main():
             bit_depth=recording_config["bitDepth"]
         )
 
+        mongodb_config = '../configs/mongodb_config.json'
         recorder = AudioEventRecorder(
             sample_rate=recording_config["sampleRate"],
             num_channels=recording_config["channels"],
-            bit_depth=recording_config["bitDepth"]
+            bit_depth=recording_config["bitDepth"],
+            mongodb_config=mongodb_config
         )
         
-
         '''Initialize per channel broadband buffers with config'''
         broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
         broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
