@@ -1,7 +1,6 @@
 import json
 import time
 from kafka import KafkaProducer
-import pyais
 from pyais.stream import TCPConnection 
 
 with open("aiscatcher_config.json", "r") as file:

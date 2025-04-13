@@ -3,8 +3,6 @@ from minio.commonconfig import Tags
 import datetime
 import os
 
-
-
 def upload_file(file_path, session_id=None, detection_id=None):
     client  = Minio("10.0.0.24:9000",
                 access_key="admin",

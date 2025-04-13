@@ -79,14 +79,10 @@ async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient
                     ships[mmsi].update(message)
                     complete_vessel = ships[mmsi]
                     
-                    print(f"Consumed message for vessel {mmsi}, offset: {msg.offset}")
-                
                     success = await socket_client.send(json.dumps(complete_vessel))
                     
-                    if success:
-                        print(f"Successfully sent complete vessel data for {mmsi} to websocket")
-                    else:
-                        print("Failed to send message to WebSocket")
+                    if not success:
+                        print(f"Failed to send vessel data for {mmsi} to WebSocket")
                 else:
                     print("Received message without MMSI, sending as is")
                     success = await socket_client.send(msg.value)

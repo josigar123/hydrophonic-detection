@@ -500,13 +500,6 @@ async def handle_connection(websocket, path):
                 except Exception as e:
                     print(f"Error processing message {e}")
 
-        if client_name == "map_client":
-            async for message in websocket:
-                try:
-                    print(f"Received message from map_client: {message[:10]}...")
-                except Exception as e:
-                    print(f"Error processing message: {e}")
-
         if client_name == "override_client":
             async for message in websocket:
                 try:
@@ -1052,7 +1045,6 @@ async def perform_narrowband_detection(spectrogram_db_flattened: np.ndarray, nar
     """
     try:
         return await produce_narrowband_detection_result(spectrogram_db_flattened, narrowband_threshold)
-        return is_detection
     except Exception as e:
         print(f"Error during narrowband detection: {e}")
     
