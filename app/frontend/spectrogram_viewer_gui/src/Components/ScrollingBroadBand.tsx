@@ -59,7 +59,7 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
       .setTickStrategy(AxisTickStrategies.DateTime);
 
     chart.axisY
-      .setTickStrategy(AxisTickStrategies.Empty)
+      .setTickStrategy(AxisTickStrategies.Numeric)
       .setStrokeStyle(emptyLine)
       .setAnimationScroll(false)
       .setTitle('Amplitude')
@@ -72,7 +72,7 @@ const ScrollingBroadBand = ({ broadbandData, windowInMin }: BroadbandProps) => {
         yAxis: chart.axisY,
       })
       .setAreaFillStyle(emptyFill)
-      .setStrokeStyle(emptyLine)
+      .setStrokeStyle((stroke) => stroke.setThickness(1.5))
       .setMaxSampleCount({ mode: 'auto', max: 10_000_000 });
 
     chart

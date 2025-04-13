@@ -70,7 +70,7 @@ const ScrollingDemonSpectrogram = ({
         theme: Themes.darkGold,
         container,
       })
-      .setTitle('DEMON');
+      .setTitle('Detection of Envelope Modulation On Noise (DEMON)');
 
     const viewMs = 1000 * 60 * windowInMin;
 

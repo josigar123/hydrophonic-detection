@@ -21,8 +21,6 @@ import {
 } from '../ColorMaps/colorMaps';
 import { Color } from '@lightningchart/lcjs';
 import { DetectionContext } from '../Contexts/DetectionContext';
-import SMAUG from '/assets/icons/SMAUGlogo.png';
-import { Image } from '@heroui/image';
 import { ValidityContext } from '../Contexts/InputValidationContext';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
@@ -511,17 +509,6 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
                 <DemonSpectrogramParameterField isConnected={isConnected} />
               </div>
             </div>
-          </div>
-        </div>
-        <div className="flex justify-center items-center h-[200px]">
-          <div className="bg-gray-200 rounded-2xl p-4 shadow-lg ring-2 ring-blue-200 border border-blue-300 transition-transform hover:scale-105 duration-300 ease-in-out mt-4">
-            <Image
-              alt="EU Horizon SMAUG LOGO"
-              src={SMAUG}
-              height={160}
-              width={160}
-              className="rounded-xl"
-            />
           </div>
         </div>
       </div>
