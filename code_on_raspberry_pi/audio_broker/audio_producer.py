@@ -1,6 +1,7 @@
 from kafka import KafkaProducer
 import sounddevice as sd
 import numpy as np
+import re
 
 '''
 
@@ -18,6 +19,9 @@ either in the consumer or before visualizing in the frontend
  # no. of samples per audio frame, 1 sample is 1 recorded amplitude value
  # A format of 16-bit int gives 2 byte per sample, so we are recording 2048 byter per channel
 
+# A pattern for the audio interface to default into using with our system
+SYSTEM_AUDIO_INTERFACE_PATTERN = r"ZOOM\s+AMS-44"
+
 def get_device_index():
     print("##############AUDIO INTERFACE SETUP##############")
 
@@ -26,6 +30,12 @@ def get_device_index():
     device_count = len(found_devices)
     for key, value in enumerate(found_devices):
         device_name = value['name']
+        
+        if re.search(SYSTEM_AUDIO_INTERFACE_PATTERN, device_name, re.IGNORECASE):
+            print(f"SYSTEM AUDIO INTERFACE FOUND: {device_name}, AUTO-APPLYING...")
+            print("##############SETUP END##############")
+            return int(key) # Will be the index of the system Audio I/F
+            
         max_input_channels = value['max_input_channels']
         print(f"Index: {key}, Name: {device_name}, Max Input Channels: {max_input_channels}")
 
