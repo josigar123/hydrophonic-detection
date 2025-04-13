@@ -170,19 +170,25 @@ const shipStore: ShipStoreInterface = {
   }
 };
 
-export function useAisStreamWithSource() {
+export function useAisStreamWithSource(isMonitoring = false) {
   const { dataSource } = useDataSource();
   
   useEffect(() => {
-    shipStore.setDataSource(dataSource);
-    
-  }, [dataSource]);
+    if (isMonitoring) {
+      shipStore.setDataSource(dataSource);
+    }
+  }, [dataSource, isMonitoring]);
+  
+  useEffect(() => {
+    if (isMonitoring) {
+      shipStore.connect(shipStore.currentDataSource);
+      
+      return () => {
+        shipStore.disconnect();
+      };
+    }
+  }, [isMonitoring]);
   
   return shipStore;
 }
-
-setTimeout(() => {
-  shipStore.connect(shipStore.currentDataSource);
-}, 1000);
-
 export default shipStore;

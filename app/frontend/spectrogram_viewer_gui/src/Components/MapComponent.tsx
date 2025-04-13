@@ -6,10 +6,14 @@ import { useShipsInRange } from '../Hooks/useShipsInRange';
 import { useMapInteraction } from '../Hooks/useMapInteraction';
 import L from 'leaflet';
 
+interface MapComponentProps {
+  isMonitoring: boolean;
+}
+
 const userPositionIcon = new L.Icon({
-  iconUrl: '/assets/icons/classic-marker.svg',
+  iconUrl: '/assets/icons/flag.svg',
   iconSize: [40, 40],
-  iconAnchor: [10, 10],
+  iconAnchor: [20, 20],
   popupAnchor: [0, -10],
   className: 'user-icon',
 });
@@ -40,18 +44,18 @@ function MapViewSynchronizer({ position }: { position: { latitude: number, longi
   return null;
 }
 
-const MapComponent = () => {
+const MapComponent = ({ isMonitoring }: MapComponentProps)=> {
   const { position, handlePositionChange } = useMapInteraction();
-  const { shipsInRange } = useShipsInRange();
+  const { shipsInRange } = useShipsInRange(isMonitoring);
 
   return (
-    <div className="h-full">
+    <div className="h-full w-full rounded-lg overflow-hidden">
       <MapContainer
         center={[position.latitude, position.longitude]}
         zoom={13}
-        maxZoom={25}
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
+        className="rounded-lg"
       >
         <MapClickHandler onPositionChange={handlePositionChange} />
         <MapViewSynchronizer position={position} />
@@ -59,7 +63,9 @@ const MapComponent = () => {
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" //url="http://localhost:8080/styles/basic-preview/512/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        <HydrophoneMarker/>
+        
+        <HydrophoneMarker isMonitoring={isMonitoring} />
+
         <Marker position = {[position.latitude, position.longitude]}
          icon={userPositionIcon}>
           <Popup className="min-w-[200px]">

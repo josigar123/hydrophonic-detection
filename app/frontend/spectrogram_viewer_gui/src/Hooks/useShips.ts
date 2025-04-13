@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Ship } from '../Components/ShipMarker';
 import { useDataSource } from '../Hooks/useDataSource';
-import shipStore from './useAisStream';
+import shipStore, { useAisStreamWithSource } from './useAisStream';
 import { useShips as useApiShips } from './useAisApi';
 
 interface UseShipsResult {
@@ -12,11 +12,14 @@ interface UseShipsResult {
   nextUpdateIn?: number;
 }
 
-export const useShips = (): UseShipsResult => {
+export const useShips = (isMonitoring = false): UseShipsResult => {
   const { dataSource } = useDataSource();
   const [antennaShips, setAntennaShips] = useState<Ship[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  
+  // Pass isMonitoring to use in useAisStreamWithSource
+  useAisStreamWithSource(isMonitoring);
   
   const apiShipsResult = useApiShips();
   
@@ -26,24 +29,20 @@ export const useShips = (): UseShipsResult => {
       setIsLoading(false);
       setLastUpdate(new Date());
       
-
-      shipStore.connect(dataSource);
-      
-      const unsubscribe = shipStore.subscribe((updatedShips) => {
-        setAntennaShips(updatedShips);
-        setLastUpdate(new Date());
-        setIsLoading(false);
-      });
-      
-      return () => {
-        unsubscribe();
-        // Only disconnect when switching away from antenna mode
-        if (dataSource !== 'antenna') {
-          shipStore.disconnect();
-        }
-      };
+      // Only connect if we're monitoring
+      if (isMonitoring) {
+        const unsubscribe = shipStore.subscribe((updatedShips) => {
+          setAntennaShips(updatedShips);
+          setLastUpdate(new Date());
+          setIsLoading(false);
+        });
+        
+        return () => {
+          unsubscribe();
+        };
+      }
     }
-  }, [dataSource]);
+  }, [dataSource, isMonitoring]);
 
   // Return appropriate data based on selected source
   if (dataSource === 'antenna') {

@@ -21,7 +21,7 @@ const numOfChannels = recordingParameters['channels'];
 const MainPage = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
 
-  usePositionSync('ws://localhost:8766?client_name=position_client', 25);
+  const { connect: connectPositionSync, disconnect: disconnectPositionSync } = usePositionSync();
 
   const detectionContext = useContext(DetectionContext);
 
@@ -88,10 +88,12 @@ const MainPage = () => {
   useEffect(() => {
     if (isMonitoring) {
       connect();
+      connectPositionSync();
     } else {
       // When no longer monitoring, reset state
       setRecordingState(RecordingState.NotRecording);
       disconnect();
+      disconnectPositionSync();
     }
   }, [connect, disconnect, isMonitoring]);
 
@@ -285,7 +287,7 @@ const MainPage = () => {
 
         {/* Rest of your grid remains the same */}
         <div className="relative overflow-auto rounded bg-slate-700">
-          <MapComponent />
+        <MapComponent isMonitoring={isMonitoring} />
           <div className="absolute top-2 right-2 z-[1000]">
             <DataSourceSelector />
           </div>
@@ -304,7 +306,7 @@ const MainPage = () => {
           </div>
         </div>
         <div className="overflow-auto rounded bg-slate-700">
-          <AisDataTable />
+        <AisDataTable isMonitoring={isMonitoring} />
         </div>
       </div>
     </div>

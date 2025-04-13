@@ -7,7 +7,7 @@ import {
     Button,
   } from '@heroui/react';
   import { Ship } from './ShipMarker';
-  import { getShipTypeDescription } from '../Utils/shipTypes';
+  import { getShipTypeDescription } from '../utils/shipTypes';
   
   interface ModalShipDetailsProps {
     isOpen: boolean;

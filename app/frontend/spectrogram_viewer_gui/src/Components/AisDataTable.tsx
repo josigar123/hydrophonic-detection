@@ -11,14 +11,19 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { Ship } from './ShipMarker';
-import { getShipTypeDescription } from '../Utils/shipTypes';
+import { getShipTypeDescription } from '../utils/shipTypes';
 import { useClosestMovingShips } from '../Hooks/useClosestMovingShips';
 import ShipDetailsModal from '../Components/ModalShipDetails';
 
-const AisDataTable = () => {
+interface AisDataTableProps {
+  isMonitoring: boolean;
+}
+
+const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
-  const { closestMovingShips, isLoading } = useClosestMovingShips();
+  const { closestMovingShips, isLoading } = useClosestMovingShips(isMonitoring);
+  
 
   const handleOpenModal = (ship: Ship) => {
     setSelectedShip(ship);
@@ -32,16 +37,18 @@ const AisDataTable = () => {
         onOpenChange={onOpenChange}
         ship={selectedShip}
       />
-      <div className="h-full flex flex-col bg-grey-400 items-justify rounded-lg p-4">
-        <div className="h-0 flex-grow overflow-auto">
+      <div className="h-full w-full flex flex-col bg-grey-400 rounded-lg">
+        <div className="flex-1 w-full">
           <Table
             aria-label="Live AIS Data Table"
             isVirtualized
             isHeaderSticky
             classNames={{
-              wrapper: "max-h-[500px] overflow-auto scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent",
-              table: "min-h-[320px]",
-              base: "rounded-lg overflow-hidden",
+              wrapper: "h-full max-h-full w-full overflow-auto scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent",
+              table: "w-full h-full",
+              base: "rounded-lg overflow-hidden w-full h-full",
+              tbody: "w-full",
+              tr: "w-full",
             }}
           >
             <TableHeader>
@@ -54,10 +61,12 @@ const AisDataTable = () => {
               isLoading={isLoading}
               items={closestMovingShips}
               loadingContent={<Spinner color="primary" label="Loading..." />}
-              emptyContent={"No ships found"}
+              emptyContent={
+                <div className="w-full text-center py-8">No ships found</div>
+              }
             >
               {(ship: Ship & { distance: number }) => (
-                <TableRow key={ship.mmsi}>
+                <TableRow key={ship.mmsi} className="w-full">
                   <TableCell>
                     <Button
                       color="default"

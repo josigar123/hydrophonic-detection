@@ -6,7 +6,7 @@ import { getHaversineDistance } from '../utils/distance';
 
 const MAX_RANGE = 40; // km
 
-export function useShipsInRange() {
+export function useShipsInRange(isMonitoring = false)  {
   const { position } = useUserPosition();
   const { ships, isLoading } = useShips();
 
