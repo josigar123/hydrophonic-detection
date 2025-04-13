@@ -2,8 +2,8 @@ from minio import Minio
 import boto3
 import json
 
-MINIO_CONFIG_RELATIVE_PATH = '../../configs/minio_config.json'
-S3_FONCIG_RELATIVE_PATH = '../../configs/s3_config.json' # File does not exist as of now
+MINIO_CONFIG_RELATIVE_PATH = '../configs/minio_config.json'
+S3_FONCIG_RELATIVE_PATH = '../configs/s3_config.json' # File does not exist as of now
 
 class MinIOSyncHandler:
     def __init__(self, s3_config=S3_FONCIG_RELATIVE_PATH, minio_config=MINIO_CONFIG_RELATIVE_PATH ):

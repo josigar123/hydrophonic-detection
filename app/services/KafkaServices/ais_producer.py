@@ -3,8 +3,8 @@ import time
 from kafka import KafkaProducer
 from pyais.stream import TCPConnection 
 
-AIS_CATHCER_CONFIG_RELATIVE_PATH = '../../configs/aiscatcher_config.json'
-BROKER_INFO_RELATIVE_PATH = '../../configs/broker_info.json'
+AIS_CATHCER_CONFIG_RELATIVE_PATH = '../configs/aiscatcher_config.json'
+BROKER_INFO_RELATIVE_PATH = '../configs/broker_info.json'
 
 with open(AIS_CATHCER_CONFIG_RELATIVE_PATH, "r") as file:
     ais_broker_info = json.load(file)

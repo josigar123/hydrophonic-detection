@@ -2,8 +2,8 @@ import asyncio
 import json
 from ServiceUtils.ais_fetcher import AisFetcher
 
-AIS_FETCHER_CONFIG_RELATIVE_PATH = '../../configs/ais_fetcher_config.json'
-BROKER_INFO_RELATIVE_PATH = '../../configs/broker_info.json'
+AIS_FETCHER_CONFIG_RELATIVE_PATH = '../configs/ais_fetcher_config.json'
+BROKER_INFO_RELATIVE_PATH = '../configs/broker_info.json'
 
 async def main():
     config_file = AIS_FETCHER_CONFIG_RELATIVE_PATH
@@ -11,7 +11,7 @@ async def main():
     # Read broker info
     try:
         with open(BROKER_INFO_RELATIVE_PATH, "r") as file:
-            broker_info = json.loads(file)
+            broker_info = json.load(file)
     except Exception as e:
         print(f"Error in ais_api_producer.py: {e}")
     

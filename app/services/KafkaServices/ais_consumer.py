@@ -18,7 +18,7 @@ MUST SUPPLY client_name query param when connecting to websocket
 
 '''
 
-BROKER_INFO_RELATIVE_PATH = '../../configs/broker_info.json'
+BROKER_INFO_RELATIVE_PATH = '../configs/broker_info.json'
 
 async def consume_ais(consumer: AIOKafkaConsumer, socket_client: WebSocketClient):
     ships = {}

@@ -4,13 +4,11 @@ import datetime
 import os
 import json
 
-MINIO_CONFIG_FILE_RELATIVE_PATH = '../../configs/minio_config.json'
-
 def upload_file(file_path, session_id=None, detection_id=None):
-    
+    MINIO_CONFIG_FILE_RELATIVE_PATH = '../configs/minio_config.json'
     # Read config
     with open(MINIO_CONFIG_FILE_RELATIVE_PATH, "r") as file:
-        minio_conf = json.loads(file)
+        minio_conf = json.load(file)
     
     client  = Minio(minio_conf["endpoint"],
                 access_key=minio_conf["access_key"],

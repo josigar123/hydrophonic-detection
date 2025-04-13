@@ -1098,6 +1098,7 @@ async def main():
             sample_rate=recording_config["sampleRate"],
             num_channels=recording_config["channels"],
             bit_depth=recording_config["bitDepth"],
+            chunk_size=recording_config["recordingChunkSize"],
             mongodb_config=mongodb_config
         )
         
