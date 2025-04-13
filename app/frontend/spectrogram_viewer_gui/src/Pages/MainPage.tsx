@@ -15,13 +15,15 @@ import { RecordingState } from '../enums/States';
 import { usePositionSync } from '../Hooks/usePositionSync';
 import { Image } from '@heroui/react';
 import SMAUG from '/assets/icons/SMAUGlogo.png';
+import WavFileList from '../Components/WavFileList';
 
 const numOfChannels = recordingParameters['channels'];
 
 const MainPage = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
 
-  const { connect: connectPositionSync, disconnect: disconnectPositionSync } = usePositionSync();
+  const { connect: connectPositionSync, disconnect: disconnectPositionSync } =
+    usePositionSync();
 
   const detectionContext = useContext(DetectionContext);
 
@@ -95,7 +97,13 @@ const MainPage = () => {
       disconnect();
       disconnectPositionSync();
     }
-  }, [connect, disconnect, connectPositionSync,disconnectPositionSync, isMonitoring]);
+  }, [
+    connect,
+    disconnect,
+    connectPositionSync,
+    disconnectPositionSync,
+    isMonitoring,
+  ]);
 
   // Effect for handling timestamps and recording states
   useEffect(() => {
@@ -136,9 +144,10 @@ const MainPage = () => {
   return (
     <div className="flex flex-col w-full h-screen p-2 lg:p-4">
       {/* Header with buttons and detection status */}
-      <div className="flex justify-center w-full mb-2 lg:mb-4 bg-slate-800 shadow-md shadow-slate-900 rounded-xl p-2 lg:p-4">
-        {/* Centered buttons */}
-        <div className="flex gap-2 lg:gap-4 items-center">
+      <div className="flex justify-between items-center w-full mb-2 lg:mb-4 bg-slate-800 shadow-md shadow-slate-900 rounded-xl p-2 lg:p-4">
+        <div className="w-1/4"></div>
+
+        <div className="flex gap-2 lg:gap-4 items-center justify-center w-1/2">
           <Button
             color={isMonitoring ? 'danger' : 'success'}
             isDisabled={
@@ -150,11 +159,16 @@ const MainPage = () => {
           >
             {isMonitoring ? 'Stop Monitoring' : 'Start Monitoring'}
           </Button>
-
           <OverrideButton
             recordingStatus={isRecording}
             isMonitoring={isMonitoring}
           />
+        </div>
+
+        <div className="w-1/4 flex justify-end">
+          <div className="relative">
+            <WavFileList />
+          </div>
         </div>
       </div>
 
@@ -287,7 +301,7 @@ const MainPage = () => {
 
         {/* Rest of your grid remains the same */}
         <div className="relative overflow-auto rounded bg-slate-700">
-        <MapComponent isMonitoring={isMonitoring} />
+          <MapComponent isMonitoring={isMonitoring} />
           <div className="absolute top-2 right-2 z-[1000]">
             <DataSourceSelector />
           </div>
@@ -306,7 +320,7 @@ const MainPage = () => {
           </div>
         </div>
         <div className="overflow-auto rounded bg-slate-700">
-        <AisDataTable isMonitoring={isMonitoring} />
+          <AisDataTable isMonitoring={isMonitoring} />
         </div>
       </div>
     </div>
