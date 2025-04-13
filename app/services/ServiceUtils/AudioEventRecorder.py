@@ -4,8 +4,8 @@ import wave
 from datetime import datetime
 import uuid
 from datetime import timedelta
-from mongodb_handler import MongoDBHandler
-from minio_handler import upload_file
+from Database.mongodb_handler import MongoDBHandler
+from Database.minio_handler import upload_file
 
 """
 This module handles audio event detection and recording.
@@ -138,7 +138,7 @@ class AudioEventRecorder:
         for ais_entry in self.ais_buffer:
             try:
             
-                entry_timestamp = parse_timestamp(ais_entry.get("timestamp"))
+                entry_timestamp = self.parse_timestamp(ais_entry.get("timestamp"))
                 if buffer_start_time <= entry_timestamp <= buffer_end_time:
                     entry_copy = ais_entry.copy()
                     relevant_ais_data.append(entry_copy)
@@ -191,7 +191,7 @@ class AudioEventRecorder:
 
         return detection_metadata
     
-    def parse_timestamp(timestamp_value):
+    def parse_timestamp(self, timestamp_value):
         """
         Parse various timestamp formats into a datetime object.
         

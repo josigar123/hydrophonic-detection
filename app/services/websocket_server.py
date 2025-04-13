@@ -7,9 +7,9 @@ import json
 import os
 import uuid
 import datetime
-from utils import calculate_bytes_per_sample, calculate_required_samples
-from SignalProcessingService import SignalProcessingService
-from AudioEventRecorder import AudioEventRecorder
+from SignalProcessing.utils import calculate_bytes_per_sample, calculate_required_samples
+from SignalProcessing.SignalProcessingService import SignalProcessingService
+from ServiceUtils.AudioEventRecorder import AudioEventRecorder
 
 '''
 
