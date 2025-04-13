@@ -2,11 +2,17 @@ from minio import Minio
 from minio.commonconfig import Tags
 import datetime
 import os
+import json
 
 def upload_file(file_path, session_id=None, detection_id=None):
-    client  = Minio("10.0.0.24:9000",
-                access_key="admin",
-                secret_key="password",
+    MINIO_CONFIG_FILE_RELATIVE_PATH = '../configs/minio_config.json'
+    # Read config
+    with open(MINIO_CONFIG_FILE_RELATIVE_PATH, "r") as file:
+        minio_conf = json.load(file)
+    
+    client  = Minio(minio_conf["endpoint"],
+                access_key=minio_conf["access_key"],
+                secret_key=minio_conf["secret_key"],
                 secure=False)
     
     tags = Tags.new_object_tags()
@@ -21,7 +27,7 @@ def upload_file(file_path, session_id=None, detection_id=None):
 
     
     file_name = os.path.basename(file_path)
-    bucket_name = "audio"
+    bucket_name = minio_conf["bucket"]
     object_name = file_name
 
     if not client.bucket_exists(bucket_name):

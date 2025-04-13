@@ -7,9 +7,9 @@ import json
 import os
 import uuid
 import datetime
-from utils import calculate_bytes_per_sample, calculate_required_samples
-from SignalProcessingService import SignalProcessingService
-from AudioEventRecorder import AudioEventRecorder
+from SignalProcessing.utils import calculate_bytes_per_sample, calculate_required_samples
+from SignalProcessing.SignalProcessingService import SignalProcessingService
+from ServiceUtils.AudioEventRecorder import AudioEventRecorder
 
 '''
 
@@ -1093,13 +1093,15 @@ async def main():
             bit_depth=recording_config["bitDepth"]
         )
 
+        mongodb_config = '../configs/mongodb_config.json'
         recorder = AudioEventRecorder(
             sample_rate=recording_config["sampleRate"],
             num_channels=recording_config["channels"],
-            bit_depth=recording_config["bitDepth"]
+            bit_depth=recording_config["bitDepth"],
+            chunk_size=recording_config["recordingChunkSize"],
+            mongodb_config=mongodb_config
         )
         
-
         '''Initialize per channel broadband buffers with config'''
         broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
         broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]

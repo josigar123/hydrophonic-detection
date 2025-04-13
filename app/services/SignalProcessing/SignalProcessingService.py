@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import signal
-from utils import average_filter, moving_average_zero_padded, spec_hfilt2, medfilt_vertcal_norm, moving_average_padded
+from SignalProcessing.utils import average_filter, moving_average_zero_padded, spec_hfilt2, medfilt_vertcal_norm, moving_average_padded
 from scipy.signal import hilbert, resample_poly
 
 '''

@@ -2,12 +2,17 @@ from minio import Minio
 import boto3
 import json
 
+MINIO_CONFIG_RELATIVE_PATH = '../configs/minio_config.json'
+S3_FONCIG_RELATIVE_PATH = '../configs/s3_config.json' # File does not exist as of now
+
 class MinIOSyncHandler:
-    def __init__(self, s3_config="s3_config.json", minio_config="minio_config.json" ):
+    def __init__(self, s3_config=S3_FONCIG_RELATIVE_PATH, minio_config=MINIO_CONFIG_RELATIVE_PATH ):
         with open(s3_config, "r") as file:
             s3_config = json.load(file)
+            
         with open(minio_config, "r") as file:
             minio_config = json.load(file)
+            
         self.s3_access_key = s3_config["access_key"]
         self.s3_secret_key = s3_config["secret_key"]
         self.s3_bucket_name = s3_config["bucket_name"]
@@ -18,15 +23,12 @@ class MinIOSyncHandler:
         self.minio_bucket_name = minio_config["bucket_name"]
         self.minio_endpoint = minio_config["endpoint"]
 
-
-
         self.minio_client = Minio(
             self.minio_endpoint,
             access_key=self.minio_access_key,
             secret_key=self.minio_secret_key,
             secure=False
         )
-
 
         s3_kwargs = {
             "aws_access_key_id": self.s3_access_key,
