@@ -481,13 +481,8 @@ async def handle_connection(websocket, path):
                         await forward_signal_processed_data_to_frontend(message)
                         await forward_demon_data_to_frontend(message)
                     
-                    if broadband_client_config and broadband_required_buffer_size and broadband_total_required_buffer_size:
-                        if recording_config:
-                            '''Initialize per channel broadband buffers with config'''
-                            '''Need to be set upon a reconnect since they are emptied when client disconnects'''
-                            broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
-                            broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
-                            await forward_broadband_data_to_frontend(message)
+                    if broadband_client_config and broadband_required_buffer_size and broadband_total_required_buffer_size:                            
+                        await forward_broadband_data_to_frontend(message)
                         
                 except Exception as e:
                     print(f"Error processing message: {e}")
@@ -571,6 +566,7 @@ async def handle_connection(websocket, path):
                         _, window_size, _, buffer_length = get_broadband_config(broadband_client_config)
                         broadband_required_samples = calculate_required_samples(window_size, sample_rate)
                         broadband_total_required_samples = calculate_required_samples(buffer_length, sample_rate)
+                        
                         broadband_required_buffer_size = broadband_required_samples * bytes_per_sample
                         broadband_total_required_buffer_size = broadband_total_required_samples * bytes_per_sample
                         
@@ -672,8 +668,8 @@ async def handle_connection(websocket, path):
                 broadband_buffer = b""
                 broadband_signal_buffer = []
                 broadband_kernel_buffer = []
-                broadband_kernel_buffers_for_each_channel = []
-                broadband_signal_buffers_for_each_channel = []
+                broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
+                broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
                 broadband_total_required_buffer_size = None
                 broadband_required_buffer_size = None
                     
