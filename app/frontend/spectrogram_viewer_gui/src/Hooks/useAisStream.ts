@@ -1,6 +1,6 @@
 import { Ship } from '../Components/ShipMarker';
 import { useDataSource } from './useDataSource';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 type ShipListener = (ships: Ship[]) => void;
 
@@ -10,6 +10,7 @@ interface ShipStoreInterface {
   ws: WebSocket | null;
   lastConnectionAttempt: number;
   currentDataSource: string;
+  activeConnections: number;
   
   addShip(ship: Ship): void;
   updateShip(mmsi: string, data: Partial<Ship>): void;
@@ -19,6 +20,8 @@ interface ShipStoreInterface {
   connect(dataSource: string): void;
   disconnect(): void;
   setDataSource(source: string): void;
+  registerConnection(): number;
+  unregisterConnection(id: number): void;
 }
 
 const shipStore: ShipStoreInterface = {
@@ -27,6 +30,7 @@ const shipStore: ShipStoreInterface = {
   ws: null,
   lastConnectionAttempt: 0,
   currentDataSource: 'antenna',
+  activeConnections: 0,
 
   addShip(ship: Ship) {
     if (!ship || !ship.mmsi || !ship.latitude || !ship.longitude) {
@@ -76,39 +80,73 @@ const shipStore: ShipStoreInterface = {
       this.currentDataSource = source;
       this.ships = {}; 
       this.notifyListeners();
+      
+      // Only reconnect if we have active connections
+      if (this.activeConnections > 0) {
+        this.disconnect();
+        this.connect(source);
+      }
+    }
+  },
+
+  // Register a new connection and return its ID
+  registerConnection() {
+    this.activeConnections++;
+    console.log(`Registered connection. Active connections: ${this.activeConnections}`);
+    
+    // If this is the first connection, establish the WebSocket
+    if (this.activeConnections === 1) {
+      this.connect(this.currentDataSource);
+    }
+    
+    return this.activeConnections;
+  },
+  
+  // Unregister a connection
+  unregisterConnection(id: number) {
+    this.activeConnections = Math.max(0, this.activeConnections - 1);
+    console.log(`Unregistered connection ${id}. Active connections: ${this.activeConnections}`);
+    
+    // If no more active connections, disconnect the WebSocket
+    if (this.activeConnections === 0) {
       this.disconnect();
-      this.connect(source);
     }
   },
 
   connect(dataSource: string = 'antenna') {
-    const now = Date.now();
-    if (now - this.lastConnectionAttempt < 2000) return;
-    this.lastConnectionAttempt = now;
+    if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
+      console.log("WebSocket connection already exists, reusing it");
+      return;
+    }
     
-    if (this.ws) {
-      try {
+    console.log(`Starting WebSocket connection attempt for ${dataSource}`);
+    
+    try {
+      if (this.ws) {
         this.ws.close();
-      } catch (e) {
-        console.error("Error closing WebSocket:", e);
       }
+    } catch (e) {
+      console.error("Error closing WebSocket:", e);
     }
     
     console.log(`Connecting to WebSocket server for ${dataSource} data...`);
     this.ws = new WebSocket(`ws://localhost:8766?client_name=map_client&data_source=${dataSource}`);
     
     this.ws.onopen = () => {
-      console.log("WebSocket connection established");
+      console.log("WebSocket connection established for AIS data");
     };
     
     this.ws.onmessage = (event) => {
+      console.log("Received WebSocket message:", event.data.substring(0, 100) + "...");
       try {
         const data = JSON.parse(event.data);
+        console.log("Parsed WebSocket data:", data);
         
         if (data && data.mmsi && data.latitude !== undefined && data.longitude !== undefined) {
           const sourceFromData = data.data_source || 'antenna';
           
           if (this.ships[data.mmsi]) {
+            console.log(`Updating existing ship ${data.mmsi} at [${data.latitude}, ${data.longitude}]`);
             this.updateShip(data.mmsi, {
               latitude: parseFloat(data.latitude),
               longitude: parseFloat(data.longitude),
@@ -119,7 +157,7 @@ const shipStore: ShipStoreInterface = {
               dataSource: sourceFromData 
             });
           } else {
-            const shipData: Ship = {
+            const shipData = {
               mmsi: String(data.mmsi),
               shipName: data.name || data.shipName || `Vessel ${String(data.mmsi).substring(0,6)}`,
               shipType: data.ship_type?.toString() || data.shipType?.toString() || '0',
@@ -139,18 +177,25 @@ const shipStore: ShipStoreInterface = {
             };
             
             this.addShip(shipData);
-            console.log(`Added ship ${data.mmsi} at [${data.latitude}, ${data.longitude}] from ${shipData.dataSource} source`);
           }
+        
+        } else {
+          console.warn("Received data missing required fields:", data);
         }
       } catch (error) {
-        console.error("Error processing WebSocket message:", error);
+        console.error("Error processing WebSocket message:", error, "Raw data:", event.data);
       }
     };
     
-    this.ws.onclose = () => {
-      console.log("WebSocket connection closed");
+    this.ws.onclose = (event) => {
+      console.log(`WebSocket connection closed with code: ${event.code}, reason: ${event.reason}, wasClean: ${event.wasClean}`);
       
-      setTimeout(() => this.connect(this.currentDataSource), 2000);
+      // Only attempt to reconnect if we still have active connections
+      if (this.activeConnections > 0) {
+        setTimeout(() => this.connect(this.currentDataSource), 2000);
+      } else {
+        console.log("Not attempting to reconnect as there are no active connections");
+      }
     };
     
     this.ws.onerror = (error) => {
@@ -160,6 +205,7 @@ const shipStore: ShipStoreInterface = {
   
   disconnect() {
     if (this.ws) {
+      console.log("Disconnecting WebSocket (active connections: " + this.activeConnections + ")");
       try {
         this.ws.close();
       } catch (e) {
@@ -172,23 +218,34 @@ const shipStore: ShipStoreInterface = {
 
 export function useAisStreamWithSource(isMonitoring = false) {
   const { dataSource } = useDataSource();
+  const connectionIdRef = useRef<number | null>(null);
   
+  // Handle data source changes
   useEffect(() => {
     if (isMonitoring) {
       shipStore.setDataSource(dataSource);
     }
   }, [dataSource, isMonitoring]);
   
+  // Handle WebSocket connection lifecycle
   useEffect(() => {
+    console.log(`useAisStreamWithSource effect triggered, isMonitoring: ${isMonitoring}`);
+    
     if (isMonitoring) {
-      shipStore.connect(shipStore.currentDataSource);
+      // Register this component as using the connection
+      connectionIdRef.current = shipStore.registerConnection();
       
       return () => {
-        shipStore.disconnect();
+        // Unregister when component unmounts or isMonitoring becomes false
+        if (connectionIdRef.current !== null) {
+          shipStore.unregisterConnection(connectionIdRef.current);
+          connectionIdRef.current = null;
+        }
       };
     }
   }, [isMonitoring]);
   
   return shipStore;
 }
+
 export default shipStore;

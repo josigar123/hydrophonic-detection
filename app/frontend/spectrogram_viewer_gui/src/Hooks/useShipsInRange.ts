@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Ship } from '../Components/ShipMarker';
 import { useShips } from './useShips';
 import { useUserPosition } from './useUserPosition';
@@ -8,7 +8,8 @@ const MAX_RANGE = 40; // km
 
 export function useShipsInRange(isMonitoring = false)  {
   const { position } = useUserPosition();
-  const { ships, isLoading } = useShips();
+  const { ships, isLoading } = useShips(isMonitoring);
+
 
   const shipsInRange = useMemo(() => {
     return ships.filter(

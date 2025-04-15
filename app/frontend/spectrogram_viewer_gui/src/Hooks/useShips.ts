@@ -17,19 +17,18 @@ export const useShips = (isMonitoring = false): UseShipsResult => {
   const [antennaShips, setAntennaShips] = useState<Ship[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  
-  // Pass isMonitoring to use in useAisStreamWithSource
   useAisStreamWithSource(isMonitoring);
   
   const apiShipsResult = useApiShips();
   
   useEffect(() => {
     if (dataSource === 'antenna') {
+      // Fetch initial ships
       setAntennaShips(shipStore.getShips());
       setIsLoading(false);
       setLastUpdate(new Date());
       
-      // Only connect if we're monitoring
+      // Set up subscription if we're monitoring
       if (isMonitoring) {
         const unsubscribe = shipStore.subscribe((updatedShips) => {
           setAntennaShips(updatedShips);
