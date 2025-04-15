@@ -15,7 +15,7 @@ import { RecordingState } from '../enums/States';
 import { usePositionSync } from '../Hooks/usePositionSync';
 import { Image } from '@heroui/react';
 import SMAUG from '/assets/icons/SMAUGlogo.png';
-import WavFileList from '../Components/WavFileList';
+import WavFileEntryList from '../Components/WavFileEntryList';
 
 const numOfChannels = recordingParameters['channels'];
 
@@ -166,9 +166,7 @@ const MainPage = () => {
         </div>
 
         <div className="w-1/4 flex justify-end">
-          <div className="relative">
-            <WavFileList />
-          </div>
+          <WavFileEntryList />
         </div>
       </div>
 

@@ -8,11 +8,6 @@ interface MinioObject {
   last_modified: string;
 }
 
-interface FileDownloadResponse {
-  status: string;
-  file_saved_to: string;
-}
-
 export type GetObjectsResponse = MinioObject[];
 
 export const getWavFiles = async (): Promise<GetObjectsResponse> => {
@@ -23,13 +18,22 @@ export const getWavFiles = async (): Promise<GetObjectsResponse> => {
   return response.data;
 };
 
-export const downloadWavFile = async (
-  object_name: string,
-  destination: string
-): Promise<FileDownloadResponse> => {
-  const request_url = `${BASE_API_URL}/download?object_name=${object_name}&destination=${destination}`;
+export const downloadWavFile = async (object_name: string): Promise<void> => {
+  const request_url = `${BASE_API_URL}/download?object_name=${encodeURIComponent(object_name)}`;
 
-  const response = await axios.get(request_url);
+  const response = await axios.get(request_url, {
+    responseType: 'blob',
+  });
 
-  return response.data;
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', object_name);
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  window.URL.revokeObjectURL(url);
 };
