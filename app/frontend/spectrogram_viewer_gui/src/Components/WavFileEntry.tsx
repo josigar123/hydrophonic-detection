@@ -1,11 +1,15 @@
 import { downloadWavFile } from '../api/wavFileApi';
 import wavIcon from '/assets/icons/wav-icon.png';
 import downloadIcon from '/assets/icons/download-symbol-svgrepo-com.svg';
+import recordingParameters from '../../../../configs/recording_parameters.json';
+
+const sampleRate = recordingParameters['sampleRate'];
+const bitDepth = recordingParameters['bitDepth'];
+const numChannels = recordingParameters['channels'];
 
 interface WavFileEntryProps {
   size: number;
   datetime: string;
-  length: number;
   objectName: string;
   fileName: string;
 }
@@ -13,10 +17,52 @@ interface WavFileEntryProps {
 const WavFileEntry = ({
   size,
   datetime,
-  length,
   objectName,
   fileName,
 }: WavFileEntryProps) => {
+  function formatBytes(bytes: number): string {
+    const units = ['bytes', 'KiB', 'MiB', 'GiB'];
+    let i = 0;
+
+    while (bytes >= 1024 && i < units.length - 1) {
+      bytes /= 1024;
+      i++;
+    }
+
+    return `${bytes.toFixed(2)} ${units[i]}`;
+  }
+
+  function formatTimestamp(iso: string): string {
+    const date = new Date(iso);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+  }
+
+  function calculateWavDuration(
+    totalBytes: number,
+    sampleRate: number,
+    bitDepth: number,
+    channels: number,
+    headerSize = 44 // default for PCM WAV files
+  ): number {
+    const dataBytes = totalBytes - headerSize;
+    const bytesPerSecond = sampleRate * channels * (bitDepth / 8);
+    return dataBytes / bytesPerSecond; // seconds
+  }
+
+  function formatDuration(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const paddedMins = String(mins).padStart(2, '0');
+    const paddedSecs = String(secs).padStart(2, '0');
+    return `${paddedMins}:${paddedSecs}`;
+  }
+
   return (
     <div className="flex items-center justify-between p-4 mb-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center flex-1">
@@ -27,9 +73,13 @@ const WavFileEntry = ({
         <div className="flex flex-col">
           <h3 className="text-lg font-medium text-gray-800">{fileName}</h3>
           <div className="flex flex-wrap gap-x-6 text-sm text-gray-600">
-            <span>{size}</span>
-            <span>{length}</span>
-            <span>{datetime}</span>
+            <span>{formatBytes(size)}</span>
+            <span>
+              {formatDuration(
+                calculateWavDuration(size, sampleRate, bitDepth, numChannels)
+              )}
+            </span>
+            <span>{formatTimestamp(datetime)}</span>
           </div>
         </div>
       </div>

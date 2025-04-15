@@ -63,7 +63,6 @@ const WavFileEntryList = () => {
                 <WavFileEntry
                   size={fileInfo.size}
                   datetime={fileInfo.last_modified}
-                  length={5}
                   objectName={fileInfo.object_name}
                   fileName={`WAV${index + 1}`}
                 />
