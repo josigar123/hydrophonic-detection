@@ -53,6 +53,20 @@ This function will read the current recording config from a Kafka topic
                 "bufferLength": int,
                 "windowInMin": int,
             }
+            
+    scot: {
+        ch1: 1,
+        ch2: 2,
+        corr_width: 512
+    }
+    
+    Want to buffer at a minimum corr_width samples per channel
+    
+    1. Extract channel data with convert_n_channel_signal_to_n_arrays
+    2. add to scot_per_channel_signal_buffer = []
+    3. check length of appropriate channels, see that they are at a min corr_width
+    4. remove the first corr_width samples from the buffer, leaving the latest rest
+    5. Run scot(self, signal_1, signal_2) and send the data through the socket
 '''
 
 ################## GLOBAL VARIABLES #########################
@@ -77,6 +91,8 @@ broadband_kernel_buffers_for_each_channel = [] # Used for OLA on each individual
 # Holds an entry of entries, each entry represents a channels broadband sig, each entries entry represents
 # window_size seconds of data
 broadband_signal_buffers_for_each_channel = [] 
+scot_audio_buffer = b"" # Will buffer data for correlation plot
+scot_per_channel_signal_buffer = [] # Buffers signal data for each channel
 
 '''
     These global variables will hold information for how much data must be collected in a buffer before the spectrogram data can be produced
@@ -684,6 +700,32 @@ async def handle_connection(websocket, path):
                 
             print(f"Removed {client_name} from active clients")
 
+def get_scot_config(spectrogram_client_config):
+    scot_config = spectrogram_client_config.get("spectrogram_client").get("scotConfiguration")
+    
+    if scot_config:
+        signal1 = scot_config.get("channel1")
+        signal2 = scot_config.get("channel2")
+        correlation_length = scot_config.get("corrLen")
+        
+        return signal1, signal2, correlation_length
+    else:
+        print("scot config is not available")
+        return None
+
+async def forward_scot_data_to_frontend(data):
+    global scot_audio_buffer
+    global scot_per_channel_signal_buffer
+    
+    if 'spectrogram_client' in clients:
+        try:
+            signal1, signal2, correlation_length = get_scot_config(spectrogram_client_config)
+        except websockets.exceptions.ConnectionClosed:
+            print("Connection to spectrogram_client was closed while sending")
+            if 'spectrogram_client' in clients:
+                clients.pop('spectrogram_client', None)
+        except Exception as e:
+            print(f"Error sending to spectrogram_cleitn from 'forward_scot_data_to_frontend': {e}")
 async def forward_recording_status_to_frontend(is_recording):
     """
     Forwards recording status to any connected status clients.
@@ -1073,6 +1115,8 @@ async def main():
     global broadband_kernel_buffers_for_each_channel
     global broadband_signal_buffers_for_each_channel
     
+    global scot_per_channel_signal_buffer
+    
     try:
         print("Loading configuration from Kafka...")
         recording_config = await consume_recording_config()
@@ -1102,7 +1146,9 @@ async def main():
         broadband_kernel_buffers_for_each_channel = [np.array([]) for _ in range(recording_config["channels"])]
         broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
         
-
+        '''Initialize per channel scot buffer with config'''
+        scot_per_channel_signal_buffer = [np.array([]) for _ in range(recording_config["channels"])]
+        
         websocket_server = websockets.serve(
             handle_connection, 
             "localhost",

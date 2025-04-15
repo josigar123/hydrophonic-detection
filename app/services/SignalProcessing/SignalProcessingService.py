@@ -207,7 +207,6 @@ class SignalProcessingService:
             if self.bit_depth != 16:
                 raise ValueError(f"Unsupported bit depth: {self.bit_depth}")
     
-
             samples = np.frombuffer(pcm_data, dtype=np.int16) 
             
             if len(samples) % self.num_channels != 0:
@@ -223,3 +222,62 @@ class SignalProcessingService:
             return channels
         except Exception as e:
             print(f"Error in convert_n_channel_signal_to_n_arrays: {e}")
+    
+    # Function takes a signal
+    def build_signal_buffer_with_n_samples(self, signal: np.ndarray, start: int, stop: int):
+        pass
+    
+    def extract_n_samples_from_signal(self, signal: np.ndarray, start: int, stop: int):
+        try:
+            if stop > len(signal):
+                raise IndexError(f"In extract_n_samples_from_signal: stop ({stop}) > len(signal): {len(signal)}")
+            return signal[start:stop]
+        except Exception as e:
+            print(f"Error in extract_n_samples_from_signal: {e}")
+            
+    # The Smoothed Coherence Transform (SCOT)
+    # Code is simplfied from https://github.com/SiggiGue/gccestimating
+    def scot(self, signal_1, signal_2):
+        """
+        INPUT:
+            signal_1, signal_2 : array of float
+                Audio data in time domain. (Best 512 samples)        
+        OUTPUT:
+            graph_line: array of float
+                Line segment of correlation graph
+            corr_lags_t: array of float
+                y-axis values, correlation time shift
+        """
+        
+        lenght = len(signal_1) + len(signal_2) -1
+        fftlen = int(2**np.ceil(np.log2(lenght)))
+
+        # Spectrum of inputsignal
+        spectrum_1 = np.fft.rfft(signal_1, fftlen)
+        spectrum_2 = np.fft.rfft(signal_2, fftlen)
+
+        # Auto power spectrum
+        G_11 = np.real(spectrum_1*np.conj(spectrum_1))
+        G_22 = np.real(spectrum_2*np.conj(spectrum_2))
+
+        # cross power spectrum
+        G_12 = spectrum_1*np.conj(spectrum_2)
+
+        # 
+        denominator = np.sqrt(G_11*G_22)
+
+        # To prevent devision by zero
+        denominator[np.logical_and(denominator < 1e-12, denominator > -1e-12)] = 1e12
+
+        # coherence function
+        gamma = G_12 / denominator
+
+        # inverse fft of gamma
+        line = np.fft.irfft(gamma, fftlen)
+        line = np.roll(line, len(line)//2)
+        start = (len(line)-lenght)//2 + 1
+        
+        graph_line = line[start:start+lenght]
+        corr_lags_t = signal.correlation_lags(len(signal_1),len(signal_2))/self.sample_rate
+
+        return graph_line, corr_lags_t
