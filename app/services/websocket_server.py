@@ -488,7 +488,7 @@ async def handle_connection(websocket, path):
                     print(f"Error processing message: {e}")
             
                     
-        if client_name == "ais_consumer":
+        if client_name == "map_client":
             async for message in websocket:
                 try:
                     await forward_ais_to_frontend(message)

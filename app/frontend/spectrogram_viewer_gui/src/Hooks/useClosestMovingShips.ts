@@ -6,7 +6,7 @@ import { useUserPosition } from './useUserPosition';
 const MAX_SHIPS = 50;
 
 export function useClosestMovingShips(isMonitoring = false) {
-  const { ships, isLoading } = useShips();
+  const { ships, isLoading } = useShips(isMonitoring);
   const { position } = useUserPosition();
 
   const closestMovingShips = useMemo(() => {
