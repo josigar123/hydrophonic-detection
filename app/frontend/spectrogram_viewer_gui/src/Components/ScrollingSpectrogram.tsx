@@ -3,7 +3,6 @@ import {
   AxisScrollStrategies,
   AxisTickStrategies,
   ChartXY,
-  Color,
   emptyLine,
   HeatmapScrollingGridSeriesIntensityValues,
   LegendBoxBuilders,
@@ -16,6 +15,7 @@ import {
 import lightningchartLicense from '../lightningchartLicense.json';
 import { SpectrogramPayload } from '../Interfaces/Payloads';
 import recordinParameters from '../../../../configs/recording_parameters.json';
+import { denormalizedInfernoData } from '../ColorMaps/colorMaps';
 
 const sampleRate = recordinParameters['sampleRate'];
 const nyQuistFrequency = sampleRate / 2;
@@ -29,7 +29,6 @@ interface SpectrogramProps {
   minFrequency: number;
   maxDb: number;
   minDb: number;
-  colorMap: Color[];
 }
 
 const ScrollingSpectrogram = ({
@@ -41,7 +40,6 @@ const ScrollingSpectrogram = ({
   minFrequency,
   maxDb,
   minDb,
-  colorMap,
 }: SpectrogramProps) => {
   const chartRef = useRef<ChartXY | null>(null);
   const heatmapSeriesRef =
@@ -89,7 +87,7 @@ const ScrollingSpectrogram = ({
       .setInterval({ start: minFrequency, end: maxFrequency });
 
     const lut = new LUT({
-      steps: regularColorSteps(minDb, maxDb, colorMap),
+      steps: regularColorSteps(minDb, maxDb, denormalizedInfernoData),
       units: 'dB',
       interpolate: true,
     });
@@ -130,7 +128,6 @@ const ScrollingSpectrogram = ({
     maxFrequency,
     minDb,
     maxDb,
-    colorMap,
     resolution,
     heatmapMinTimeStepMs,
   ]);

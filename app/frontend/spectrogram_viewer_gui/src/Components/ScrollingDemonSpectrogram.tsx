@@ -3,7 +3,6 @@ import {
   AxisScrollStrategies,
   AxisTickStrategies,
   ChartXY,
-  Color,
   emptyLine,
   HeatmapScrollingGridSeriesIntensityValues,
   LegendBoxBuilders,
@@ -16,6 +15,7 @@ import {
 import lightningchartLicense from '../lightningchartLicense.json';
 import { DemonSpectrogramPayload } from '../Interfaces/Payloads';
 import recordingConfiguration from '../../../../configs/recording_parameters.json';
+import { denormalizedViridisData } from '../ColorMaps/colorMaps';
 
 const sampleRate = recordingConfiguration['sampleRate'];
 const nyQuistFrequency = sampleRate / 2;
@@ -29,7 +29,6 @@ interface DemonSpectrogramProps {
   minFrequency: number;
   maxDb: number;
   minDb: number;
-  colorMap: Color[];
 }
 
 const ScrollingDemonSpectrogram = ({
@@ -41,7 +40,6 @@ const ScrollingDemonSpectrogram = ({
   minFrequency,
   maxDb,
   minDb,
-  colorMap,
 }: DemonSpectrogramProps) => {
   const chartRef = useRef<ChartXY | null>(null);
   const heatmapSeriesRef =
@@ -92,7 +90,7 @@ const ScrollingDemonSpectrogram = ({
     if (!theme.examples) return null;
 
     const lut = new LUT({
-      steps: regularColorSteps(minDb, maxDb, colorMap),
+      steps: regularColorSteps(minDb, maxDb, denormalizedViridisData),
       units: 'dB',
       interpolate: true,
     });
@@ -131,7 +129,6 @@ const ScrollingDemonSpectrogram = ({
     maxFrequency,
     minDb,
     maxDb,
-    colorMap,
     resolution,
     heatmapMinTimeStepMs,
   ]);
