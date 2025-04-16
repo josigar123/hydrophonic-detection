@@ -22,6 +22,8 @@ import {
 import { Color } from '@lightningchart/lcjs';
 import { DetectionContext } from '../Contexts/DetectionContext';
 import { ValidityContext } from '../Contexts/InputValidationContext';
+import ScrollingCrossCorrelation from './ScrollingCrossCorrelation';
+import CrossCorrelationParameterField from './CrossCorrelationParameterField';
 
 const websocketUrl = 'ws://localhost:8766?client_name=spectrogram_client';
 const sampleRate = recordingConfig['sampleRate'];
@@ -62,6 +64,7 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
   const {
     spectrogramData,
     demonSpectrogramData,
+    scotData,
     isNarrowbandDetection,
     isConnected,
     connect,
@@ -85,10 +88,17 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     ): boolean => {
       if (!spectrogramConfig) return false;
 
-      const { spectrogramConfiguration, demonSpectrogramConfiguration } =
-        spectrogramConfig;
+      const {
+        spectrogramConfiguration,
+        demonSpectrogramConfiguration,
+        scotConfiguration,
+      } = spectrogramConfig;
 
-      if (!spectrogramConfiguration || !demonSpectrogramConfiguration)
+      if (
+        !spectrogramConfiguration ||
+        !demonSpectrogramConfiguration ||
+        !scotConfiguration
+      )
         return false;
 
       return (
@@ -132,11 +142,49 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
         validateMinFrequency(demonSpectrogramConfiguration.minFrequency ?? 0) &&
         validateMaxDb(demonSpectrogramConfiguration.maxDb ?? 0) &&
         validateMinDb(demonSpectrogramConfiguration.minDb ?? 0) &&
-        validateWindow(demonSpectrogramConfiguration.window ?? '')
+        validateWindow(demonSpectrogramConfiguration.window ?? '') &&
+        validateChannel1(scotConfiguration.channel1 ?? 0) &&
+        validateChannel2(scotConfiguration.channel2 ?? 0) &&
+        validateCorrelationLength(scotConfiguration.correlationLength ?? 0) &&
+        validateRefreshRateInSeconds(
+          scotConfiguration.refreshRateInSeconds ?? 0
+        )
       );
     },
     [selectedColormap]
   );
+
+  const validateChannel1 = (channel1: number) => {
+    if (channel1 === undefined || channel1 === 0) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateChannel2 = (channel2: number) => {
+    if (channel2 === undefined || channel2 === 0) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateCorrelationLength = (correlationLength: number) => {
+    if (correlationLength === undefined || correlationLength === 0) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateRefreshRateInSeconds = (refreshRateInSeconds: number) => {
+    if (refreshRateInSeconds === undefined || refreshRateInSeconds === 0) {
+      return false;
+    }
+
+    return true;
+  };
 
   const validateColorMap = (map: string) => {
     if (map === undefined || map === '') {
@@ -283,6 +331,17 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
     [spectrogramConfig]
   );
 
+  const scotProps = useMemo(
+    () => ({
+      windowInMin: spectrogramConfig.scotConfiguration?.windowInMin ?? 2,
+      correlationLength:
+        spectrogramConfig.scotConfiguration?.correlationLength ?? 512,
+      refreshRateInSeonds:
+        spectrogramConfig.scotConfiguration?.refreshRateInSeconds ?? 60,
+    }),
+    [spectrogramConfig]
+  );
+
   const handlePreset1 = () => {
     setSpectrogramConfig(parameterPreset1);
   };
@@ -365,10 +424,10 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
           >
             <Tab key="spectrogram" title="Spectrogram"></Tab>
             <Tab key="demon" title="DEMON"></Tab>
+            <Tab key="scot" title="SCOT"></Tab>
           </Tabs>
         </div>
 
-        {/* Right side: Buttons */}
         <div className="flex items-center gap-2">
           <Tabs
             isDisabled={isConnected}
@@ -507,6 +566,51 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
               {/* Parameter field with improved spacing */}
               <div className="mt-4 bg-slate-700 p-3 rounded-md">
                 <DemonSpectrogramParameterField isConnected={isConnected} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scot */}
+        <div className={`${selected === 'scot' ? 'block' : 'hidden'}`}>
+          <div className="h-full flex flex-col bg-slate-800 rounded-lg p-4 shadow-lg">
+            <div
+              className="flex-1 w-full relative"
+              style={{ minHeight: '400px' }}
+            >
+              {scotData ? (
+                <ScrollingCrossCorrelation
+                  scotData={scotData}
+                  windowInMin={scotProps.windowInMin}
+                  correlationLength={scotProps.correlationLength}
+                  refreshRateInSeconds={scotProps.refreshRateInSeonds}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+                  <div className="text-center">
+                    <svg
+                      className="w-12 h-12 mx-auto mb-3 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    <p className="text-lg font-medium">No DEMON Data</p>
+                    <p className="text-sm mt-1">
+                      Click Connect to start streaming
+                    </p>
+                  </div>
+                </div>
+              )}
+              {/* Parameter field with improved spacing */}
+              <div className="mt-4 bg-slate-700 p-3 rounded-md">
+                <CrossCorrelationParameterField isConnected={isConnected} />
               </div>
             </div>
           </div>

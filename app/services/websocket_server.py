@@ -83,6 +83,8 @@ broadband_kernel_buffers_for_each_channel = [] # Used for OLA on each individual
 # window_size seconds of data
 broadband_signal_buffers_for_each_channel = [] 
 scot_per_channel_signal_buffer = [] # Buffers signal data for each channel
+scot_n_segment_chunking_buffer = []
+scot_chunking_buffer_timer = 0
 
 '''
     These global variables will hold information for how much data must be collected in a buffer before the spectrogram data can be produced
@@ -465,6 +467,9 @@ async def handle_connection(websocket, path):
     global broadband_kernel_buffers_for_each_channel
     global broadband_kernel_buffer
     global scot_per_channel_signal_buffer
+    global scot_n_segment_chunking_buffer
+    global scot_chunking_buffer_timer
+    
     
     '''Dict holding the recording config, get set after the server has been served'''
     global recording_config
@@ -487,6 +492,7 @@ async def handle_connection(websocket, path):
                     if spectrogram_client_config and spectrogram_required_buffer_size and demon_required_buffer_size:
                         await forward_signal_processed_data_to_frontend(message)
                         await forward_demon_data_to_frontend(message)
+                        await forward_scot_data_to_frontend(message)
                     
                     if broadband_client_config and broadband_required_buffer_size and broadband_total_required_buffer_size:                            
                         await forward_broadband_data_to_frontend(message)
@@ -679,6 +685,8 @@ async def handle_connection(websocket, path):
                 broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
                 broadband_total_required_buffer_size = None
                 broadband_required_buffer_size = None
+                scot_n_segment_chunking_buffer = []
+                scot_chunking_buffer_timer = 0
                     
             # Empty the buffers on disconnect
             if client_name == "spectrogram_client":
@@ -698,9 +706,10 @@ def get_scot_config(spectrogram_client_config):
     if scot_config:
         signal1 = scot_config.get("channel1")
         signal2 = scot_config.get("channel2")
-        correlation_length = scot_config.get("corrLen")
+        correlation_length = scot_config.get("correlationLength")
+        refresh_rate_in_seconds = scot_config.get("refreshRateInSeconds")
         
-        return signal1, signal2, correlation_length
+        return signal1, signal2, correlation_length, refresh_rate_in_seconds
     else:
         print("scot config is not available")
         return None
@@ -722,10 +731,12 @@ def trim_samples_from_scot_channel_buffer(buffer: list[list[int]], num_samples_t
 async def forward_scot_data_to_frontend(data):
 
     global scot_per_channel_signal_buffer
+    global scot_n_segment_chunking_buffer
+    global scot_chunking_buffer_timer
     
     if 'spectrogram_client' in clients:
         try:
-            signal1, signal2, correlation_length = get_scot_config(spectrogram_client_config)
+            signal1, signal2, correlation_length, refresh_rate_in_seconds = get_scot_config(spectrogram_client_config)
             
             # Values recvd throuhg socket will be 1 indexed
             signal1_index = signal1 - 1
@@ -757,16 +768,27 @@ async def forward_scot_data_to_frontend(data):
                 # Generate correlation data
                 graph_line, corr_lags_t = signal_processing_service.scot(signal1_data_to_analyze, signal2_data_to_analyze)
                 
-                # ndarrays not JSON serializable
-                data_dict = {
-                    "graphLine": graph_line.tolist(),
-                    "crossCorrelationLagTimes": corr_lags_t.tolist()
-                }
+                # A matrix holding correlation_length samples worth of data
+                scot_n_segment_chunking_buffer.append(corr_lags_t)
                 
-                # Send correlation data through socket
-                data_json = json.dumps(data_dict)
-                print("Sending SCOT data...")
-                await clients["spectrogram_client"].send(data_json)
+                # Incrementing counter
+                scot_chunking_buffer_timer += correlation_length/recording_config["sampleRate"]
+                
+                # If enough data is accumulated, send data
+                if scot_chunking_buffer_timer >= refresh_rate_in_seconds:
+                    # ndarrays not JSON serializable
+                    data_dict = {
+                        "graphLine": graph_line.tolist(),
+                        "crossCorrelationLagTimes": [chunk.tolist() for chunk in scot_n_segment_chunking_buffer]
+                    }
+                    
+                    scot_n_segment_chunking_buffer = []
+                    scot_chunking_buffer_timer = 0
+                    
+                    # Send correlation data through socket
+                    data_json = json.dumps(data_dict)
+                    print("Sending SCOT data...")
+                    await clients["spectrogram_client"].send(data_json)
             
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
@@ -1015,7 +1037,6 @@ async def forward_broadband_data_to_frontend(data):
                 
                 # Send detectino for each channel
                 detections_json = json.dumps(detections_dict, indent=2)
-                print(detections_json)
                 await clients["broadband_client"].send(detections_json)
 
         except websockets.exceptions.ConnectionClosed:

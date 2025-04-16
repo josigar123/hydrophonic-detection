@@ -12,7 +12,7 @@ export interface DemonSpectrogramPayload {
 
 export interface ScotPayload {
   graphLine: number[];
-  crossCorrelationLagTimes: number[];
+  crossCorrelationLagTimes: number[][];
 }
 
 export interface BroadbandPayload {

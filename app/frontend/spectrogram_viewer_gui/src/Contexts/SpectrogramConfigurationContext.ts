@@ -1,14 +1,12 @@
 import { createContext, Dispatch, SetStateAction } from 'react';
 import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
-import recordingConfig from '../../../../configs/recording_parameters.json';
+
 interface SpectrogramConfigurationContextType {
   spectrogramConfig: SpectrogramNarrowbandAndDemonConfiguration;
   setSpectrogramConfig: Dispatch<
     SetStateAction<SpectrogramNarrowbandAndDemonConfiguration>
   >;
 }
-
-const sampleRate = recordingConfig['sampleRate'];
 
 export const SpectrogramConfigurationContext = createContext<
   SpectrogramConfigurationContextType | undefined
@@ -24,7 +22,7 @@ export const parameterPreset1: SpectrogramNarrowbandAndDemonConfiguration = {
     horizontalFilterLength: 4,
     maxDb: 15,
     minDb: 0,
-    maxFrequency: Math.round(sampleRate / 2),
+    maxFrequency: 1000,
     minFrequency: 0,
     window: 'hann',
     narrowbandThreshold: 8,
@@ -41,5 +39,12 @@ export const parameterPreset1: SpectrogramNarrowbandAndDemonConfiguration = {
     window: 'hann',
     windowInMin: 3,
     horizontalFilterLength: 4,
+  },
+  scotConfiguration: {
+    channel1: 1,
+    channel2: 1,
+    correlationLength: 512,
+    windowInMin: 2,
+    refreshRateInSeconds: 10,
   },
 };

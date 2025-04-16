@@ -24,6 +24,14 @@ export interface DemonSpectrogramConfiguration {
   window?: string;
 }
 
+export interface ScotConfiguration {
+  channel1?: number;
+  channel2?: number;
+  correlationLength?: number;
+  windowInMin?: number;
+  refreshRateInSeconds?: number;
+}
+
 export interface BroadbandConfiguration {
   broadbandThreshold?: number;
   windowSize?: number;
@@ -35,4 +43,5 @@ export interface BroadbandConfiguration {
 export interface SpectrogramNarrowbandAndDemonConfiguration {
   spectrogramConfiguration?: SpectrogramConfiguration;
   demonSpectrogramConfiguration?: DemonSpectrogramConfiguration;
+  scotConfiguration?: ScotConfiguration;
 }
