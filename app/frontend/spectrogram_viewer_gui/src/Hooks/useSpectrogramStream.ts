@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   SpectrogramPayload,
   DemonSpectrogramPayload,
+  ScotPayload,
 } from '../Interfaces/Payloads';
 import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 
@@ -26,6 +27,11 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
       demonTimes: [],
       demonSpectrogramDb: [],
     });
+
+  const [scotData, setScotData] = useState<ScotPayload>({
+    graphLine: [],
+    crossCorrelationLagTimes: [],
+  });
 
   const [isNarrowbandDetection, setIsNarrowbandDetection] = useState(false);
 
@@ -84,6 +90,13 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
                 demonFrequencies: data.demonFrequencies || [],
                 demonTimes: data.demonTimes || [],
                 demonSpectrogramDb: data.demonSpectrogramDb || [],
+              });
+            }
+
+            if (data.crossCorrelationLagTimes) {
+              setScotData({
+                graphLine: data.graphLine || [],
+                crossCorrelationLagTimes: data.crossCorrelationLagTimes || [],
               });
             }
           } catch (error) {
@@ -152,6 +165,7 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
   return {
     spectrogramData,
     demonSpectrogramData,
+    scotData,
     isNarrowbandDetection,
     isConnected,
     error,

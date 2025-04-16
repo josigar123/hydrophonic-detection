@@ -10,6 +10,11 @@ export interface DemonSpectrogramPayload {
   demonSpectrogramDb: number[];
 }
 
+export interface ScotPayload {
+  graphLine: number[];
+  crossCorrelationLagTimes: number[];
+}
+
 export interface BroadbandPayload {
   broadbandSignal: number[];
   times: number[];
