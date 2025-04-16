@@ -91,7 +91,6 @@ broadband_kernel_buffers_for_each_channel = [] # Used for OLA on each individual
 # Holds an entry of entries, each entry represents a channels broadband sig, each entries entry represents
 # window_size seconds of data
 broadband_signal_buffers_for_each_channel = [] 
-scot_audio_buffer = b"" # Will buffer data for correlation plot
 scot_per_channel_signal_buffer = [] # Buffers signal data for each channel
 
 '''
@@ -713,19 +712,76 @@ def get_scot_config(spectrogram_client_config):
         print("scot config is not available")
         return None
 
+def trim_samples_from_scot_channel_buffer(buffer: list[list[int]], num_samples_to_remove: int):
+    
+    samples_removed = 0
+    while buffer and samples_removed < num_samples_to_remove:
+        current_array = buffer[0]
+        remaining_needed = num_samples_to_remove - samples_removed
+        
+        if len(current_array) <= remaining_needed:
+            samples_removed += len(current_array)
+            buffer.pop(0)
+        else:
+            buffer[0] = current_array[remaining_needed:]
+            samples_removed += remaining_needed
+
 async def forward_scot_data_to_frontend(data):
-    global scot_audio_buffer
+
     global scot_per_channel_signal_buffer
     
     if 'spectrogram_client' in clients:
         try:
             signal1, signal2, correlation_length = get_scot_config(spectrogram_client_config)
+            
+            # Values recvd throuhg socket will be 1 indexed
+            signal1_index = signal1 - 1
+            signal2_index = signal2 - 1
+            
+            # Extract each channels data in a matrix
+            channels = signal_processing_service.convert_n_channel_signal_to_n_arrays(data)
+            
+            signal1_data = channels[signal1_index]
+            signal2_data = channels[signal2_index]
+            
+            # Appending the channel data to the buffer
+            scot_per_channel_signal_buffer[signal1_index].append(signal1_data)
+            scot_per_channel_signal_buffer[signal2_index].append(signal2_data)
+            
+            # Flatten matrix to one long 1D list
+            signal1_sig = np.concatenate(scot_per_channel_signal_buffer[signal1_index])
+            signal2_sig = np.concatenate(scot_per_channel_signal_buffer[signal2_index])
+            
+            # Check length of channel data
+            if len(signal1_sig) >= correlation_length and len(signal2_sig) >= correlation_length:
+                signal1_data_to_analyze = signal1_sig[0:correlation_length]
+                signal2_data_to_analyze = signal2_sig[0:correlation_length]
+                
+                # Adjust channel buffers, removing samples that are going to be analyzed
+                trim_samples_from_scot_channel_buffer(scot_per_channel_signal_buffer[signal1_index], correlation_length)
+                trim_samples_from_scot_channel_buffer(scot_per_channel_signal_buffer[signal2_index], correlation_length)
+                
+                # Generate correlation data
+                graph_line, corr_lags_t = signal_processing_service.scot(signal1_data_to_analyze, signal2_data_to_analyze)
+                
+                # ndarrays not JSON serializable
+                data_dict = {
+                    "graphLine": graph_line.tolist(),
+                    "crossCorrelationLagTimes": corr_lags_t.tolist()
+                }
+                
+                # Send correlation data through socket
+                data_json = json.dumps(data_dict)
+                print("Sending SCOT data...")
+                await clients["spectrogram_client"].send(data_json)
+            
         except websockets.exceptions.ConnectionClosed:
             print("Connection to spectrogram_client was closed while sending")
             if 'spectrogram_client' in clients:
                 clients.pop('spectrogram_client', None)
         except Exception as e:
-            print(f"Error sending to spectrogram_cleitn from 'forward_scot_data_to_frontend': {e}")
+            print(f"Error sending to spectrogram_client from 'forward_scot_data_to_frontend': {e}")
+            
 async def forward_recording_status_to_frontend(is_recording):
     """
     Forwards recording status to any connected status clients.
@@ -1147,7 +1203,7 @@ async def main():
         broadband_signal_buffers_for_each_channel = [[] for _ in range(recording_config["channels"])]
         
         '''Initialize per channel scot buffer with config'''
-        scot_per_channel_signal_buffer = [np.array([]) for _ in range(recording_config["channels"])]
+        scot_per_channel_signal_buffer = [[] for _ in range(recording_config["channels"])]
         
         websocket_server = websockets.serve(
             handle_connection, 
