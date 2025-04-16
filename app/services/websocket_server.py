@@ -44,6 +44,11 @@ This function will read the current recording config from a Kafka topic
                     "horizontalFilterLength": int,
                     "window": string
                 },
+                "scotConfiguration": {
+                    "channel1": int,
+                    "channel2": int,
+                    "correlationWidth": int
+                }
             }
     When 'broadband_client' first connects, expect the following config payload:
             {
@@ -53,20 +58,6 @@ This function will read the current recording config from a Kafka topic
                 "bufferLength": int,
                 "windowInMin": int,
             }
-            
-    scot: {
-        ch1: 1,
-        ch2: 2,
-        corr_width: 512
-    }
-    
-    Want to buffer at a minimum corr_width samples per channel
-    
-    1. Extract channel data with convert_n_channel_signal_to_n_arrays
-    2. add to scot_per_channel_signal_buffer = []
-    3. check length of appropriate channels, see that they are at a min corr_width
-    4. remove the first corr_width samples from the buffer, leaving the latest rest
-    5. Run scot(self, signal_1, signal_2) and send the data through the socket
 '''
 
 ################## GLOBAL VARIABLES #########################
@@ -473,6 +464,7 @@ async def handle_connection(websocket, path):
     global broadband_signal_buffers_for_each_channel
     global broadband_kernel_buffers_for_each_channel
     global broadband_kernel_buffer
+    global scot_per_channel_signal_buffer
     
     '''Dict holding the recording config, get set after the server has been served'''
     global recording_config
@@ -694,6 +686,7 @@ async def handle_connection(websocket, path):
                 demon_spectrogram_audio_buffer = b""
                 demon_required_buffer_size = None
                 spectrogram_required_buffer_size = None
+                scot_per_channel_signal_buffer = [[] for _ in range(recording_config["channels"])]
             
             clients.pop(client_name, None)
                 
