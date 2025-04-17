@@ -565,7 +565,6 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
                   </div>
                 </div>
               )}
-              {/* Parameter field with improved spacing */}
               <div className="mt-4 bg-slate-700 p-3 rounded-md">
                 <CrossCorrelationParameterField isConnected={isConnected} />
               </div>

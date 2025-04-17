@@ -72,10 +72,13 @@ const ScrollingCrossCorrelation = ({
     chart.axisY
       .setTitle('Time delay between channels')
       .setUnits('s')
-      .setInterval({ start: 0, end: 15 });
+      .setInterval({
+        start: scotData.graphLine[0] ?? 0,
+        end: scotData.graphLine[scotData.graphLine.length - 1] ?? 10,
+      });
 
     const lut = new LUT({
-      steps: regularColorSteps(0, 15, denormalizedMagmaData),
+      steps: regularColorSteps(0, 0.15, denormalizedMagmaData),
       units: 'dB',
       interpolate: true,
     });
@@ -160,6 +163,9 @@ const ScrollingCrossCorrelation = ({
     if (!scotData || !heatmapSeriesRef.current) return;
 
     const currentTimestamp = Date.now();
+
+    console.log('ORIGIN: ', scotData.graphLine[0]);
+    console.log('APEX: ', scotData.graphLine[scotData.graphLine.length - 1]);
 
     if (tFirstSampleRef.current === null) {
       tFirstSampleRef.current = currentTimestamp;

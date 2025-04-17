@@ -24,7 +24,6 @@ const WavFileEntryList = () => {
       setIsLoading(true);
       setError(null);
       const objects = await getWavFiles();
-      console.log(objects);
       setWavFilesInfo(objects);
     } catch (err) {
       setError('Error fetching WAV files');
