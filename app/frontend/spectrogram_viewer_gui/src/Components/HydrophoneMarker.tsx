@@ -12,10 +12,6 @@ const hydroPhoneIcon = new L.Icon({
   className: 'hydrophone-icon',
 });
 
-interface HydrophoneMarkerProps {
-  isMonitoring: boolean;
-}
-
 type ChannelId = 'channel1' | 'channel2' | 'channel3' | 'channel4';
 
 const HYDROPHONES = [
@@ -73,7 +69,7 @@ const RadiationEffect = ({ position }: { position: [number, number] }) => {
   );
 };
 
-export function HydrophoneMarker({ isMonitoring }: HydrophoneMarkerProps) {
+export function HydrophoneMarker() {
   const context = useContext(DetectionContext);
   if (!context) return null;
 
