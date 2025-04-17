@@ -28,7 +28,7 @@ const BroadbandParameterInfoCard = () => {
 
   return (
     <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-      <div className="bg-blue-600" p-4>
+      <div className="bg-blue-600 p-4">
         <h2 className="text-xl font-bold text-white">Parameter Information</h2>
       </div>
 
