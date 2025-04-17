@@ -14,12 +14,6 @@ import {
 import { SpectrogramNarrowbandAndDemonConfiguration } from '../Interfaces/Configuration';
 import { Tooltip } from '@heroui/tooltip';
 import SpectrogramParameterInfoCard from './SpectrogramParameterInfoCard';
-
-import {
-  denormalizedInfernoData,
-  denormalizedViridisData,
-} from '../ColorMaps/colorMaps';
-import { Color } from '@lightningchart/lcjs';
 import { DetectionContext } from '../Contexts/DetectionContext';
 import { ValidityContext } from '../Contexts/InputValidationContext';
 
@@ -72,12 +66,6 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
 
   const [selected, setSelected] = useState('spectrogram');
 
-  const [selectedColormap, setSelectedColormap] = useState('inferno');
-
-  const [colorMapValues, setColorMapValues] = useState<Color[]>(
-    denormalizedInfernoData
-  );
-
   // Big chunky, clunky function for validating the input, might want to refactor this
   const validateEntireConfiguration = useCallback(
     (
@@ -92,7 +80,6 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
         return false;
 
       return (
-        validateColorMap(selectedColormap ?? '') &&
         validateWindow(spectrogramConfiguration.window ?? '') &&
         validateTperseg(
           spectrogramConfiguration.tperseg ?? 0,
@@ -135,17 +122,8 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
         validateWindow(demonSpectrogramConfiguration.window ?? '')
       );
     },
-    [selectedColormap]
+    []
   );
-
-  const validateColorMap = (map: string) => {
-    if (map === undefined || map === '') {
-      return false;
-    }
-
-    return true;
-  };
-
   const validateWindow = (window: string) => {
     if (window === undefined || window === '') {
       return false;
@@ -370,26 +348,6 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
 
         {/* Right side: Buttons */}
         <div className="flex items-center gap-2">
-          <Tabs
-            isDisabled={isConnected}
-            radius="sm"
-            selectedKey={selectedColormap}
-            onSelectionChange={(key) => {
-              switch (String(key)) {
-                case 'inferno':
-                  setColorMapValues(denormalizedInfernoData);
-                  break;
-                case 'viridis':
-                  setColorMapValues(denormalizedViridisData);
-                  break;
-              }
-              setSelectedColormap(String(key));
-            }}
-          >
-            <Tab key="inferno" title="Inferno"></Tab>
-            <Tab key="viridis" title="Viridis"></Tab>
-          </Tabs>
-
           <Tooltip
             content="Apply a preset for the spectrogram and DEMON spectrogram"
             size="md"
@@ -428,7 +386,6 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
                   minFrequency={spectrogramProps.minFrequency}
                   maxDb={spectrogramProps.maxDb}
                   minDb={spectrogramProps.minDb}
-                  colorMap={colorMapValues}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-300">
@@ -479,7 +436,6 @@ const SpectrogramSelection = ({ isMonitoring }: SpectrogramSelectionProps) => {
                   minFrequency={demonSpectrogramProps.minFrequency}
                   maxDb={demonSpectrogramProps.maxDb}
                   minDb={demonSpectrogramProps.minDb}
-                  colorMap={colorMapValues}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-300">
