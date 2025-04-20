@@ -12,7 +12,7 @@ import {
 } from '@heroui/react';
 import { Ship } from './ShipMarker';
 import { getShipTypeDescription } from '../utils/shipTypes';
-import { useClosestMovingShips } from '../Hooks/useClosestMovingShips';
+import { useShips } from '../Hooks/useShips';
 import ShipDetailsModal from '../Components/ModalShipDetails';
 
 interface AisDataTableProps {
@@ -22,7 +22,7 @@ interface AisDataTableProps {
 const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
-  const { closestMovingShips, isLoading } = useClosestMovingShips(isMonitoring);
+  const { ships, isLoading } = useShips(isMonitoring);
 
   const handleOpenModal = (ship: Ship) => {
     setSelectedShip(ship);
@@ -36,8 +36,9 @@ const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
         onOpenChange={onOpenChange}
         ship={selectedShip}
       />
-      <div className="h-full w-full flex flex-col bg-grey-400 rounded-lg">
-        <div className="flex-1 w-full">
+      {/* Added min-h-0 so the table can shrink inside grid cells */}
+      <div className="h-full w-full min-h-0 flex flex-col bg-grey-400 rounded-lg">
+        <div className="flex-1 w-full min-h-0">
           <Table
             aria-label="Live AIS Data Table"
             isVirtualized
@@ -55,31 +56,22 @@ const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
               <TableColumn key="MMSI">MMSI</TableColumn>
               <TableColumn key="SHIP_TYPE">Type</TableColumn>
               <TableColumn key="Knots">Knots</TableColumn>
-              <TableColumn key="Distance">
-                Distance: Closest Moving Ships
-              </TableColumn>
             </TableHeader>
             <TableBody
               isLoading={isLoading}
-              items={closestMovingShips}
+              items={ships}
               loadingContent={<Spinner color="primary" label="Loading..." />}
-              emptyContent={
-                <div className="w-full text-center py-8">No ships found</div>
-              }
+              emptyContent={<div className="w-full text-center py-8">No ships found</div>}
             >
-              {(ship: Ship & { distance: number }) => (
+              {(ship: Ship) => (
                 <TableRow key={ship.mmsi} className="w-full">
                   <TableCell>
-                    <Button
-                      color="default"
-                      onPress={() => handleOpenModal(ship)}
-                    >
+                    <Button color="default" onPress={() => handleOpenModal(ship)}>
                       {ship.mmsi}
                     </Button>
                   </TableCell>
                   <TableCell>{getShipTypeDescription(ship.shipType)}</TableCell>
                   <TableCell>{ship.speed}</TableCell>
-                  <TableCell>{ship.distance.toFixed(1)} km</TableCell>
                 </TableRow>
               )}
             </TableBody>

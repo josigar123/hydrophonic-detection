@@ -1,66 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Ship } from '../Components/ShipMarker';
 import { useDataSource } from '../Hooks/useDataSource';
 import shipStore, { useAisStreamWithSource } from './useAisStream';
-import { useShips as useApiShips } from './useAisApi';
 
 interface UseShipsResult {
   ships: Ship[];
   isLoading: boolean;
   lastUpdate: Date | null;
-  error?: string | null;
-  nextUpdateIn?: number;
 }
-
 export const useShips = (isMonitoring = false): UseShipsResult => {
   const { dataSource } = useDataSource();
-  const [antennaShips, setAntennaShips] = useState<Ship[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [ships, setShips] = useState<Ship[]>([]);
+  const [isLoading, setLoading] = useState(true);
+  const [lastUpdate, setStamp] = useState<Date | null>(null);
+
+  // Opens / closes the WebSocket and switches feed when the context changes
   useAisStreamWithSource(isMonitoring);
-  
-  const apiShipsResult = useApiShips();
-  
+
+  // Subscribe to the shipStore whenever monitoring is on
   useEffect(() => {
-    if (dataSource === 'antenna') {
-      // Fetch initial ships
-      setAntennaShips(shipStore.getShips());
-      setIsLoading(false);
-      setLastUpdate(new Date());
-      
-      // Set up subscription if we're monitoring
-      if (isMonitoring) {
-        const unsubscribe = shipStore.subscribe((updatedShips) => {
-          setAntennaShips(updatedShips);
-          setLastUpdate(new Date());
-          setIsLoading(false);
-        });
-        
-        return () => {
-          unsubscribe();
-        };
-      }
-    }
+    setShips(shipStore.getShips());
+    setLoading(false);
+    setStamp(new Date());
+
+    // Live updates only when monitoring is enabled
+    if (!isMonitoring) return;
+
+    const unsubscribe = shipStore.subscribe(updated => {
+      setShips(updated);
+      setStamp(new Date());
+    });
+
+    return unsubscribe;
   }, [dataSource, isMonitoring]);
 
-  // Return appropriate data based on selected source
-  if (dataSource === 'antenna') {
-    return {
-      ships: antennaShips,
-      isLoading,
-      lastUpdate,
-      error: null,
-      nextUpdateIn: undefined
-    };
-  } else {
-    return {
-      ships: apiShipsResult.ships,
-      isLoading: apiShipsResult.isLoading,
-      lastUpdate: apiShipsResult.lastUpdate,
-      error: apiShipsResult.error,
-      nextUpdateIn: apiShipsResult.nextUpdateIn
-    };
-  }
+  return { ships, isLoading, lastUpdate };
 };
 
 export default useShips;

@@ -1,10 +1,10 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Ship } from '../Components/ShipMarker';
 import { useShips } from './useShips';
 import { useUserPosition } from './useUserPosition';
 import { getHaversineDistance } from '../utils/distance';
 
-const MAX_RANGE = 40; // km
+const MAX_RANGE = 50; // km
 
 export function useShipsInRange(isMonitoring = false)  {
   const { position } = useUserPosition();
