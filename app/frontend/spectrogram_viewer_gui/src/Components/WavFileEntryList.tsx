@@ -39,19 +39,23 @@ const WavFileEntryList = () => {
       <DropdownTrigger>
         <Button className="flex items-center p-2">
           {isLoading && !error ? (
-            <Spinner />
+            <>
+              <Spinner />
+              <span>Fetching Files</span>
+            </>
           ) : (
-            <Image
-              src={audioFolder}
-              alt="Audio folder"
-              className="w-6 h-6 mr-2"
-            />
+            <>
+              <Image
+                src={audioFolder}
+                alt="Audio folder"
+                className="w-6 h-6 mr-2"
+              />
+              <span>Audio Files</span>
+            </>
           )}
-
-          <span>Audio Files</span>
         </Button>
       </DropdownTrigger>
-      <DropdownMenu>
+      <DropdownMenu closeOnSelect={false}>
         <DropdownItem hidden={!error} key="error" textValue={error || 'Error'}>
           {error}
         </DropdownItem>

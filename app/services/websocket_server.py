@@ -112,7 +112,7 @@ async def consume_recording_config():
                 config_data = message.value
                 
                 # Create the target directory two levels up
-                target_directory = os.path.join(os.path.dirname(__file__), "../../../configs")
+                target_directory = os.path.join(os.path.dirname(__file__), "../configs")
                 os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
 
                 # Define the file path within the 'configs' directory

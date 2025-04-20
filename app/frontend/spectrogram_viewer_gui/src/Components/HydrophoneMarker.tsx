@@ -43,12 +43,12 @@ const HYDROPHONES = [
 
 // Radiation effect component for active hydrophones
 const RadiationEffect = ({ position }: { position: [number, number] }) => {
-  const [radius, setRadius] = useState(20);
+  const [radius, setRadius] = useState(1);
   const [opacity, setOpacity] = useState(0.8);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setRadius((prev) => (prev < 100 ? prev + 5 : 20));
+      setRadius((prev) => (prev < 8 ? prev + 1 : 8));
       setOpacity((prev) => (prev > 0.1 ? prev - 0.03 : 0.8));
     }, 50);
 

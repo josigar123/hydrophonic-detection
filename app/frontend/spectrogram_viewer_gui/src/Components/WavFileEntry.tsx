@@ -2,6 +2,8 @@ import { downloadWavFile } from '../api/wavFileApi';
 import wavIcon from '/assets/icons/wav-icon.png';
 import downloadIcon from '/assets/icons/download-symbol-svgrepo-com.svg';
 import recordingParameters from '../../../../configs/recording_parameters.json';
+import { useState } from 'react';
+import { Spinner } from '@heroui/spinner';
 
 const sampleRate = recordingParameters['sampleRate'];
 const bitDepth = recordingParameters['bitDepth'];
@@ -20,6 +22,8 @@ const WavFileEntry = ({
   objectName,
   fileName,
 }: WavFileEntryProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   function formatBytes(bytes: number): string {
     const units = ['bytes', 'KiB', 'MiB', 'GiB'];
     let i = 0;
@@ -63,6 +67,17 @@ const WavFileEntry = ({
     return `${paddedMins}:${paddedSecs}`;
   }
 
+  const handleDownload = async () => {
+    try {
+      setIsLoading(true);
+      await downloadWavFile(objectName);
+    } catch (error) {
+      console.log('Dowload failed: ', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between p-4 mb-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center flex-1">
@@ -71,7 +86,14 @@ const WavFileEntry = ({
         </div>
 
         <div className="flex flex-col">
-          <h3 className="text-lg font-medium text-gray-800">{fileName}</h3>
+          <div className="flex items-center">
+            <h3 className="text-lg font-medium text-gray-800">{fileName}</h3>
+            {isLoading && (
+              <span className="ml-2 text-sm font-medium text-green-600">
+                • fetching file
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap gap-x-6 text-sm text-gray-600">
             <span>{formatBytes(size)}</span>
             <span>
@@ -88,12 +110,16 @@ const WavFileEntry = ({
         className="flex-shrink-0 p-2 ml-4 text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Download file"
       >
-        <img
-          src={downloadIcon}
-          alt="Download"
-          className="w-5 h-5"
-          onClick={() => downloadWavFile(objectName)}
-        />
+        {isLoading ? (
+          <Spinner />
+        ) : (
+          <img
+            src={downloadIcon}
+            alt="Download"
+            className="w-5 h-5"
+            onClick={handleDownload}
+          />
+        )}
       </button>
     </div>
   );
