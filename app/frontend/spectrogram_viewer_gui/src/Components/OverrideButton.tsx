@@ -59,24 +59,27 @@ const OverrideButton = ({
       return;
     }
 
-    let newValue: boolean;
-    if (recordingStatus) {
-      // If we are already recording, then pressing the buttson should end it
-      newValue = false;
-    } else {
-      newValue = !overrideActive;
-    }
+    setOverrideActive((prev) => {
+      let newValue: boolean;
 
-    try {
-      const message = JSON.stringify({ value: newValue ? 1 : 0 });
-
-      socket.send(message);
-      setOverrideActive(newValue);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log(`Error sending message: ${error.message}`);
+      if (recordingStatus) {
+        // If we are already recording, then pressing the button should end it
+        newValue = false;
+      } else {
+        newValue = !prev;
       }
-    }
+
+      try {
+        const message = JSON.stringify({ value: newValue ? 1 : 0 });
+        socket.send(message);
+      } catch (error) {
+        if (error instanceof Error) {
+          console.log(`Error sending message: ${error.message}`);
+        }
+      }
+
+      return newValue;
+    });
   };
 
   useEffect(() => {

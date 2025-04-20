@@ -267,8 +267,11 @@ async def listen_for_events(recorder):
                     in_debounce_period = False
 
                 # Override deactivation - stop immediately 
-                elif (topic == "override-detection" and was_override_active and 
-                      not threshold_reached and is_recording and is_override_event):
+                # BUG: Denne vil vel bare utløses dersom opptaket ble startet av override knappen? Tenkte på was_override_active
+                #      terskel vil vel og være oppnådd dersom en automatisk deteksjon har forekommet, så 'not threshold_reached'
+                #      vil vel gjøre det slik at det ikke fungerer?
+                #      'is_override_event' vil vel og da kun fungere dersom opptaket ble startet med en overstying så en autodeteksjon vil ikke kunne bli overstyrt?
+                elif (topic == "override-detection" and is_recording):
                     print(f"Override deactivated - stopping recording immediately")
                     recorder.stop_event_detection(current_event_id)
                     await produce_recording_status(False)
