@@ -570,7 +570,6 @@ async def handle_connection(websocket, path):
                         spectrogram_required_samples = calculate_required_samples(spectrogram_hfilt_length, sample_rate)
                         spectrogram_required_buffer_size = spectrogram_required_samples * bytes_per_sample
 
-                        print(f"Updated spectrogram configuration: {spectrogram_client_config[client_name]}")
                     else:
                         print(f"Received unknow message from {client_name}: {data}")
 
@@ -597,7 +596,6 @@ async def handle_connection(websocket, path):
                         broadband_required_buffer_size = broadband_required_samples * bytes_per_sample
                         broadband_total_required_buffer_size = broadband_total_required_samples * bytes_per_sample
                         
-                        print(f"Updated broadband configuration: {broadband_client_config[client_name]}")
                     else:
                         print(f"Received unknown message from {client_name}: {e}")
                 except Exception as e:
@@ -1074,6 +1072,7 @@ async def perform_narrowband_detection(spectrogram_db_flattened: np.ndarray, nar
     return False
 
 async def produce_user_position(position_data):
+    
     """Publish user position data to Kafka for AIS filtering"""
     topic = 'user-position'
     producer = AIOKafkaProducer(
@@ -1101,11 +1100,11 @@ async def main():
     global broadband_signal_buffers_for_each_channel
     
     try:
-        print("Loading configuration from Kafka...")
+        print("Reading current latest configuration from Kafka...")
         recording_config = await consume_recording_config()
 
         if not recording_config:
-            raise RuntimeError("Failed to load configuration from Kafka")
+            raise RuntimeError("Failed to read current latest configuration from Kafka")
         
         print(f"Configuration loaded: {recording_config}")
 
