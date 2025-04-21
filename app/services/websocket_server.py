@@ -1,5 +1,5 @@
 import asyncio
-from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, TopicPartition
 import numpy as np
 import websockets
 from urllib.parse import parse_qs, urlparse
@@ -51,7 +51,6 @@ This function will read the current recording config from a Kafka topic
                 "windowSize": int,
                 "hilbertWindow": int,
                 "bufferLength": int,
-                "windowInMin": int,
             }
 '''
 
@@ -98,17 +97,30 @@ async def consume_recording_config():
         try:
             topic = 'recording-parameters'
             consumer = AIOKafkaConsumer(
-                topic,
                 bootstrap_servers=BOOTSTRAP_SERVERS,
+                group_id="recording-config-group",
                 auto_offset_reset='latest',
                 enable_auto_commit=False,
                 value_deserializer=lambda m: json.loads(m.decode('utf-8'))
             )
 
+            partition = TopicPartition(topic, 0)
+            
             await consumer.start()
             print("Connected to Kafka, waiting for configuration...")
             try:
+                
+                consumer.assign([partition])
+                
+                await consumer.seek_to_end(partition)
+                last_offset = await consumer.position(partition) - 1
+                
+                consumer.seek(partition, last_offset)
+                
                 message = await consumer.getone()
+                
+                await consumer.commit()
+                
                 config_data = message.value
                 
                 # Create the target directory two levels up
