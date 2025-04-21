@@ -54,13 +54,29 @@ This function will read the current recording config from a Kafka topic
             }
 '''
 
+############### CONFIGURATIONS ################
+
+CONFIGURATION_FOLDER_RELATIVE_PATH = "../configs"
+
+BROKER_INFO_RELATIVE_PATH = f"{CONFIGURATION_FOLDER_RELATIVE_PATH}/broker_info.json"
+with open(BROKER_INFO_RELATIVE_PATH, "r") as file:
+    broker_info = json.load(file)
+
+RECORDING_PARAMETERS_FILE_NAME = "recording_parameters.json"
+
+SERVER_IP = "localhost"
+SERVER_PORT = 8766
+
+############### END CONFIGURATIONS ################
+
+
 ################## GLOBAL VARIABLES #########################
 
 clients = {}                   # This dictionary holds a clients websocket and name
 spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
 broadband_client_config = {}
 recording_config = {}          # This dict holds the most recent recording config
-BOOTSTRAP_SERVERS = '10.0.0.24:9092'
+BOOTSTRAP_SERVERS = f"{broker_info['ip']}:{broker_info['port']}"
 
 # Will be an instantiated SignalProcessingService when the server is running
 signal_processing_service: SignalProcessingService = None
@@ -123,12 +139,12 @@ async def consume_recording_config():
                 
                 config_data = message.value
                 
-                # Create the target directory two levels up
-                target_directory = os.path.join(os.path.dirname(__file__), "../configs")
+                # Create the target directory one level up
+                target_directory = os.path.join(os.path.dirname(__file__), CONFIGURATION_FOLDER_RELATIVE_PATH)
                 os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
 
                 # Define the file path within the 'configs' directory
-                file_path = os.path.join(target_directory, 'recording_parameters.json')
+                file_path = os.path.join(target_directory, RECORDING_PARAMETERS_FILE_NAME)
 
                 with open(file_path, 'w') as json_file:
                     json.dump(config_data, json_file, indent=4)
@@ -279,10 +295,6 @@ async def listen_for_events(recorder):
                     in_debounce_period = False
 
                 # Override deactivation - stop immediately 
-                # BUG: Denne vil vel bare utløses dersom opptaket ble startet av override knappen? Tenkte på was_override_active
-                #      terskel vil vel og være oppnådd dersom en automatisk deteksjon har forekommet, så 'not threshold_reached'
-                #      vil vel gjøre det slik at det ikke fungerer?
-                #      'is_override_event' vil vel og da kun fungere dersom opptaket ble startet med en overstying så en autodeteksjon vil ikke kunne bli overstyrt?
                 elif (topic == "override-detection" and is_recording):
                     print(f"Override deactivated - stopping recording immediately")
                     recorder.stop_event_detection(current_event_id)
@@ -1120,8 +1132,8 @@ async def main():
 
         websocket_server = websockets.serve(
             handle_connection, 
-            "localhost",
-            8766,
+            SERVER_IP,
+            SERVER_PORT,
             ping_interval=30,
             ping_timeout=10
         )
