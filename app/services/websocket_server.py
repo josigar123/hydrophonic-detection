@@ -163,6 +163,7 @@ async def consume_audio(recorder):
     consumer = AIOKafkaConsumer(
         "audio-stream",
         bootstrap_servers=BOOTSTRAP_SERVERS,
+        group_id="audio-recorder",
         auto_offset_reset="latest"
     )
 
@@ -178,6 +179,7 @@ async def consume_ais_data(recorder):
     consumer = AIOKafkaConsumer(
         "ais-log",
         bootstrap_servers=BOOTSTRAP_SERVERS,
+        group_id="ais-listener",
         auto_offset_reset="latest",
         value_deserializer=lambda m: json.loads(m.decode("utf-8"))
     )
@@ -206,6 +208,7 @@ async def listen_for_events(recorder):
         "broadband-detection",
         "override-detection",
         bootstrap_servers=BOOTSTRAP_SERVERS,
+        group_id="detector-events",
         auto_offset_reset="latest",
         value_deserializer=lambda m: bool(int.from_bytes(m, byteorder='big'))
     )
