@@ -170,7 +170,7 @@ const MainPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 grid-rows-2 gap-2 lg:gap-4 w-full flex-1 mt-4">
+      <div className="grid grid-cols-2 grid-rows-[repeat(2,minmax(0,1fr))] gap-2 lg:gap-4 w-full flex-1 mt-4 min-h-0">
         <div className="overflow-auto rounded bg-slate-700 flex flex-col">
           <div className="flex-1">
             <SpectrogramSelection isMonitoring={isMonitoring} />

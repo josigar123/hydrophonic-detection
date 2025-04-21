@@ -20,7 +20,7 @@ either in the consumer or before visualizing in the frontend
  # A format of 16-bit int gives 2 byte per sample, so we are recording 2048 byter per channel
 
 # A pattern for the audio interface to default into using with our system
-SYSTEM_AUDIO_INTERFACE_PATTERN = r"ZOOM\s+AMS-44"
+SYSTEM_AUDIO_INTERFACE_PATTERN = r"(ZOOM\s+AMS-44|Snowball|Blue)"
 
 def get_device_index():
     print("##############AUDIO INTERFACE SETUP##############")

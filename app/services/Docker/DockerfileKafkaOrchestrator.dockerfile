@@ -11,6 +11,6 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY kafka_orchestrator.py topic_creator.py audio_producer.py config_producer.py broker_info.json recording_parameters.json /orchestrator/
+COPY . /orchestrator/
 
 CMD [ "python", "kafka_orchestrator.py" ]
