@@ -12,7 +12,7 @@ import {
 } from '@heroui/react';
 import { Ship } from './ShipMarker';
 import { getShipTypeDescription } from '../utils/shipTypes';
-import { useShips } from '../Hooks/useShips';
+import { useClosestMovingShips } from '../Hooks/useClosestMovingShips';
 import ShipDetailsModal from '../Components/ModalShipDetails';
 
 interface AisDataTableProps {
@@ -22,7 +22,7 @@ interface AisDataTableProps {
 const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
-  const { ships, isLoading } = useShips(isMonitoring);
+  const { closestMovingShips, isLoading } = useClosestMovingShips(isMonitoring);
 
   const handleOpenModal = (ship: Ship) => {
     setSelectedShip(ship);
@@ -36,7 +36,6 @@ const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
         onOpenChange={onOpenChange}
         ship={selectedShip}
       />
-      {/* Added min-h-0 so the table can shrink inside grid cells */}
       <div className="h-full w-full min-h-0 flex flex-col bg-grey-400 rounded-lg">
         <div className="flex-1 w-full min-h-0">
           <Table
@@ -56,14 +55,15 @@ const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
               <TableColumn key="MMSI">MMSI</TableColumn>
               <TableColumn key="SHIP_TYPE">Type</TableColumn>
               <TableColumn key="Knots">Knots</TableColumn>
+              <TableColumn key="Distance">Distance</TableColumn>
             </TableHeader>
             <TableBody
               isLoading={isLoading}
-              items={ships}
+              items={closestMovingShips}
               loadingContent={<Spinner color="primary" label="Loading..." />}
               emptyContent={<div className="w-full text-center py-8">No ships found</div>}
             >
-              {(ship: Ship) => (
+              {(ship) => (
                 <TableRow key={ship.mmsi} className="w-full">
                   <TableCell>
                     <Button color="default" onPress={() => handleOpenModal(ship)}>
@@ -72,6 +72,7 @@ const AisDataTable = ({ isMonitoring }: AisDataTableProps) => {
                   </TableCell>
                   <TableCell>{getShipTypeDescription(ship.shipType)}</TableCell>
                   <TableCell>{ship.speed}</TableCell>
+                  <TableCell>{ship.distance.toFixed(1)} km</TableCell>
                 </TableRow>
               )}
             </TableBody>
