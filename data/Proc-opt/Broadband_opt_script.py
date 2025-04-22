@@ -60,13 +60,13 @@ def compute_BB(i, j, sx, fs, window_size, hilbert_win):
 
 
 def main():
-    Audio_path = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/001029.wav"
+    Audio_path = "/Users/christofferaaseth/Documents/GitHub/hydrophonic-detection/Sound_data/torrtst2.wav"
 
     fs = 10_000
-    hilbert_win = 2
+    hilbert_win = 10
     window_size = 2
     num_window_iterations = 20
-    num_hilbert_iterations = 20
+    num_hilbert_iterations = 4
     tot_time = 0
 
     colors = generate_vivid_colors(num_window_iterations * num_hilbert_iterations)
