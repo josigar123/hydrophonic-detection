@@ -175,126 +175,6 @@ const MainPage = () => {
           <div className="flex-1">
             <SpectrogramSelection isMonitoring={isMonitoring} />
           </div>
-          <div className="flex justify-center items-center p-4 gap-4">
-            <div className="bg-gray-200 rounded-2xl p-4 shadow-lg ring-2 ring-blue-200 border border-blue-300 transition-transform hover:scale-105 duration-300 ease-in-out">
-              <Image
-                alt="EU Horizon SMAUG LOGO"
-                src={SMAUG}
-                height={140}
-                width={140}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700 p-3">
-              <h3 className="text-gray-300 text-sm uppercase font-semibold mb-2 border-b border-slate-700 pb-1">
-                System Status
-              </h3>
-              <div className="flex flex-col gap-2.5">
-                {/* Narrowband status */}
-                <div className="grid grid-cols-[120px_auto_1fr] items-center px-3 py-1.5 rounded-md bg-slate-800/70">
-                  <span className="text-gray-300 font-medium">Narrowband:</span>
-                  <div className="flex justify-center w-8">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        detection.narrowbandDetection && isMonitoring
-                          ? 'bg-green-500 animate-pulse shadow-glow-green'
-                          : !isMonitoring
-                            ? 'bg-gray-400'
-                            : 'bg-gray-500'
-                      }`}
-                    ></span>
-                  </div>
-                  <span
-                    className={`font-medium ${
-                      detection.narrowbandDetection && isMonitoring
-                        ? 'text-green-400'
-                        : !isMonitoring
-                          ? 'text-gray-50'
-                          : 'text-gray-300'
-                    }`}
-                  >
-                    {detection.narrowbandDetection && isMonitoring
-                      ? 'Detection'
-                      : !isMonitoring
-                        ? 'No data'
-                        : 'No detection'}
-                  </span>
-                </div>
-
-                {/* Broadband status */}
-                <div className="grid grid-cols-[120px_auto_1fr] items-center px-3 py-1.5 rounded-md bg-slate-800/70">
-                  <span className="text-gray-300 font-medium">Broadband:</span>
-                  <div className="flex justify-center w-8">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        detection.broadbandDetections?.detections
-                          .summarizedDetection && isMonitoring
-                          ? 'bg-green-500 animate-pulse shadow-glow-green'
-                          : !isMonitoring
-                            ? 'bg-gray-400'
-                            : 'bg-gray-500'
-                      }`}
-                    ></span>
-                  </div>
-                  <span
-                    className={`font-medium ${
-                      detection.broadbandDetections?.detections
-                        .summarizedDetection && isMonitoring
-                        ? 'text-green-400'
-                        : !isMonitoring
-                          ? 'text-gray-50'
-                          : 'text-gray-300'
-                    }`}
-                  >
-                    {detection.broadbandDetections?.detections
-                      .summarizedDetection && isMonitoring
-                      ? 'Detection'
-                      : !isMonitoring
-                        ? 'No data'
-                        : 'No detection'}
-                  </span>
-                </div>
-
-                {/* Recording status */}
-                <div className="grid grid-cols-[120px_auto_1fr] items-center px-3 py-1.5 rounded-md bg-slate-800/70">
-                  <span className="text-gray-300 font-medium">Recording:</span>
-                  <div className="flex justify-center w-8">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        recordingState === RecordingState.Recording &&
-                        isMonitoring
-                          ? 'bg-red-500 animate-pulse shadow-glow-red'
-                          : !isMonitoring ||
-                              recordingState === RecordingState.NotRecording
-                            ? 'bg-gray-400'
-                            : 'bg-gray-500'
-                      }`}
-                    ></span>
-                  </div>
-                  <span
-                    className={`font-medium ${
-                      isRecording && isMonitoring
-                        ? 'text-green-400'
-                        : !isMonitoring ||
-                            recordingState === RecordingState.NotRecording
-                          ? 'text-gray-50'
-                          : 'text-red-400'
-                    }`}
-                  >
-                    {isRecording && isMonitoring
-                      ? recordingStart &&
-                        `${formatTime(recordingStart)} (${formatElapsedTime(recordingElapsed)})`
-                      : !isMonitoring ||
-                          recordingState === RecordingState.NotRecording
-                        ? 'No audio'
-                        : recordingStart &&
-                          recordingStop &&
-                          formatDuration(recordingStart, recordingStop)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Rest of your grid remains the same */}
@@ -317,8 +197,146 @@ const MainPage = () => {
             </div>
           </div>
         </div>
+        
+        {/* AIS Data Table with SMAUG Image and System Status on the left */}
         <div className="overflow-auto rounded bg-slate-700">
-          <AisDataTable isMonitoring={isMonitoring} />
+          <div className="flex h-full">
+            {/* SMAUG Image and System Status taking 40% of width */}
+            <div className="w-2/5 flex flex-col justify-start items-center p-2 lg:p-16 gap-4">
+              {/* SMAUG Image */}
+              <div className="bg-gray-200 rounded-2xl p-3 shadow-lg ring-2 ring-blue-200 border border-blue-300 transition-transform hover:scale-105 duration-300 ease-in-out w-4/5 max-w-[220px] flex items-center justify-center">
+                <Image
+                  alt="EU Horizon SMAUG LOGO"
+                  src={SMAUG}
+                  height={200}
+                  width={200}
+                  className="rounded-xl"
+                />
+              </div>
+              
+              {/* System Status */}
+              <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700 p-4 mt-6 w-full">
+                <h3 className="text-gray-300 text-sm uppercase font-semibold mb-3 border-b border-slate-700 pb-1">
+                  SYSTEM STATUS
+                </h3>
+                <div className="flex flex-col gap-4">
+                  {/* Narrowband status - More space between elements */}
+                  <div className="flex px-3">
+                    <span className="text-gray-200 font-medium text-base w-40">Narrowband:</span>
+                    <div className="flex items-center">
+                      <div className="mr-3 flex items-center justify-center">
+                        <div
+                          className={`h-3 w-3 rounded-full ${
+                            detection.narrowbandDetection && isMonitoring
+                              ? 'bg-green-500 animate-pulse shadow-glow-green'
+                              : !isMonitoring
+                                ? 'bg-gray-400'
+                                : 'bg-gray-500'
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`font-medium text-base ${
+                          detection.narrowbandDetection && isMonitoring
+                            ? 'text-green-400'
+                            : !isMonitoring
+                              ? 'text-gray-200'
+                              : 'text-gray-300'
+                        }`}
+                      >
+                        {detection.narrowbandDetection && isMonitoring
+                          ? 'Detection'
+                          : !isMonitoring
+                            ? 'No data'
+                            : 'No detection'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Broadband status - More space between elements */}
+                  <div className="flex px-3">
+                    <span className="text-gray-200 font-medium text-base w-40">Broadband:</span>
+                    <div className="flex items-center">
+                      <div className="mr-3 flex items-center justify-center">
+                        <div
+                          className={`h-3 w-3 rounded-full ${
+                            detection.broadbandDetections?.detections
+                              .summarizedDetection && isMonitoring
+                              ? 'bg-green-500 animate-pulse shadow-glow-green'
+                              : !isMonitoring
+                                ? 'bg-gray-400'
+                                : 'bg-gray-500'
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`font-medium text-base ${
+                          detection.broadbandDetections?.detections
+                            .summarizedDetection && isMonitoring
+                            ? 'text-green-400'
+                            : !isMonitoring
+                              ? 'text-gray-200'
+                              : 'text-gray-300'
+                        }`}
+                      >
+                        {detection.broadbandDetections?.detections
+                          .summarizedDetection && isMonitoring
+                          ? 'Detection'
+                          : !isMonitoring
+                            ? 'No data'
+                            : 'No detection'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Recording status - More space between elements */}
+                  <div className="flex px-3">
+                    <span className="text-gray-200 font-medium text-base w-40">Recording:</span>
+                    <div className="flex items-center">
+                      <div className="mr-3 flex items-center justify-center">
+                        <div
+                          className={`h-3 w-3 rounded-full ${
+                            recordingState === RecordingState.Recording &&
+                            isMonitoring
+                              ? 'bg-red-500 animate-pulse shadow-glow-red'
+                              : !isMonitoring ||
+                                  recordingState === RecordingState.NotRecording
+                                ? 'bg-gray-400'
+                                : 'bg-gray-500'
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`font-medium text-base ${
+                          isRecording && isMonitoring
+                            ? 'text-green-400'
+                            : !isMonitoring ||
+                                recordingState === RecordingState.NotRecording
+                              ? 'text-gray-200'
+                              : 'text-red-400'
+                        }`}
+                      >
+                        {isRecording && isMonitoring
+                          ? recordingStart &&
+                            `${formatTime(recordingStart)} (${formatElapsedTime(recordingElapsed)})`
+                          : !isMonitoring ||
+                              recordingState === RecordingState.NotRecording
+                            ? 'No audio'
+                            : recordingStart &&
+                              recordingStop &&
+                              formatDuration(recordingStart, recordingStop)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* AIS Data Table taking 60% of width */}
+            <div className="w-3/5">
+              <AisDataTable isMonitoring={isMonitoring} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
