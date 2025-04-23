@@ -2,13 +2,12 @@ const BroadbandParameterInfoCard = () => {
   const generalParams = [
     {
       name: 'hilbertWin (Hilbert window [S])',
-      description: 'Number of samples to apply a hilbert transformation to',
+      description: 'Downsampling factor. Determines the sampling rate of the envelope signal',
     },
 
     {
       name: 'winSize (window size [s])',
-      description:
-        'Number of seconds of audio to be analyzed at a time, decides how quickly the graph gets updated',
+      description: 'Time per processed segment. Determines graph refresh rate',
     },
     {
       name: 'winLen (window length [min])',
@@ -17,12 +16,12 @@ const BroadbandParameterInfoCard = () => {
     {
       name: 'bufferLen (buffer length [s])',
       description:
-        'In seconds, represents an internal FILO buffer and will represent N seconds of broadband signals, to be analyzed for detection',
+        'Time of data to use for broadband analysis',
     },
     {
       name: 'BBThresh (broadband threshold [dB])',
       description:
-        'The threshold for which a broadband detection will be triggered',
+        'Decibel threshold for broadband detection',
     },
   ];
 
