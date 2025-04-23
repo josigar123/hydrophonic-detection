@@ -120,7 +120,7 @@ function ShipMarker({ ship }: ShipMarkerProps) {
       </Marker>
       {isTracking && ship.path.length > 1 && (
         <Polyline
-          positions={ship.path.map((coord) => [coord[1], coord[0]])}
+          positions={ship.path.map((coord) => [coord[0], coord[1]])}
           color="blue"
           opacity={0.6}
           weight={3}

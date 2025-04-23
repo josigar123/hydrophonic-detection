@@ -41,7 +41,9 @@ const shipStore: ShipStoreInterface = {
     this.ships[ship.mmsi] = {
       ...ship,
       dateTimeUtc: new Date(),
-      dataSource: ship.dataSource || 'antenna' 
+      dataSource: ship.dataSource || 'antenna',
+      // Initialize path with current position
+      path: [[ship.latitude, ship.longitude]] as [number, number][]
     };
     
     this.notifyListeners();
@@ -50,11 +52,30 @@ const shipStore: ShipStoreInterface = {
   updateShip(mmsi: string, data: Partial<Ship>) {
     if (!this.ships[mmsi] || !data) return;
     
+    // Get the current ship data
+    const currentShip = this.ships[mmsi];
+    
+    let updatedPath = currentShip.path || [];
+    if (data.latitude !== undefined && data.longitude !== undefined) {
+      // Create a new path array with the new position appended (using the correct type)
+      const newCoord: [number, number] = [data.latitude, data.longitude];
+      updatedPath = [
+        ...(currentShip.path || []),
+        newCoord
+      ];
+      
+      const MAX_PATH_LENGTH = 100;
+      if (updatedPath.length > MAX_PATH_LENGTH) {
+        updatedPath = updatedPath.slice(-MAX_PATH_LENGTH);
+      }
+    }
+    
     this.ships[mmsi] = {
-      ...this.ships[mmsi],
+      ...currentShip,
       ...data,
       dateTimeUtc: new Date(),
-      dataSource: data.dataSource || this.ships[mmsi].dataSource
+      dataSource: data.dataSource || currentShip.dataSource,
+      path: updatedPath
     };
     
     this.notifyListeners();
@@ -172,7 +193,7 @@ const shipStore: ShipStoreInterface = {
               longitude: parseFloat(data.longitude),
               dateTimeUtc: new Date(),
               course: parseFloat(String(data.course || '0')) || 0,
-              path: [],
+              path: [[parseFloat(data.latitude), parseFloat(data.longitude)]] as [number, number][], 
               dataSource: sourceFromData 
             };
             
