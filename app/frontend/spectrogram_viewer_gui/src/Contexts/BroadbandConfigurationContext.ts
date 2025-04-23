@@ -13,9 +13,9 @@ export const BroadbandConfigurationContext = createContext<
 export const defaultBroadbandConfig: BroadbandConfiguration = {};
 
 export const broadbandPreset1: BroadbandConfiguration = {
-  broadbandThreshold: 8,
-  windowSize: 5,
-  bufferLength: 50,
-  hilbertWindow: 15,
-  windowLength: 10,
+  broadbandThreshold: 7,
+  windowSize: 13,
+  bufferLength: 900,
+  hilbertWindow: 50,
+  windowLength: 15,
 };
