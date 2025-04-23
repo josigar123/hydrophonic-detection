@@ -7,7 +7,7 @@ import { BroadbandDetections } from '../Interfaces/Payloads';
 const hydroPhoneIcon = new L.Icon({
   iconUrl: '/assets/icons/hydrophone.svg',
   iconSize: [50, 50],
-  iconAnchor: [15, 15],
+  iconAnchor: [25, 25],
   popupAnchor: [0, -10],
   className: 'hydrophone-icon',
 });
@@ -16,29 +16,23 @@ type ChannelId = 'channel1' | 'channel2' | 'channel3' | 'channel4';
 
 const HYDROPHONES = [
   {
-    id: 'hp1',
-    latitude: 59.42854224286619,
-    longitude: 10.465024672526075,
-    channel: 'channel1' as ChannelId,
+    "id": "hp1",
+    "latitude": 59.428493127821774,
+    "longitude": 10.465132005497228,
+    "channel": "channel1"
   },
   {
-    id: 'hp2',
-    latitude: 59.42852041557567,
-    longitude: 10.465164139959759,
-    channel: 'channel2' as ChannelId,
+    "id": "hp2",
+    "latitude": 59.42846584366684,
+    "longitude": 10.465282224072247,
+    "channel": "channel2"
   },
   {
-    id: 'hp3',
-    latitude: 59.428506773511955,
-    longitude: 10.465282186896783,
-    channel: 'channel3' as ChannelId,
-  },
-  {
-    id: 'hp4',
-    latitude: 59.428490403028235,
-    longitude: 10.4654001446127,
-    channel: 'channel4' as ChannelId,
-  },
+    "id": "hp3",
+    "latitude": 59.428441287908576,
+    "longitude": 10.465400226398717,
+    "channel": "channel3"
+  }
 ];
 
 // Radiation effect component for active hydrophones
