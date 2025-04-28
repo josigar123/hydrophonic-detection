@@ -358,52 +358,11 @@ def start_new_recording(recorder, topic_states):
     print(f"Started recording for {'override' if is_new_override else 'threshold'} event: {new_event_id}")
     return new_event_id
 
-async def produce_recording_status(is_recording):
-    """
-    Produce recording status to Kafka and forward to connected clients.
-    
-    This function:
-    1. Updates the global recording status
-    2. Publishes status to Kafka topic for other services
-    3. Forwards status to any connected frontend clients
-    
-    Args:
-        is_recording: Boolean indicating if recording is in progress
-        
-    Returns:
-        bool: Success of the operation
-    """
+async def produce_recording_status(is_recording: bool):
     global current_recording_status
-    
-    # Convert to boolean to ensure consistency
-    is_recording = bool(is_recording)
-    current_recording_status = is_recording
-    
-    topic = 'recording-status'
-    producer = AIOKafkaProducer(
-        bootstrap_servers=BOOTSTRAP_SERVERS,
-        value_serializer = lambda v: (1 if v else 0).to_bytes(1, byteorder='big')
-    )
-    
-    await producer.start()
+    current_recording_status = bool(is_recording)
     try:
-        kafka_message = {
-            "is_recording": is_recording,
-            "timestamp": datetime.datetime.now().isoformat()
-        }
-        
-        await producer.send(topic, kafka_message)
-        await producer.flush()
-    except Exception as e:
-        print(f"Error producing recording status: {e}")
-        await producer.stop()
-        return False
-    finally:
-        await producer.stop()
-        
-    try:
-        success = await forward_recording_status_to_frontend(is_recording)
-        return success
+        await forward_recording_status_to_frontend(current_recording_status)
     except Exception as e:
         print(f"Error forwarding recording status to frontend: {e}")
         return False
