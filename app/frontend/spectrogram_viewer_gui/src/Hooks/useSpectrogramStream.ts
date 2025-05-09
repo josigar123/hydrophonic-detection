@@ -13,6 +13,59 @@ in the Interfaces directory
 
 */
 
+interface SpectrogramConfigView {
+  tperseg?: number;
+  frequencyFilter?: number;
+  horizontalFilterLength?: number;
+  window?: string;
+  narrowbandThreshold?: number;
+}
+
+interface DemonSpectrogramConfigView {
+  demonSampleFrequency?: number;
+  tperseg?: number;
+  frequencyFilter?: number;
+  horizontalFilterLength?: number;
+  window?: string;
+}
+
+interface ConfigurationView {
+  spectrogramConfiguration?: SpectrogramConfigView;
+  demonSpectrogramConfiguration?: DemonSpectrogramConfigView;
+}
+
+const createConfigView = (
+  configuration: SpectrogramNarrowbandAndDemonConfiguration
+): ConfigurationView => {
+  const spec = configuration.spectrogramConfiguration;
+  const demon = configuration.demonSpectrogramConfiguration;
+
+  const specConf: SpectrogramConfigView | undefined = spec
+    ? {
+        tperseg: spec.tperseg,
+        frequencyFilter: spec.frequencyFilter,
+        horizontalFilterLength: spec.horizontalFilterLength,
+        window: spec.window,
+        narrowbandThreshold: spec.narrowbandThreshold,
+      }
+    : undefined;
+
+  const demonConf: DemonSpectrogramConfigView | undefined = demon
+    ? {
+        demonSampleFrequency: demon.demonSampleFrequency,
+        tperseg: demon.tperseg,
+        frequencyFilter: demon.frequencyFilter,
+        horizontalFilterLength: demon.horizontalFilterLength,
+        window: demon.window,
+      }
+    : undefined;
+
+  return {
+    spectrogramConfiguration: specConf,
+    demonSpectrogramConfiguration: demonConf,
+  };
+};
+
 export function useSpectrogramStream(url: string, autoConnect = false) {
   const [spectrogramData, setSpectrogramData] = useState<SpectrogramPayload>({
     frequencies: [],
@@ -44,8 +97,6 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
         return;
       }
 
-      console.log('Configuration:\n', JSON.stringify(configuration, null, 2));
-
       setError(null);
 
       try {
@@ -58,7 +109,10 @@ export function useSpectrogramStream(url: string, autoConnect = false) {
           setError(null);
 
           if (configuration) {
-            const messageString = JSON.stringify(configuration);
+            // Create view
+            const configView = createConfigView(configuration);
+
+            const messageString = JSON.stringify(configView);
             socket.send(messageString);
           }
         };

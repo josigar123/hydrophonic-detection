@@ -2,6 +2,24 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { BroadbandPayload, BroadbandDetections } from '../Interfaces/Payloads';
 import { BroadbandConfiguration } from '../Interfaces/Configuration';
 
+interface ConfigurationView {
+  broadbandThreshold?: number;
+  windowSize?: number;
+  hilbertWindow?: number;
+  bufferLength?: number;
+}
+
+const createConfigView = (
+  configuration: BroadbandConfiguration
+): ConfigurationView => {
+  return {
+    broadbandThreshold: configuration.broadbandThreshold,
+    windowSize: configuration.windowSize,
+    hilbertWindow: configuration.hilbertWindow,
+    bufferLength: configuration.bufferLength,
+  } as ConfigurationView;
+};
+
 export function useBroadbandStream(url: string, autoConnect = false) {
   const [broadbandData, setBroadbandData] = useState<BroadbandPayload>({
     broadbandSignal: [],
@@ -46,7 +64,8 @@ export function useBroadbandStream(url: string, autoConnect = false) {
           setError(null);
 
           if (configuration) {
-            const messageString = JSON.stringify(configuration);
+            const configView = createConfigView(configuration);
+            const messageString = JSON.stringify(configView);
             socket.send(messageString);
           }
         };
