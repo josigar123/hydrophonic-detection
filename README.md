@@ -1,2 +1,2 @@
-# hydrophonic-detection
+# Hydroacoustic Tripwire Detection
 hydrophonic detection
