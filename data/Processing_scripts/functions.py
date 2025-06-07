@@ -1,7 +1,7 @@
 #Function library for data processing
 #Bachelor i havnovervåkning vha hydrofon
 #Christoffer Aaseth
-#Finished Date: 07.04.2025
+#Last updated: 25.05.2025
 
 
 import matplotlib.pyplot as plt
@@ -11,8 +11,9 @@ from scipy.fft import fft, fftshift, fftfreq    # FFT and helper functions
 import numpy as np
 from scipy.signal import hilbert, resample_poly
 import librosa
+import matplotlib.gridspec as gridspec
 
-def plot_spectrogram(x, fs, tperseg, freq_filt, hfilt_length, f_max, s_min,s_max, plot=True):
+def plot_spectrogram(x, fs, tperseg, freq_filt, hfilt_length, f_max = 1000, s_min=0,s_max=10, plot=True):
     """Plot spectrogram of signal x.
 
     Parameters
@@ -65,6 +66,62 @@ def plot_spectrogram(x, fs, tperseg, freq_filt, hfilt_length, f_max, s_min,s_max
 
     return t, f, sx_db
 
+def plot_spectrogram_multichannel(x, fs, tperseg, freq_filt, hfilt_length, f_max = 1000, s_min=0,s_max=10,window="hamming", plot=True):
+    """Plot spectrogram of signal x.
+        Note: Only works with multidimentional arrays of x
+            For one-dimentional arrays of x, use plot_spectrogram()
+
+    Parameters
+    ----------
+    x: array of floats
+        Signal in time-domain
+    fs: float
+        Sample rate [Samples/s]
+    tperseg: float
+        Time resolution of spectrogram [s]
+    f_max: float
+        Max. on frequency axis
+    freq_filt: int (odd)
+        Number of frequency bins for smoothing and normalizing
+    hfilt_length: int
+        Number of time bins for horizontal smoothing
+    plot: bool
+        Determines if plot is generated
+    
+    Output
+    ---------
+    t: array of floats
+        Time array for spectrogram
+    f: array of floats
+        frequency array for spectrogram
+    sx_db: 2D-array of floats
+        Spectrogram values in dB
+        
+    """
+    sum_spec = 0
+    for channel in x:
+        # Calculate spectrogram
+        nperseg=int(tperseg*fs)
+        f, t, sx = signal.spectrogram(channel, fs, nperseg=nperseg, window=window,detrend=False)
+        sx_norm = medfilt_vertcal_norm(sx,freq_filt)
+        sum_spec += sx_norm
+    sx_db = 10*np.log10(np.maximum(sum_spec,1e-10))   # Convert to dB
+    sx_db, f, t = spec_hfilt2(sx_db,f,t,window_length=hfilt_length)
+
+    if plot:
+        # Plot spectrogram
+        plt.figure(figsize=(16, 9))  # Define figure for results	
+        plt.subplot(1, 1, 1)
+        
+        plt.pcolormesh(t, f, sx_db, vmin=s_min, vmax=s_max, cmap='inferno')  # Draw spectrogram image
+                
+        plt.xlabel("Time [s]")         # Axis labels and scales
+        plt.ylabel("Frequency [Hz]")
+        plt.ylim(0, f_max)
+                
+        plt.colorbar(label="Magnitude [dB]")  # Colorbar for intensity scale
+    return t, f, sx_db
+
 def plot_signal(x, t,output_path):
     """Plot signal x as function of time t.
 
@@ -80,7 +137,8 @@ def plot_signal(x, t,output_path):
     plt.xlabel("Time [s]")
     plt.ylabel("Amplitude")
     plt.grid(True)
-    plt.savefig(output_path, format="png", dpi=300)
+    if output_path != None:
+        plt.savefig(output_path, format="png", dpi=300)
     return 0
 
 def butter_highpass(cutoff, fs, order=5):
@@ -100,7 +158,7 @@ def butter_lowpass(sig, fs, cutoff=0.9):  # cutoff som andel av Nyquist
     b, a = signal.butter(4, cutoff * nyq / nyq, btype='low')
     return signal.filtfilt(b, a, sig)
 
-def load_audiofile(input_file, fs:int, fc_low:float ,remove_offcet=True):
+def load_audiofile(input_file, fs:int, fc_low:float ,remove_offcet=True, mono=True):
     """
     INPUT:
         input_file: directory to audiofile
@@ -110,18 +168,25 @@ def load_audiofile(input_file, fs:int, fc_low:float ,remove_offcet=True):
         fs : sample frequency
     """
     # Load audio data from the input file
-    data_offcet, fs = librosa.load(input_file, sr=fs)  # Load the file, returns the audio signal and its sampling rate
+    data_arr, fs = librosa.load(input_file, sr=fs, mono=mono)  # Load the file, returns the audio signal and its sampling rate
 
     b,a = signal.butter(N=4,Wn=fc_low, btype="highpass",fs=fs)
-    data_offcet = signal.filtfilt(b,a,data_offcet)   
-    if remove_offcet:
-        # Remove DC offset by subtracting the mean value
-        data = data_offcet - np.mean(data_offcet)  # Remove the mean (DC offset)
-        
+    if not mono:
+        for i in range(len(data_arr)):
+            data_arr[i] = signal.filtfilt(b,a,data_arr[i])   
+
+            if remove_offcet:
+                # Remove DC offset by subtracting the mean value
+                data_arr[i] = data_arr[i] - np.mean(data_arr[i])  # Remove the mean (DC offset)
+
     else:
-        data = data_offcet
+        data_arr = signal.filtfilt(b,a,data_arr)   
+        if remove_offcet:
+            # Remove DC offset by subtracting the mean value
+            data_arr = data_arr - np.mean(data_arr)  # Remove the mean (DC offset)
+                
     
-    return data, fs
+    return data_arr, fs
 
 def moving_average_padded(signal, window_size=5):
     pad_size = window_size // 2
@@ -198,7 +263,6 @@ def BB_data(sx, fs, sx_buff, hilbert_win, window_size):
 
 
 def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=10, window="hamming", plot=True):
-    #DEMON 2
     """
     Produces a DEMON (Detection of Envelope Modulation On Noise) spectrogram from a time domain audio signal.
 
@@ -239,7 +303,7 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
             2D array of intencity for spectrogram (dB)
     """
 
-    #RMS data of hilbert
+    #RMS data of hilbert NB! Not acually RMS - more like MS (mean of squares)
     kernal_size = int(fs/Fds) 
     analytic_signal = np.abs(hilbert(sx))**2
     rms_values = average_filter(analytic_signal, kernal_size)
@@ -259,7 +323,7 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
     sxx_db, fd_rms, td_rms = spec_hfilt2(10*np.log10(sxx_rms_norm),fd_rms,td_rms,window_length=hfilt_length)
 
     #bandpass cut filter
-    fc = 4 #Hz
+    fc = 0 #Hz
     sxx_db[0:int(fc*tperseg+1),:] = 0
     sxx_db[-int(fc*tperseg+1):,:] = 0
     
@@ -273,6 +337,89 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
         plt.title("sxx_rms_norm")
         plt.colorbar(label="Magnitude [dB]")  # Colorbar for intensity scale
         
+    return td_rms, fd_rms, sxx_db
+
+def DEMON_multichannel(sx, fs, fds, tperseg, freq_filt, hfilt_length ,fmax=100, s_max=10, window="hamming", plot=True):
+    """
+    Produces a DEMON (Detection of Envelope Modulation On Noise) spectrogram from a time domain audio signal.
+    Note: Only works with multidimentional arrays of x
+            For one-dimentional arrays of x, use DEMON_from_data()
+
+    PARAMETERS:
+        sx: array_like
+            Time series of measurement values
+
+        fs: int
+            Sample frequency
+        
+        Fds: int
+            Demon sample frequency
+
+        tperseg: float
+            Seconds of audiodata for spectrogram fft
+        
+        freq_filt: int (odd)
+            Number of frequency bins for smoothing and normalizing
+        
+        hfilt_length: int
+            Number of seconds used for horizontal smoothing
+        
+        fmax: float
+            Max frequency for DEMON spectrogram
+        
+        s_max: float
+            Max dB on spectrogram
+        
+        window: str
+            Spectrogram window
+    
+    RETURN:
+        td: 1D array of float
+            time array for spectrogram
+        fd: 1D array of float
+            frequency array for spectrogram
+        sxx_db: 2D array of float
+            2D array of intencity for spectrogram (dB)
+    """
+    sum_spec = 0
+    kernal_size = int(fs/fds) 
+
+    for channel in sx:
+
+        #RMS data of hilbert NB! Not acually RMS - more like MS (mean of squares)
+        analytic_signal = np.abs(hilbert(channel))**2
+        rms_values = average_filter(analytic_signal, kernal_size)
+        
+        #hente freq
+        nperseg= int(fds*tperseg) #Number of samples in time axis to use for each vertical spectrogram coloumn
+
+        fd_rms, td_rms, sxx_rms = signal.spectrogram(rms_values,fds,
+                                                        nperseg=nperseg,
+                                                        window=window
+                                                        )
+
+
+        #Normaliserer sxx
+        sxx_rms_norm = medfilt_vertcal_norm(spec=sxx_rms,vertical_medfilt_size=freq_filt)
+        sum_spec += sxx_rms_norm
+
+    sxx_db, fd_rms, td_rms = spec_hfilt2(10*np.log10(sum_spec),fd_rms,td_rms,window_length=hfilt_length)
+
+    #bandpass cut filter
+    fc = 3 #Hz
+    sxx_db[0:int(fc*tperseg+1),:] = 0
+    sxx_db[-int(fc*tperseg+1):,:] = 0
+
+    if plot:
+        plt.figure(figsize=(9,9))
+        plt.subplot(1, 1, 1)
+        plt.pcolormesh(td_rms, fd_rms, sxx_db, vmin=0,vmax=s_max)
+        plt.xlabel("Time [s]")
+        plt.ylabel("Demon Frequency [Hz]")
+        plt.ylim(0,fmax)
+        plt.title("sxx_rms_norm")
+        plt.colorbar(label="Magnitude [dB]")  # Colorbar for intensity scale
+
     return td_rms, fd_rms, sxx_db
 
 def average_filter(signal, window_size):
@@ -338,12 +485,16 @@ def spec_hfilt2(spec, freq, time, window_length: float):
     return smoothed_spec, freq, new_time
 
 def NB_detect(spec,Threshold):
+    """
+    Returns True if any value in array is larger than Threshold
+    """
     return True in (spec > Threshold)
 
  
+
+def scot(signal_1, signal_2, fs):
 # The Smoothed Coherence Transform (SCOT)
 # Code is simplfied from https://github.com/SiggiGue/gccestimating
-def scot(signal_1, signal_2, fs):
     """
     INPUT:
         signal_1, signal_2 : array of float
@@ -389,3 +540,143 @@ def scot(signal_1, signal_2, fs):
     corr_lags_t = signal.correlation_lags(len(signal_1),len(signal_2))/fs
 
     return graph_line, corr_lags_t
+
+def full_plot_imag(input_file, pars:dict, caption:str):
+    """
+    Makes an image with the sudiosignal, broadband analasys w/trigger, spectrogram and DEMON spectrogram.
+    INPUT:
+        Input_file: any format compatible with librosa.load(), must be recorded with multiple channels
+        pars: dict
+            dictionary with all processing parameters
+        caption: str
+            Caption of image, f"Results from {caption}"
+    
+    Pars example:
+        pars = {
+                "fs": 10_000,  # Sample frequency
+                "broadband": {
+                    "hilbert_win": 50 ,
+                    "window_size": 22,
+                    "trigger" : 10,
+                },
+                "DEMON": {
+                    "fds": 900,
+                    "tperseg": 2,
+                    "freq_filt": 39,
+                    "hfilt_length": 5,
+                    "minfreq": 0,
+                    "maxfreq": 450, #if None, def. fds/2
+                    "vmin": None, #if None, def. 10*log10(len(sx))
+                    "vmax": 10,
+                    "window": "hann",
+                },
+                "spectrogram": {
+                    "tperseg": 1,
+                    "freq_filt": 13,
+                    "hfilt_length": 10,
+                    "minfreq": 0,
+                    "maxfreq": 1000,
+                    "vmin": None, #if None, def. 10*log10(len(sx))
+                    "vmax": 10,
+                    "window": "hann",
+                },
+            }
+    """
+
+
+    sx, fs = load_audiofile(input_file, pars["fs"], 5, True, False)
+
+
+    D_td, D_fd, D_sx = DEMON_multichannel(sx, fs=pars["fs"], fds=pars["DEMON"]["fds"], tperseg=pars["DEMON"]["tperseg"], freq_filt=pars["DEMON"]["freq_filt"], hfilt_length=pars["DEMON"]["hfilt_length"],window=pars["DEMON"]["window"], plot = False)
+
+    S_td, S_fd, S_sx = plot_spectrogram_multichannel(sx, pars["fs"], tperseg=pars["spectrogram"]["tperseg"], freq_filt=pars["spectrogram"]["freq_filt"], hfilt_length=pars["spectrogram"]["hfilt_length"],window=pars["spectrogram"]["window"],plot=False)
+    bb_sx = 0
+    for i in range(len(sx)):
+        bb_sx += sx[i]
+
+    bb, bbt, bb_buff_out = BB_data(bb_sx,fs=pars["fs"],sx_buff=[],hilbert_win=pars["broadband"]["hilbert_win"], window_size=pars["broadband"]["window_size"])
+    bb = bb-bb.min()
+
+    vmin = 10*np.log10(len(sx))
+    
+
+    fontsize=14
+
+    fig = plt.figure(figsize=(16, 16))
+
+    # 7 rader, 4 kolonner – styr høyde proporsjonalt
+    gs = gridspec.GridSpec(7, 4, height_ratios=[4, 0.01, 4, 0.01, 4.2, 4.2, 0.01], hspace=0.7)
+
+    # A: rad 0, hele bredden
+    axA = fig.add_subplot(gs[0, :])
+    axA.set_title("Audio signal", fontsize=fontsize+2)
+    axA.plot(np.linspace(0, len(sx[0]) / fs, len(sx[0])), bb_sx / len(sx))
+    axA.set_ylabel("Amplitude", fontsize=fontsize)
+    axA.set_xlabel("Tid [s]", fontsize=fontsize)
+    axA.set_yticks([-1,-0.5,0,0.5,1])
+    axA.grid()
+
+    # B: rad 2, hele bredden
+    T_1 = pars["broadband"]["trigger"]
+
+    # Finn steder hvor verdien går fra under T til over T
+    overskridninger_1 = (bb[:-1] < T_1) & (bb[1:] > T_1)
+
+    # Hent indeksene rett etter terskelkryssing
+    indekser_1 = np.where(overskridninger_1)[0] + 1
+    times_1 = indekser_1*50/fs
+
+
+    axB = fig.add_subplot(gs[2, :])
+    axB.set_title("Broadbandsignal for detection", fontsize=fontsize+2)
+    axB.plot(bbt, bb, linewidth=2)
+    axB.set_ylabel("SNR [dB]", fontsize=fontsize)
+    axB.set_xlabel("Tid [s]", fontsize=fontsize)
+  
+    axB.hlines(y=[T_1],xmin=0,xmax=(len(sx[0]) / fs),colors='r',linestyles='--')
+    axB.vlines(x=[times_1],ymin=-1,ymax=T_1, linestyles='--', colors='black')
+    for i in range(len(times_1)):
+        axB.plot(times_1[i], T_1, 'o', markersize=12, markeredgecolor='magenta', markerfacecolor='none')
+        axB.text(times_1[i], -5, f'{int(times_1[i]//60)}m{int(times_1[i]%60)}s', color='black', rotation=30,
+            ha='center', va='bottom', fontsize=9)
+
+    axB.text(0, T_1+1, fr'$T={T_1}$', fontsize=12)
+    axB.grid()
+
+    # C: nederst venstre, rad 4-5 (2 rader), kolonne 0-1
+    axC = fig.add_subplot(gs[4:6, 0:2])
+    axC.set_title("Spectrogram", fontsize=fontsize+2)
+
+    vmin_spec = pars["spectrogram"]["vmin"] if pars["spectrogram"]["vmin"] is not None else 10 * np.log10(len(sx))
+    maxfreq_spec = pars["spectrogram"]["maxfreq"] if pars["spectrogram"]["maxfreq"] is not None else pars["fs"]/2
+
+    pcmC = axC.pcolormesh(S_td, S_fd, S_sx, vmin=vmin_spec, vmax=pars["spectrogram"]["vmax"], cmap='inferno')
+    axC.set_ylim(pars["spectrogram"]["minfreq"],maxfreq_spec)
+    plt.colorbar(pcmC, ax=axC,label="SNR [dB]")
+    axC.set_xlabel("Tid [s]", fontsize=fontsize)
+    axC.set_ylabel("Frequency [Hz]", fontsize=fontsize-1)
+    axC.vlines(x=[times_1],ymin=pars["spectrogram"]["minfreq"]-250,ymax=maxfreq_spec, linestyles='--', colors='red')
+    for i in range(len(times_1)):
+        axC.text(times_1[i], pars["spectrogram"]["minfreq"]-250, f'{int(times_1[i]//60)}m{int(times_1[i]%60)}s', color='black', rotation=30,
+                ha='center', va='bottom', fontsize=9)
+
+    # D: nederst høyre, rad 4-5 (2 rader), kolonne 2-3
+    axD = fig.add_subplot(gs[4:6, 2:4])
+    axD.set_title("DEMON spectrogram", fontsize=fontsize+2)
+
+    vmin_dem = pars["DEMON"]["vmin"] if pars["DEMON"]["vmin"] is not None else 10 * np.log10(len(sx))
+    maxfreq_dem = pars["DEMON"]["maxfreq"] if pars["DEMON"]["maxfreq"] is not None else pars["fs"]/2
+
+    pcmD = axD.pcolormesh(D_td, D_fd, D_sx, vmin=vmin_dem, vmax=pars["DEMON"]["vmax"])
+    axD.set_ylim(pars["DEMON"]["minfreq"], maxfreq_dem)
+    plt.colorbar(pcmD, ax=axD,label="SNR [dB]")
+    axD.set_xlabel("Tid [s]", fontsize=fontsize)
+    axD.set_ylabel("Frequency [Hz]", fontsize=fontsize-1)
+
+    for ax in [axA, axB, axC, axD]:
+        ax.tick_params(axis='both', labelsize=14)
+
+    fig.suptitle(f"Results from {caption}", fontsize=fontsize+3, fontweight='bold')
+    plt.tight_layout(rect=[0, 0, 1, 0.98])
+
+    return 0
