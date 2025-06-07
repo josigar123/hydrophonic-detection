@@ -68,6 +68,8 @@ def plot_spectrogram(x, fs, tperseg, freq_filt, hfilt_length, f_max = 1000, s_mi
 
 def plot_spectrogram_multichannel(x, fs, tperseg, freq_filt, hfilt_length, f_max = 1000, s_min=0,s_max=10,window="hamming", plot=True):
     """Plot spectrogram of signal x.
+        Note: Only works with multidimentional arrays of x
+            For one-dimentional arrays of x, use plot_spectrogram()
 
     Parameters
     ----------
@@ -261,7 +263,6 @@ def BB_data(sx, fs, sx_buff, hilbert_win, window_size):
 
 
 def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=10, window="hamming", plot=True):
-    #DEMON 2
     """
     Produces a DEMON (Detection of Envelope Modulation On Noise) spectrogram from a time domain audio signal.
 
@@ -341,6 +342,8 @@ def DEMON_from_data(sx, fs, Fds,tperseg,freq_filt,hfilt_length ,fmax=100, s_max=
 def DEMON_multichannel(sx, fs, fds, tperseg, freq_filt, hfilt_length ,fmax=100, s_max=10, window="hamming", plot=True):
     """
     Produces a DEMON (Detection of Envelope Modulation On Noise) spectrogram from a time domain audio signal.
+    Note: Only works with multidimentional arrays of x
+            For one-dimentional arrays of x, use DEMON_from_data()
 
     PARAMETERS:
         sx: array_like
@@ -482,12 +485,16 @@ def spec_hfilt2(spec, freq, time, window_length: float):
     return smoothed_spec, freq, new_time
 
 def NB_detect(spec,Threshold):
+    """
+    Returns True if any value in array is larger than Threshold
+    """
     return True in (spec > Threshold)
 
  
+
+def scot(signal_1, signal_2, fs):
 # The Smoothed Coherence Transform (SCOT)
 # Code is simplfied from https://github.com/SiggiGue/gccestimating
-def scot(signal_1, signal_2, fs):
     """
     INPUT:
         signal_1, signal_2 : array of float
@@ -543,6 +550,37 @@ def full_plot_imag(input_file, pars:dict, caption:str):
             dictionary with all processing parameters
         caption: str
             Caption of image, f"Results from {caption}"
+    
+    Pars example:
+        pars = {
+                "fs": 10_000,  # Sample frequency
+                "broadband": {
+                    "hilbert_win": 50 ,
+                    "window_size": 22,
+                    "trigger" : 10,
+                },
+                "DEMON": {
+                    "fds": 900,
+                    "tperseg": 2,
+                    "freq_filt": 39,
+                    "hfilt_length": 5,
+                    "minfreq": 0,
+                    "maxfreq": 450, #if None, def. fds/2
+                    "vmin": None, #if None, def. 10*log10(len(sx))
+                    "vmax": 10,
+                    "window": "hann",
+                },
+                "spectrogram": {
+                    "tperseg": 1,
+                    "freq_filt": 13,
+                    "hfilt_length": 10,
+                    "minfreq": 0,
+                    "maxfreq": 1000,
+                    "vmin": None, #if None, def. 10*log10(len(sx))
+                    "vmax": 10,
+                    "window": "hann",
+                },
+            }
     """
 
 
@@ -617,9 +655,9 @@ def full_plot_imag(input_file, pars:dict, caption:str):
     plt.colorbar(pcmC, ax=axC,label="SNR [dB]")
     axC.set_xlabel("Tid [s]", fontsize=fontsize)
     axC.set_ylabel("Frequency [Hz]", fontsize=fontsize-1)
-    axC.vlines(x=[times_1],ymin=pars["spectrogram"]["minfreq"]-150,ymax=maxfreq_spec, linestyles='--', colors='red')
+    axC.vlines(x=[times_1],ymin=pars["spectrogram"]["minfreq"]-250,ymax=maxfreq_spec, linestyles='--', colors='red')
     for i in range(len(times_1)):
-        axC.text(times_1[i], pars["spectrogram"]["minfreq"]-150, f'{int(times_1[i]//60)}m{int(times_1[i]%60)}s', color='black', rotation=30,
+        axC.text(times_1[i], pars["spectrogram"]["minfreq"]-250, f'{int(times_1[i]//60)}m{int(times_1[i]%60)}s', color='black', rotation=30,
                 ha='center', va='bottom', fontsize=9)
 
     # D: nederst høyre, rad 4-5 (2 rader), kolonne 2-3
