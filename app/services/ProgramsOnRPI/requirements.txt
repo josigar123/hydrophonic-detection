@@ -16,3 +16,4 @@ geosphere==0.0.1
 boto3==1.37.29
 pymongo==4.11.3
 numpy==2.2.4
+requests

@@ -64,7 +64,7 @@ with open(BROKER_INFO_RELATIVE_PATH, "r") as file:
 
 RECORDING_PARAMETERS_FILE_NAME = "recording_parameters.json"
 
-SERVER_IP = "localhost"
+SERVER_IP = "0.0.0.0"
 SERVER_PORT = 8766
 
 ############### END CONFIGURATIONS ################

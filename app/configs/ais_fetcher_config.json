@@ -1,8 +1,8 @@
 {
   "api_url": "https://kystdatahuset.no/ws/api/ais/realtime/geojson",
   "broker": {
-    "ip": "localhost",
-    "port": 9092
+    "ip": "broker",
+    "port": 29092
   },
   "kafka_topic": "ais-log",
   "fetch_interval": 10,

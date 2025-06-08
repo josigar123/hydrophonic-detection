@@ -11,7 +11,7 @@ React front-end can display real-time ship positions.
 BROKER_INFO_RELATIVE_PATH = '../configs/broker_info.json'
 KAFKA_TOPIC = 'ais-log'
 CLIENT_NAME = 'map_client'
-WEBSOCKET_URL = f"ws://localhost:8766?client_name={CLIENT_NAME}"
+WEBSOCKET_URL = f"ws://backend:8766?client_name={CLIENT_NAME}"
 
 
 def ensure_position_fields(record: dict) -> None:
