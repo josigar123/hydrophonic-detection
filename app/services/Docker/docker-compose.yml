@@ -113,6 +113,7 @@ services:
         condition: service_started
       minio:
         condition: service_started
+
   frontend:
     build:
       context: ../../
@@ -123,6 +124,16 @@ services:
     depends_on:
       - backend
 
+  audio_file_api:
+    build:
+      context: ../../
+      dockerfile: services/Docker/audio_file_api.dockerfile
+    container_name: audio_file_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - frontend
+      - minio
 
 
 volumes:
