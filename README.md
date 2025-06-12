@@ -14,7 +14,6 @@
 - [Usage](#usage)
 - [Services](#services)
 - [Development](#development)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -36,12 +35,44 @@
 ## 🧰 Requirements
 
 ### Operating System
+Works fine on Windows, MacOS and Linux
 
 ### Core Dependencies
+System needs to have installed the latest node version to run the frontend.
+
+#### On Debian/Ubuntu:
+```bash
+sudo apt update
+sudo apt install nodejs npm
+
+# Verify installation
+node -v     # Check Node.js version
+npm -v      # Check npm version
+```
+
+#### On MacOS (with homebrew):
+```bash
+brew install node
+# Verify installation
+node -v     # Check Node.js version
+npm -v      # Check npm version
+```
+
+#### On Windows:
+Follow the installer at: https://nodejs.org/en (choose LTS)
+
+After installation
+```bash
+nvm install lts
+nvm use lts
+
+# Verify installation
+node -v     # Check Node.js version
+npm -v      # Check npm version
+
+```
 
 ### Python Packages
-
-### Optional Tools
 
 ---
 
