@@ -10,6 +10,7 @@
 - [Features](#features)
 - [System Architecture](#system-architecture)
 - [Requirements](#requirements)
+- [Environment](#environment)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Services](#services)
@@ -165,6 +166,62 @@ uvloop==0.21.0
 watchfiles==1.0.5
 websockets==10.4
 ```
+---
+
+## Environment
+It is recommended to use an isolated python environment for installing all the packages into, using either venv or a conda environment with miniconda (preferred) or another alternative. This is to avoid potential version collisions
+
+Installing miniconda:
+
+#### Debian/Ubuntu:
+Download the installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#linux-installers
+
+Run installation script:
+```bash
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+
+Follow installation propmts
+
+Restart your terminal or source your shell config:
+```bash
+source ~/.bashrc   # or ~/.zshrc if you use zsh
+```
+
+Verify:
+```bash
+conda --version
+```
+
+#### MacOS:
+Download the installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#macos-installers
+
+Run installation script:
+```bash
+bash Miniconda3-latest-MacOSX-x86_64.sh
+```
+
+Follow installation propmts
+
+Restart your terminal or source your shell config:
+```bash
+source ~/.bashrc   # or ~/.zshrc if you use zsh
+```
+
+Verify:
+```bash
+conda --version
+```
+
+#### Windows:
+Download installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#windows-installers
+
+Run the .exe and follow the GUI steps
+
+After installation open, AnacondaPrompt, Command Promp or PowerShell and verify:
+```bash
+conda --version
+```
 
 ---
 
@@ -172,7 +229,7 @@ websockets==10.4
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/hydrophonic-tripwire.git
+git clone https://github.com/josigar123/hydrophonic-detection.git
 cd hydrophonic-tripwire
 
 # Set up Python virtual environment
