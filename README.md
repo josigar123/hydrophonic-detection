@@ -39,6 +39,32 @@ Works fine on Windows, MacOS and Linux
 
 ### Core Dependencies
 
+#### PortAudio
+The system uses PortAudio, a cross-platform audio I/O library for real-time audio input/output, and is used with the Python sounddevice wrapper library, and MUST be installed on your system.
+
+#### On Debian/Ubuntu:
+```bash
+sudo apt update
+sudo apt install portaudio19-dev python3-pyaudio
+```
+
+#### On MacOS:
+```bash
+brew install portaudio
+```
+#### On Windows:
+Should be installed when installing the python "sounddevice" wrapper library (however, you need not install it here as its included in the requirement.txt, but is included for the sake of completeness):
+```bash
+pip install sounddevice
+```
+
+##### Verify
+Verify the installation using this python code in REPL or in your own script (should be done after installing from requirement.txt:
+```bash
+import sounddevice as sd
+print(sd.query_devices())  # Lists all available audio input/output devices
+```
+
 #### Frontend
 System needs to have installed the latest node version to run the frontend.
 
