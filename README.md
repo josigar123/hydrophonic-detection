@@ -7,6 +7,7 @@
 ## 📚 Table of Contents
 
 - [🧠 Overview](#-overview)
+- [Acoustic Detection](#-acoustic-detection)
 - [✨ Features](#-features)
 - [🏗️ System Architecture](#️-system-architecture)
 - [🧰 Requirements](#-requirements)
@@ -20,7 +21,17 @@
 ## 🧠 Overview
 This project proposes a solution for using passivevly monitored hydroacoustic data captured by hydrophones for detecting passing marine vessels. The system has been developed by Joseph K. Gargari, Victor L. Dehli, Christoffer Aaset, Bård Bremnes and Henrik B. Eriksen as part of the Bachelor's project at the University of South-Eastern Norway (USN), spring 2025.
 
-It's been developed in collaboration with the EU-funder project: SMAUG (Smart Maritime And Underwater Guardian), a pipeline of operations with the goal of securing harbours from smuggling of drugs and weapons and trafficking. Read more about SMAUG here: https://smaug-horizon.eu/. In the context og the SMAUG system, it represents the acoustic detection sub-system, responsible for automatically detecting passing vessels and capturing both acoustic data as well as AIS (Automatic Identification System: https://en.wikipedia.org/wiki/Automatic_identification_system) data.
+It's been developed in collaboration with the EU-funded project: SMAUG (Smart Maritime And Underwater Guardian), a pipeline of operations with the goal of securing harbours from smuggling of drugs and weapons and trafficking. Read more about SMAUG here: https://smaug-horizon.eu/. In the context og the SMAUG system, it represents the acoustic detection sub-system, responsible for automatically detecting passing vessels and capturing both acoustic data as well as AIS (Automatic Identification System: https://en.wikipedia.org/wiki/Automatic_identification_system) data.
+
+Monitoring harbours, especially busy harbours with a lot of shipping traffick is of special interest for countries such as Norway and Canada who has the second longest, and longest coastlines in the world respectively, giving this system a very real and potentially impactful purpose for existing.
+
+What has been developed here is still in its prototyping phase and should be considered the first iteration of the proposed solution, and is expected to be further developed and advanced in the future. With this in mind do not expect a "perfect" system, but a well-formed prototype and an image of the potential such a system can bring.
+
+From numerous practical tests and demonstrations, the results observed gives a promising outlook for further development of the system.
+
+---
+
+## Acoustc Detection
 
 ---
 
