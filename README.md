@@ -41,7 +41,7 @@ From numerous practical tests and demonstrations, the results observed gives a p
 
 ## 🏗️ System Architecture
 
-![System Architecture](path/to/system-architecture.png)
+![System Architecture](figs/SystemArchitectureFinal.drawio.png)
 
 ---
 
