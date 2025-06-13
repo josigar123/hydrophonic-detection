@@ -11,6 +11,8 @@
 - [✨ Features](#-features)
 - [🏗️ System Architecture](#️-system-architecture)
 - [Graphical User Interface](#-graphical-user-interface)
+- [Acoustic Sample](#-acoustic-sample)
+- [System In Action](#-system-in-action)
 - [🧰 Requirements](#-requirements)
 - [🌍 Environment](#-environment)
 - [⚙️ Installation](#️-installation)
@@ -86,6 +88,18 @@ From numerous practical tests and demonstrations, the results observed gives a *
 ## Graphical User Interface
 
 ![Graphical User Interface](figs/bildeavGUIMedSpektrogram.png)
+
+---
+
+## Acoustic Sample
+
+Listen to the passing of the cargo vessel, AutoPrestige automatically detected at approx. 800 meters away from testing station (before a visual could be made) at Svelvikstrømmen, Svelvik 21.05.2025 on [Soundcloud](https://soundcloud.com/user-770429242/autoprestige).
+
+---
+
+## System In Action
+
+See a video of the system in action during the passing of the passing of the AutoPrestige vessel at Svelvikstrømmen, Svelvik 21.05.2025 on [Vimeo](https://vimeo.com/manage/videos/1093190818/ccc9a615b6).
 
 ---
 
