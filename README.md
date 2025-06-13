@@ -258,3 +258,39 @@ Close down the GUI with in the terminal:
 ```bash
 Ctrl + C
 ```
+#### LightningchartJS
+A big part of the frontend is data visualization, the library used fro spectrogram, DEMON-spectrogram and broadband analysis is LightningchartJS. Since the project is still in its development phase, their non-commercial license has been used.
+This licenses must be updated each month, and on system-boot an internet connection is required for validating the key.
+
+A license key can be fetched from:
+```bash
+https://lightningchart.com/non-commercial-license/
+```
+This can be re-used indefinitely as of writing this. You should recieve an email with a zip-attachement containing a license.txt file with some basic javascript:
+```bash
+const lc = lightningChart({
+    license: "0002-n0i9AP8MN...",
+    licenseInformation: {
+        appTitle: "LightningChart JS Trial",
+        company: "LightningChart Ltd."
+    },
+})
+const chart = lc.ChartXY()
+
+
+Installation instructions
+https://lightningchart.com/js-charts/docs/installation
+```
+
+When updating the license key move into:
+```bash
+cd app/frontend/spectrogram_viewer_gui
+```
+And open the lightningChartLicense.json file:
+```bash
+{
+  "license": "0002-n0i9AP8MN..."
+}
+```
+Replace the old license key with the new one. Do not be concerned that the key is public on github, since its a free key a new one can always be fetched.
+*Beware*, we have experienced recieving outdated license keys, check the date. If its outdated get a new one.
