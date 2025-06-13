@@ -18,6 +18,9 @@
 ---
 
 ## 🧠 Overview
+This project proposes a solution for using passivevly monitored hydroacoustic data captured by hydrophones for detecting passing marine vessels. The system has been developed by Joseph K. Gargari, Victor L. Dehli, Christoffer Aaset, Bård Bremnes and Henrik B. Eriksen as part of the Bachelor's project at the University of South-Eastern Norway (USN), spring 2025.
+
+It's been developed in collaboration with the EU-funder project: SMAUG (Smart Maritime And Underwater Guardian), a pipeline of operations with the goal of securing harbours from smuggling of drugs and weapons and trafficking. Read more about SMAUG here: https://smaug-horizon.eu/. In the context og the SMAUG system, it represents the acoustic detection sub-system, responsible for automatically detecting passing vessels and capturing both acoustic data as well as AIS (Automatic Identification System: https://en.wikipedia.org/wiki/Automatic_identification_system) data.
 
 ---
 
