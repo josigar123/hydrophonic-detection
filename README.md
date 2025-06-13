@@ -37,6 +37,20 @@ From numerous practical tests and demonstrations, the results observed gives a p
 
 ## ✨ Features
 
+- Real-time signalprocessing of hydroacoustic data
+- Real-time data streaming of hydroacoustic data and AIS data
+- Automatic detection of hydroacoustic evenets using signalprocessing techniques
+- A clean and modern looking GUI for user-interraction
+- Real-time visualization of spectrograms
+- Real-time visualization of DEMON-spetrograms
+- Real-time visualization of waveform envelope
+- Real-time visualization of waveforms from each connected channel
+- Real-time visualization of geospacially accurate AIS data
+- Automatic capture and storage of acoustic data and AIS data logically encapsulated as a "detection"
+- A rich selection of parameters to adjust for real-time signalprocessing
+- An interface for downloading acoustic data locally to the users machine
+- A system architecture with support for a distributed system and future underwater deployment (See ["Ocean Side"](#-system-architecture) section of system architecture image)
+
 ---
 
 ## 🏗️ System Architecture
