@@ -17,6 +17,7 @@
 - [🌍 Environment](#-environment)
 - [⚙️ Installation](#️-installation)
 - [🚀 Starting the System](#-starting-the-system)
+- [Performance](#-performance)
 - [📄 License](#-license)
 
 ---
@@ -487,6 +488,12 @@ This will start the frontend, open it in a browser.
 ## 🎉 System Ready!
 
 > **That's it, all services should be up and running correctly. The system is ready for use. Input parameters for the signal processing and press "Start Monitoring" you should expect N-channels to render in the bottom left, indicating acoustic data-flow.**
+
+---
+
+## 📈 Performance
+The main performance bottle-neck of the system is the visualization of the spectrogram, DEMON spectrogram, and waveform envelope. Since its using **LightninchartJS** a **WebGL**-powered library it utilizes the machines GPU for rendering the graphincs. It is then recommended running the system on a machine with a dedicated GPU for optimal performance. The video in [this section](#-system-in-action) was captured on a machine with 16GB of memory, an Intel i5 KabyLake (K-series) and an Nvidia GTX 1070, giving a good performance.
+Performance can also be impacted by poor parameter choices, since these can impact: refresh-rate, data resolution and the number of data points plotted every N-seconds. Keep this in mind when running into performance issues. Extra CPU overhead is also present since the system-design achieves an "offline-first" approach, meaning that all services are hosted and running locally.
 
 ---
 
