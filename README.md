@@ -1,4 +1,4 @@
-# Hydrophonic Tripwire Detection
+# Hydroacoustic Tripwire Detection
 
 **An automatic real-time system for signal processing, visualization, and data collection of hydroacoustic and AIS data during detection of hydroacoustic events**
 
