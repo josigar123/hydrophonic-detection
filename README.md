@@ -129,43 +129,6 @@ Continue following the installer, then verify:
 python --version
 pip --version
 ```
-
-### Python Packages
-The relevant Python packages are listed in requirement.txt as follows:
-```bash
-aiokafka==0.12.0
-argon2-cffi==23.1.0
-argon2-cffi-bindings==21.2.0
-async-timeout==5.0.1
-attrs==25.3.0
-bitarray==3.3.1
-brotli==1.1.0
-certifi==2025.1.31
-dnspython==2.7.0
-environs==14.1.1
-fastapi-cors==0.0.6
-geosphere==0.0.1
-httptools==0.6.4
-idna==3.10
-kafka-python==2.0.5
-marshmallow==3.26.1
-minio==7.2.15
-mutagen==1.47.0
-packaging==24.2
-protobuf==4.25.3
-pyais==2.9.2
-pyaudio==0.2.11
-pycryptodome==3.22.0
-pycryptodomex==3.22.0
-pymongo==4.11.3
-python-dotenv==1.1.0
-scipy==1.15.2
-six==1.17.0
-sounddevice==0.5.1
-uvloop==0.21.0
-watchfiles==1.0.5
-websockets==10.4
-```
 ---
 
 ## Environment
@@ -227,14 +190,14 @@ conda --version
 
 ## ⚙️ Installation
 
-#### Download the source code
+### Download the source code
 ```bash
 # Clone the repository to your desired location
 git clone https://github.com/josigar123/hydrophonic-detection.git
 cd hydrophonic-detection
 ```
 
-#### Setup the backend environment
+### Setup the backend environment
 From the project root (assuming miniconda is installed on your system) run the following:
 ```bash
 conda env create -f environment.yml # Creates an environment named "python_htd_env"
@@ -242,7 +205,7 @@ conda activate python_htd_env # Activates the environment
 ```
 On consecutive starts of the system, you may need to activate the environment again.
 
-# Set up frontend
+#### Set up frontend
 From the project root move into:
 ```bash
 cd app/frontend/spectrogram_viewer_gui/src
@@ -258,8 +221,8 @@ Close down the GUI with in the terminal:
 ```bash
 Ctrl + C
 ```
-#### LightningchartJS
-A big part of the frontend is data visualization, the library used fro spectrogram, DEMON-spectrogram and broadband analysis is LightningchartJS. Since the project is still in its development phase, their non-commercial license has been used.
+### LightningchartJS
+A big part of the frontend is data visualization, the library used for spectrogram, DEMON-spectrogram and broadband analysis is LightningchartJS. Since the project is still in its development phase, their non-commercial license has been used.
 This licenses must be updated each month, and on system-boot an internet connection is required for validating the key.
 
 A license key can be fetched from:
@@ -293,4 +256,4 @@ And open the lightningChartLicense.json file:
 }
 ```
 Replace the old license key with the new one. Do not be concerned that the key is public on github, since its a free key a new one can always be fetched.
-*Beware*, we have experienced recieving outdated license keys, check the date. If its outdated get a new one.
+**Beware**, we have experienced recieving outdated license keys, check the date (in the name of the folder). If its outdated get a new one.
