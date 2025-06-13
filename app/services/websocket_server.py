@@ -62,6 +62,10 @@ BROKER_INFO_RELATIVE_PATH = f"{CONFIGURATION_FOLDER_RELATIVE_PATH}/broker_info.j
 with open(BROKER_INFO_RELATIVE_PATH, "r") as file:
     broker_info = json.load(file)
 
+RECORDING_PARAMETERS_RELATIVE_PATH = f"{CONFIGURATION_FOLDER_RELATIVE_PATH}/recording_parameters.json"
+with open(RECORDING_PARAMETERS_RELATIVE_PATH, "r") as file:
+    recording_config = json.load(file) # This dict holds the most recent recording config
+
 RECORDING_PARAMETERS_FILE_NAME = "recording_parameters.json"
 
 SERVER_IP = "localhost"
@@ -74,8 +78,7 @@ SERVER_PORT = 8766
 
 clients = {}                   # This dictionary holds a clients websocket and name
 spectrogram_client_config = {} # This will hold configurations for spectrogram and DEMON spectrogram and narrowband threshold
-broadband_client_config = {}
-recording_config = {}          # This dict holds the most recent recording config
+broadband_client_config = {}        
 BOOTSTRAP_SERVERS = f"{broker_info['ip']}:{broker_info['port']}"
 
 # Will be an instantiated SignalProcessingService when the server is running
@@ -104,60 +107,6 @@ broadband_total_required_buffer_size = None # This represents the WHOLE buffer o
 current_recording_status = False
 
 ################## GLOBAL VARIABLES END #####################
-
-async def consume_recording_config():
-    """Async function to consume configuration messages from Kafka before WebSocket server starts."""
-    global recording_config
-
-    while True:
-        try:
-            topic = 'recording-parameters'
-            consumer = AIOKafkaConsumer(
-                bootstrap_servers=BOOTSTRAP_SERVERS,
-                group_id="recording-config-group",
-                auto_offset_reset='latest',
-                enable_auto_commit=False,
-                value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-            )
-
-            partition = TopicPartition(topic, 0)
-            
-            await consumer.start()
-            print("Connected to Kafka, waiting for configuration...")
-            try:
-                
-                consumer.assign([partition])
-                
-                await consumer.seek_to_end(partition)
-                last_offset = await consumer.position(partition) - 1
-                
-                consumer.seek(partition, last_offset)
-                
-                message = await consumer.getone()
-                
-                await consumer.commit()
-                
-                config_data = message.value
-                
-                # Create the target directory one level up
-                target_directory = os.path.join(os.path.dirname(__file__), CONFIGURATION_FOLDER_RELATIVE_PATH)
-                os.makedirs(target_directory, exist_ok=True)  # Ensure the 'configs' directory exists
-
-                # Define the file path within the 'configs' directory
-                file_path = os.path.join(target_directory, RECORDING_PARAMETERS_FILE_NAME)
-
-                with open(file_path, 'w') as json_file:
-                    json.dump(config_data, json_file, indent=4)
-                    print(f"Configuration saved to {file_path}")
-
-                recording_config =config_data
-                return config_data
-            finally:
-                await consumer.stop()
-        except Exception as e:
-            print(f"Error consuming configuration: {e}. Retrying in 5 seconds...")
-            await asyncio.sleep(5)
-
 
 async def consume_audio(recorder):
     consumer = AIOKafkaConsumer(
@@ -1061,13 +1010,7 @@ async def main():
     global broadband_kernel_buffers_for_each_channel
     global broadband_signal_buffers_for_each_channel
     
-    try:
-        print("Reading current latest configuration from Kafka...")
-        recording_config = await consume_recording_config()
-
-        if not recording_config:
-            raise RuntimeError("Failed to read current latest configuration from Kafka")
-        
+    try:        
         print(f"Configuration loaded: {recording_config}")
 
         '''Recording MUST be set before the server is served så that the signal_processing_service is instantiated'''
