@@ -12,9 +12,7 @@
 - [Requirements](#requirements)
 - [Environment](#environment)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Services](#services)
-- [Development](#development)
+- [Starting the system](#starting-the-system)
 - [License](#license)
 
 ---
@@ -257,3 +255,13 @@ And open the lightningChartLicense.json file:
 ```
 Replace the old license key with the new one. Do not be concerned that the key is public on github, since its a free key a new one can always be fetched.
 **Beware**, we have experienced recieving outdated license keys, check the date (in the name of the folder). If its outdated get a new one.
+
+---
+
+## Starting the system
+The system can be started in two ways. The first and most straigh forward is manually starting each service combining multiple terminals and some docker-containers (a bit clunky, but it works). The other will only utilize docker-compose for launching all services (UNDER CONSTRUCTION). The system architecture is also desgined to be somewaht distributed down the line. As of now, this guide will only provide a deployment on a single machine.
+
+### Manually launching each service
+Before starting any services it is important to set some configuration, since multiple services will rely upon the data provided in making connections and capturing data (acoustic). Also for capture of AIS-data our system has two methods: antenna + reciever or from Kystverkets API, the following set-up will only setup for the API.
+
+#### 
