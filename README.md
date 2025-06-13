@@ -28,6 +28,8 @@ It's been developed in collaboration with the EU-funded project: **SMAUG** (Smar
 
 🔗 **Learn more about SMAUG:** https://smaug-horizon.eu/
 
+[![SMAUG Pipeline](figs/SMAUG-pipeline.jpg)](https://smaug-horizon.eu/about/)
+
 In the context of the SMAUG system, it represents the **acoustic detection sub-system**, responsible for automatically detecting passing vessels and capturing both acoustic data as well as **AIS** (Automatic Identification System: https://en.wikipedia.org/wiki/Automatic_identification_system) data.
 
 ### 🌍 Real-World Impact
