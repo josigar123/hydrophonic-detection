@@ -54,13 +54,13 @@ sudo apt install portaudio19-dev python3-pyaudio
 brew install portaudio
 ```
 #### On Windows:
-Should be installed when installing the python "sounddevice" wrapper library (however, you need not install it here as its included in the requirement.txt, but is included for the sake of completeness):
+Should be installed when installing the python "sounddevice" wrapper library (however, you need not install it here as its included in the environment.yml, but is included here for the sake of completeness):
 ```bash
 pip install sounddevice
 ```
 
 ##### Verify
-Verify the installation using this python code in REPL or in your own script (should be done after installing from requirement.txt:
+Verify the installation using this python code in REPL or in your own script (should be done after setting up environment):
 ```bash
 import sounddevice as sd
 print(sd.query_devices())  # Lists all available audio input/output devices
@@ -169,7 +169,7 @@ websockets==10.4
 ---
 
 ## Environment
-It is recommended to use an isolated python environment for installing all the packages into, using either venv or a conda environment with miniconda (preferred) or another alternative. This is to avoid potential version collisions
+It is recommended to use an isolated python environment for installing all the packages into. For this project use miniconda. This is to avoid potential version collisions.
 
 Installing miniconda:
 
@@ -227,16 +227,34 @@ conda --version
 
 ## ⚙️ Installation
 
+#### Download the source code
 ```bash
-# Clone the repository
+# Clone the repository to your desired location
 git clone https://github.com/josigar123/hydrophonic-detection.git
-cd hydrophonic-tripwire
+cd hydrophonic-detection
+```
 
-# Set up Python virtual environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+#### Setup the backend environment
+From the project root (assuming miniconda is installed on your system) run the following:
+```bash
+conda env create -f environment.yml # Creates an environment named "python_htd_env"
+conda activate python_htd_env # Activates the environment
+```
+On consecutive starts of the system, you may need to activate the environment again.
 
 # Set up frontend
-cd frontend/
-npm install
+From the project root move into:
+```bash
+cd app/frontend/spectrogram_viewer_gui/src
+npm install # Installs necessary dependencies for the frontend
+```
+The frontend should be up and running, verify that it works by running:
+```bash
+npm run dev # Vites dev server
+```
+In the terminal you should be presented with multiple URLs, pick one and you should be redirected to the GUI.
+
+Close down the GUI with in the terminal:
+```bash
+Ctrl + C
+```
