@@ -1,6 +1,6 @@
 # 🌊 Hydroacoustic Tripwire Detection
 
-**An automatic real-time system for signal processing, visualization, and data collection of hydroacoustic and AIS data during detection of hydroacoustic events**
+> **An automatic real-time system for signal processing, visualization, and data collection of hydroacoustic and AIS data during detection of hydroacoustic events**
 
 ---
 
@@ -10,9 +10,9 @@
 - [🎯 Acoustic Detection](#-acoustic-detection)
 - [✨ Features](#-features)
 - [🏗️ System Architecture](#️-system-architecture)
-- [Graphical User Interface](#-graphical-user-interface)
-- [Acoustic Sample](#-acoustic-sample)
-- [System In Action](#-system-in-action)
+- [🖥️ Graphical User Interface](#️-graphical-user-interface)
+- [🎵 Acoustic Sample](#-acoustic-sample)
+- [📹 System In Action](#-system-in-action)
 - [🧰 Requirements](#-requirements)
 - [🌍 Environment](#-environment)
 - [⚙️ Installation](#️-installation)
@@ -49,19 +49,21 @@ From numerous practical tests and demonstrations, the results observed gives a *
 
 ## 🎯 Acoustic Detection
 
+> *Content section for acoustic detection details*
+
 ---
 
 ## ✨ Features
 
 ### 🔄 Real-Time Processing
-- Real-time signal processing of hydroacoustic data
-- Real-time data streaming of hydroacoustic data and AIS data
-- Automatic detection of hydroacoustic events using signal processing techniques
+- **Real-time signal processing** of hydroacoustic data
+- **Real-time data streaming** of hydroacoustic data and AIS data
+- **Automatic detection** of hydroacoustic events using signal processing techniques
 
 ### 🖥️ User Interface
-- A clean and modern looking GUI for user-interaction
-- A rich selection of parameters to adjust for real-time signal processing
-- An interface for downloading acoustic data locally to the user's machine
+- A **clean and modern** looking GUI for user-interaction
+- A **rich selection of parameters** to adjust for real-time signal processing
+- An **interface for downloading** acoustic data locally to the user's machine
 
 ### 📊 Visualization Capabilities
 - Real-time visualization of **spectrograms**
@@ -71,7 +73,7 @@ From numerous practical tests and demonstrations, the results observed gives a *
 - Real-time visualization of **geospatially accurate AIS data**
 
 ### 💾 Data Management
-- Automatic capture and storage of acoustic data and AIS data logically encapsulated as a "detection"
+- **Automatic capture and storage** of acoustic data and AIS data logically encapsulated as a "detection"
 
 ### 🏗️ System Architecture
 - A system architecture with support for a **distributed system** and future underwater deployment (See ["Ocean Side"](#️-system-architecture) section of system architecture image)
@@ -85,21 +87,21 @@ From numerous practical tests and demonstrations, the results observed gives a *
 
 ---
 
-## Graphical User Interface
+## 🖥️ Graphical User Interface
 
 ![Graphical User Interface](figs/bildeavGUIMedSpektrogram.png)
 
 ---
 
-## Acoustic Sample
+## 🎵 Acoustic Sample
 
-Listen to the passing of the cargo vessel, AutoPrestige automatically detected at approx. 800 meters away from testing station (before a visual could be made) at Svelvikstrømmen, Svelvik 21.05.2025 on [Soundcloud](https://soundcloud.com/user-770429242/autoprestige).
+🎧 **Listen to the passing of the cargo vessel, AutoPrestige** automatically detected at approx. 800 meters away from testing station (before a visual could be made) at Svelvikstrømmen, Svelvik 21.05.2025 on [**Soundcloud**](https://soundcloud.com/user-770429242/autoprestige).
 
 ---
 
-## System In Action
+## 📹 System In Action
 
-See a video of the system in action during the passing of the passing of the AutoPrestige vessel at Svelvikstrømmen, Svelvik 21.05.2025 on [Vimeo](https://vimeo.com/manage/videos/1093190818/ccc9a615b6).
+🎬 **See a video of the system in action** during the passing of the passing of the AutoPrestige vessel at Svelvikstrømmen, Svelvik 21.05.2025 on [**Vimeo**](https://vimeo.com/manage/videos/1093190818/ccc9a615b6).
 
 ---
 
@@ -113,24 +115,24 @@ Works fine on **Windows**, **MacOS** and **Linux**
 #### 🎵 PortAudio
 The system uses PortAudio, a cross-platform audio I/O library for real-time audio input/output, and is used with the Python sounddevice wrapper library, and **MUST** be installed on your system.
 
-**On Debian/Ubuntu:**
+**🐧 On Debian/Ubuntu:**
 ```bash
 sudo apt update
 sudo apt install portaudio19-dev
 ```
 
-**On MacOS:**
+**🍎 On MacOS:**
 ```bash
 brew install portaudio
 ```
 
-**On Windows:**
+**🪟 On Windows:**
 Should be installed when installing the python "sounddevice" wrapper library (however, you need not install it here as its included in the environment.yml, but is included here for the sake of completeness):
 ```bash
 pip install sounddevice
 ```
 
-**🔍 Verify**
+**🔍 Verify Installation**
 Verify the installation using this python code in REPL or in your own script (should be done after setting up environment):
 ```python
 import sounddevice as sd
@@ -140,7 +142,7 @@ print(sd.query_devices())  # Lists all available audio input/output devices
 #### 🌐 Frontend
 System needs to have installed the latest node version to run the frontend.
 
-**On Debian/Ubuntu:**
+**🐧 On Debian/Ubuntu:**
 ```bash
 sudo apt update
 sudo apt install nodejs npm
@@ -150,7 +152,7 @@ node -v     # Check Node.js version
 npm -v      # Check npm version
 ```
 
-**On MacOS (with homebrew):**
+**🍎 On MacOS (with homebrew):**
 ```bash
 brew install node
 
@@ -159,7 +161,7 @@ node -v     # Check Node.js version
 npm -v      # Check npm version
 ```
 
-**On Windows:**
+**🪟 On Windows:**
 Follow the installer at: https://nodejs.org/en (choose LTS)
 
 After installation (in PowerShell)
@@ -175,7 +177,7 @@ npm -v      # Check npm version
 #### 🐍 Backend
 The backend runs using Python, ensure that you have atleast **Python 3.10+** installed on your system
 
-**On Debian/Ubuntu:**
+**🐧 On Debian/Ubuntu:**
 Should already be preinstalled on your system, check with:
 ```bash
 python3 --version
@@ -185,7 +187,7 @@ sudo apt update
 sudo apt install python3-pip 
 ```
 
-**On MacOS (with homebrew):**
+**🍎 On MacOS (with homebrew):**
 ```bash
 brew install python
 
@@ -194,7 +196,7 @@ python3 --version
 pip3 --version
 ```
 
-**On Windows:**
+**🪟 On Windows:**
 Go to: https://www.python.org/downloads/windows/ and install the latest 64-bit version, mark the checkbox asking if you want to add Python to PATH as: **YES**.
 Continue following the installer, then verify:
 ```bash
@@ -210,7 +212,7 @@ It is recommended to use an isolated python environment for installing all the p
 
 ### 📦 Installing miniconda:
 
-#### **Debian/Ubuntu:**
+#### **🐧 Debian/Ubuntu:**
 Download the installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#linux-installers
 
 Run installation script:
@@ -230,7 +232,7 @@ Verify:
 conda --version
 ```
 
-#### **MacOS:**
+#### **🍎 MacOS:**
 Download the installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#macos-installers
 
 Run installation script:
@@ -250,7 +252,7 @@ Verify:
 conda --version
 ```
 
-#### **Windows:**
+#### **🪟 Windows:**
 Download installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#windows-installers
 
 Run the `.exe` and follow the GUI steps
@@ -277,7 +279,7 @@ From the project root (assuming miniconda is installed on your system) run the f
 conda env create -f environment.yml # Creates an environment named "python_htd_env"
 conda activate python_htd_env # Activates the environment
 ```
-> **Note:** On consecutive starts of the system, you may need to activate the environment again.
+> **💡 Note:** On consecutive starts of the system, you may need to activate the environment again.
 
 ### 🌐 Set up frontend
 From the project root move into:
@@ -361,12 +363,14 @@ lie all the configuration files that must be set **BEFORE** any services are sta
 
 The following files are present in the directory:
 
-- `ais_fetcher_config.json` - generated automatically, do not touch
-- `aiscatcher_config.json` - not relevant in the following steps, ignore it
-- `broker_info.json` - set ip and port of kafka broker
-- `minio_config.json` - set ip and port of minio service, do not change other params
-- `mongodb_config.json` - set ip and port of mongodb, do not change other params 
-- `recording_parameters.json` - set samplerate and number of channels, do not change other params
+| File | Description |
+|------|-------------|
+| `ais_fetcher_config.json` | Generated automatically, do not touch |
+| `aiscatcher_config.json` | Not relevant in the following steps, ignore it |
+| `broker_info.json` | Set ip and port of kafka broker |
+| `minio_config.json` | Set ip and port of minio service, do not change other params |
+| `mongodb_config.json` | Set ip and port of mongodb, do not change other params |
+| `recording_parameters.json` | Set samplerate and number of channels, do not change other params |
 
 > **🚨 Important**: DO NOT CHANGE ANY OF THE PORT NUMBERS, ONLY IPs if necessary
 
@@ -415,7 +419,7 @@ docker-compose -f your-compose-file.yml down
 
 After deploying the containers, you can continue with starting the other necessary services for the system. For the rest of the services you will need to open **7** terminals (PowerShell, iterm2, terminal, etc.)
 
-##### 🖥️ Terminal #1:
+##### 🖥️ Terminal #1: Kafka Orchestrator
 ```bash
 cd app/services/ProgramsOnRPI
 
@@ -424,7 +428,7 @@ python kafka_orchestrator.py # alt. python3 kafka_orchestrator.py
 ```
 This program will create all of the systems topics, it will also prompt the user with selecting an audio interface to stream from. If the Zoom 44 I/F is plugged in then it's auto-selected since it is deemed as a "part of the system". If not select the capture-interface you desire. The program might crash if you have overstepped the number of channels the device has, or you have selected an unsupported samplerate. After selecting the interface, a producer is created, and it will start streaming audio to Kafka.
 
-##### 🖥️ Terminal #2:
+##### 🖥️ Terminal #2: WebSocket Server
 ```bash
 cd app/services
 
@@ -433,7 +437,7 @@ python websocket_server.py # alt. python3 websocket_server.py
 ```
 This will start the websocket server, the "heart" of the system, it will now be awaiting connections and message transfer.
 
-##### 🖥️ Terminal #3:
+##### 🖥️ Terminal #3: Audio Consumer
 ```bash
 cd app/services
 
@@ -442,7 +446,7 @@ python -m KafkaServices.audio_consumer # alt. python3 -m KafkaServices.audio_con
 ```
 This will consume the audio produced to the Kafka topic.
 
-##### 🖥️ Terminal #4:
+##### 🖥️ Terminal #4: AIS API Producer
 ```bash
 cd app/services
 
@@ -451,7 +455,7 @@ python -m KafkaServices.ais_api_producer # alt. python3 -m KafkaServices.ais_api
 ```
 This will produce AIS data to the appropriate Kafka topic from the Kystverket API.
 
-##### 🖥️ Terminal #5:
+##### 🖥️ Terminal #5: AIS Consumer
 ```bash
 cd app/services
 
@@ -460,7 +464,7 @@ python -m KafkaServices.ais_consumer # alt. python3 -m KafkaServices.ais_consume
 ```
 This will consume AIS data produced to the appropriate topic
 
-##### 🖥️ Terminal #6:
+##### 🖥️ Terminal #6: FastAPI Server
 ```bash
 cd app/services
 
@@ -469,7 +473,7 @@ python -m uvicorn Apis.main:app --reload # alt. python3 -m uvicorn Apis.main:app
 ```
 This will launch a FastAPI with uvicorn, the API is used by the frontend for fetching and downloading audio files from MinIO directly.
 
-##### 🖥️ Terminal #7:
+##### 🖥️ Terminal #7: Frontend
 ```bash
 cd app/frontend/spectrogram_viewer_gui/src
 
@@ -482,10 +486,16 @@ This will start the frontend, open it in a browser.
 
 ## 🎉 System Ready!
 
-**That's it, all services should be up and running correctly. The system is ready for use. Input parameters for the signal processing and press "Start Monitoring" you should expect N-channels to render in the bottom left, indicating acoustic data-flow.**
+> **That's it, all services should be up and running correctly. The system is ready for use. Input parameters for the signal processing and press "Start Monitoring" you should expect N-channels to render in the bottom left, indicating acoustic data-flow.**
 
 ---
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**🌊 Built with passion for maritime security and acoustic detection 🌊**
+
+*Developed at University of South-Eastern Norway (USN) in collaboration with SMAUG project*
