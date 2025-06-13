@@ -13,7 +13,7 @@
 - [🖥️ Graphical User Interface](#️-graphical-user-interface)
 - [🎵 Acoustic Sample](#-acoustic-sample)
 - [📹 System In Action](#-system-in-action)
-- [💻⚙️ Hardware Used](#hardware-used)
+- [💻⚙️ Hardware Used](#️-hardware-used)
 - [🧰 Requirements](#-requirements)
 - [🌍 Environment](#-environment)
 - [⚙️ Installation](#️-installation)
