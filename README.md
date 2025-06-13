@@ -10,6 +10,7 @@
 - [🎯 Acoustic Detection](#-acoustic-detection)
 - [✨ Features](#-features)
 - [🏗️ System Architecture](#️-system-architecture)
+- [Graphical User Interface](#-graphical-user-interface)
 - [🧰 Requirements](#-requirements)
 - [🌍 Environment](#-environment)
 - [⚙️ Installation](#️-installation)
@@ -79,6 +80,12 @@ From numerous practical tests and demonstrations, the results observed gives a *
 ## 🏗️ System Architecture
 
 ![System Architecture](figs/SystemArchitectureFinalADJUSTEDZOOM125.drawio.png)
+
+---
+
+## Graphical User Interface
+
+![Graphical User Interface](figs/bildeavGUIMedSpektrogram.png)
 
 ---
 
