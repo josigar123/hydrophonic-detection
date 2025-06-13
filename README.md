@@ -1,4 +1,4 @@
-# Hydroacoustic Tripwire Detection
+# 🌊 Hydroacoustic Tripwire Detection
 
 **An automatic real-time system for signal processing, visualization, and data collection of hydroacoustic and AIS data during detection of hydroacoustic events**
 
@@ -6,14 +6,14 @@
 
 ## 📚 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [System Architecture](#system-architecture)
-- [Requirements](#requirements)
-- [Environment](#environment)
-- [Installation](#installation)
-- [Starting the system](#starting-the-system)
-- [License](#license)
+- [🧠 Overview](#-overview)
+- [✨ Features](#-features)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🧰 Requirements](#-requirements)
+- [🌍 Environment](#-environment)
+- [⚙️ Installation](#️-installation)
+- [🚀 Starting the System](#-starting-the-system)
+- [📄 License](#-license)
 
 ---
 
@@ -33,41 +33,42 @@
 
 ## 🧰 Requirements
 
-### Operating System
-Works fine on Windows, MacOS and Linux
+### 💻 Operating System
+Works fine on **Windows**, **MacOS** and **Linux**
 
-### Core Dependencies
+### 🔧 Core Dependencies
 
-#### PortAudio
-The system uses PortAudio, a cross-platform audio I/O library for real-time audio input/output, and is used with the Python sounddevice wrapper library, and MUST be installed on your system.
+#### 🎵 PortAudio
+The system uses PortAudio, a cross-platform audio I/O library for real-time audio input/output, and is used with the Python sounddevice wrapper library, and **MUST** be installed on your system.
 
-#### On Debian/Ubuntu:
+**On Debian/Ubuntu:**
 ```bash
 sudo apt update
 sudo apt install portaudio19-dev
 ```
 
-#### On MacOS:
+**On MacOS:**
 ```bash
 brew install portaudio
 ```
-#### On Windows:
+
+**On Windows:**
 Should be installed when installing the python "sounddevice" wrapper library (however, you need not install it here as its included in the environment.yml, but is included here for the sake of completeness):
 ```bash
 pip install sounddevice
 ```
 
-##### Verify
+**🔍 Verify**
 Verify the installation using this python code in REPL or in your own script (should be done after setting up environment):
-```bash
+```python
 import sounddevice as sd
 print(sd.query_devices())  # Lists all available audio input/output devices
 ```
 
-#### Frontend
+#### 🌐 Frontend
 System needs to have installed the latest node version to run the frontend.
 
-#### On Debian/Ubuntu:
+**On Debian/Ubuntu:**
 ```bash
 sudo apt update
 sudo apt install nodejs npm
@@ -77,15 +78,16 @@ node -v     # Check Node.js version
 npm -v      # Check npm version
 ```
 
-#### On MacOS (with homebrew):
+**On MacOS (with homebrew):**
 ```bash
 brew install node
+
 # Verify installation
 node -v     # Check Node.js version
 npm -v      # Check npm version
 ```
 
-#### On Windows:
+**On Windows:**
 Follow the installer at: https://nodejs.org/en (choose LTS)
 
 After installation (in PowerShell)
@@ -96,12 +98,12 @@ nvm use lts
 # Verify installation
 node -v     # Check Node.js version
 npm -v      # Check npm version
-
 ```
-#### Backend
-The backend runs using Python, ensure that you have atleast Python 3.10+ installed on your system
 
-#### On Debian/Ubuntu:
+#### 🐍 Backend
+The backend runs using Python, ensure that you have atleast **Python 3.10+** installed on your system
+
+**On Debian/Ubuntu:**
 Should already be preinstalled on your system, check with:
 ```bash
 python3 --version
@@ -111,7 +113,7 @@ sudo apt update
 sudo apt install python3-pip 
 ```
 
-#### On MacOS (with homebrew):
+**On MacOS (with homebrew):**
 ```bash
 brew install python
 
@@ -120,21 +122,23 @@ python3 --version
 pip3 --version
 ```
 
-#### On Windows:
-Go to: https://www.python.org/downloads/windows/ and install the latest 64-bit version, mark the checkbox asking if you want to add Python to PATH as: YES.
+**On Windows:**
+Go to: https://www.python.org/downloads/windows/ and install the latest 64-bit version, mark the checkbox asking if you want to add Python to PATH as: **YES**.
 Continue following the installer, then verify:
 ```bash
 python --version
 pip --version
 ```
+
 ---
 
-## Environment
-It is recommended to use an isolated python environment for installing all the packages into. For this project use miniconda. This is to avoid potential version collisions.
+## 🌍 Environment
 
-Installing miniconda:
+It is recommended to use an isolated python environment for installing all the packages into. For this project use **miniconda**. This is to avoid potential version collisions.
 
-#### Debian/Ubuntu:
+### 📦 Installing miniconda:
+
+#### **Debian/Ubuntu:**
 Download the installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#linux-installers
 
 Run installation script:
@@ -142,7 +146,7 @@ Run installation script:
 bash Miniconda3-latest-Linux-x86_64.sh
 ```
 
-Follow installation propmts
+Follow installation prompts
 
 Restart your terminal or source your shell config:
 ```bash
@@ -154,7 +158,7 @@ Verify:
 conda --version
 ```
 
-#### MacOS:
+#### **MacOS:**
 Download the installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#macos-installers
 
 Run installation script:
@@ -162,7 +166,7 @@ Run installation script:
 bash Miniconda3-latest-MacOSX-x86_64.sh
 ```
 
-Follow installation propmts
+Follow installation prompts
 
 Restart your terminal or source your shell config:
 ```bash
@@ -174,12 +178,12 @@ Verify:
 conda --version
 ```
 
-#### Windows:
+#### **Windows:**
 Download installer from: https://www.anaconda.com/docs/getting-started/miniconda/main#windows-installers
 
-Run the .exe and follow the GUI steps
+Run the `.exe` and follow the GUI steps
 
-After installation open, AnacondaPrompt, Command Promp or PowerShell and verify:
+After installation open, **AnacondaPrompt**, **Command Prompt** or **PowerShell** and verify:
 ```bash
 conda --version
 ```
@@ -188,27 +192,28 @@ conda --version
 
 ## ⚙️ Installation
 
-### Download the source code
+### 📥 Download the source code
 ```bash
 # Clone the repository to your desired location
 git clone https://github.com/josigar123/hydrophonic-detection.git
 cd hydrophonic-detection
 ```
 
-### Setup the backend environment
+### 🐍 Setup the backend environment
 From the project root (assuming miniconda is installed on your system) run the following:
 ```bash
 conda env create -f environment.yml # Creates an environment named "python_htd_env"
 conda activate python_htd_env # Activates the environment
 ```
-On consecutive starts of the system, you may need to activate the environment again.
+> **Note:** On consecutive starts of the system, you may need to activate the environment again.
 
-#### Set up frontend
+### 🌐 Set up frontend
 From the project root move into:
 ```bash
 cd app/frontend/spectrogram_viewer_gui/src
 npm install # Installs necessary dependencies for the frontend
 ```
+
 The frontend should be up and running, verify that it works by running:
 ```bash
 npm run dev # Vites dev server
@@ -219,16 +224,20 @@ Close down the GUI with in the terminal:
 ```bash
 Ctrl + C
 ```
-### LightningchartJS
-A big part of the frontend is data visualization, the library used for spectrogram, DEMON-spectrogram and broadband analysis is LightningchartJS. Since the project is still in its development phase, their non-commercial license has been used.
+
+### ⚡ LightningchartJS
+A big part of the frontend is data visualization, the library used for spectrogram, DEMON-spectrogram and broadband analysis is **LightningchartJS**. Since the project is still in its development phase, their non-commercial license has been used.
+
 This licenses must be updated each month, and on system-boot an internet connection is required for validating the key.
 
 A license key can be fetched from:
-```bash
+```
 https://lightningchart.com/non-commercial-license/
 ```
-This can be re-used indefinitely as of writing this. You should recieve an email with a zip-attachement containing a license.txt file with some basic javascript:
-```bash
+
+This can be re-used indefinitely as of writing this. You should receive an email with a zip-attachment containing a `license.txt` file with some basic javascript:
+
+```javascript
 const lc = lightningChart({
     license: "0002-n0i9AP8MN...",
     licenseInformation: {
@@ -238,67 +247,81 @@ const lc = lightningChart({
 })
 const chart = lc.ChartXY()
 
-
-Installation instructions
-https://lightningchart.com/js-charts/docs/installation
+// Installation instructions
+// https://lightningchart.com/js-charts/docs/installation
 ```
 
+#### 🔑 Updating the license key
 When updating the license key move into:
 ```bash
 cd app/frontend/spectrogram_viewer_gui
 ```
-And open the lightningChartLicense.json file:
-```bash
+
+And open the `lightningChartLicense.json` file:
+```json
 {
   "license": "0002-n0i9AP8MN..."
 }
 ```
+
 Replace the old license key with the new one. Do not be concerned that the key is public on github, since its a free key a new one can always be fetched.
-**Beware**, we have experienced recieving outdated license keys, check the date (in the name of the folder). If its outdated get a new one.
+
+> **⚠️ Beware**: We have experienced receiving outdated license keys, check the date (in the name of the folder). If its outdated get a new one.
 
 ---
 
-## Starting the system
-The system can be started in two ways. The first and most straigh forward is manually starting each service combining multiple terminals and some docker-containers (a bit clunky, but it works). The other will only utilize docker-compose for launching all services (UNDER CONSTRUCTION). The system architecture is also desgined to be somewaht distributed down the line. As of now, this guide will only provide a deployment on a single machine.
+## 🚀 Starting the System
 
-### Manually launching each service
-Before starting any services it is important to set some configuration, since multiple services will rely upon the data provided in making connections and capturing data (acoustic). Also for capture of AIS-data our system has two methods: antenna + reciever or from Kystverkets API, the following set-up will only setup for the API.
+The system can be started in two ways. The first and most straightforward is manually starting each service combining multiple terminals and some docker-containers (a bit clunky, but it works). The other will only utilize docker-compose for launching all services (**UNDER CONSTRUCTION**). The system architecture is also designed to be somewhat distributed down the line. As of now, this guide will only provide a deployment on a single machine.
 
-#### Configuration
+### 🔧 Manually launching each service
+
+Before starting any services it is important to set some configuration, since multiple services will rely upon the data provided in making connections and capturing data (acoustic). Also for capture of AIS-data our system has two methods: antenna + receiver or from Kystverkets API, the following set-up will only setup for the API.
+
+#### ⚙️ Configuration
+
 In the directory:
 ```bash
 hydrophonic-detection/app/configs
 ```
+
 lie all the configuration files that must be set **BEFORE** any services are started.
+
 The following files are present in the directory:
 
-- ais_fetcher_config.json, generated automatically, do not touch
-- aiscatcher_config.json, not relevant in the following steps, ignore it
-- broker_info.json, set ip and port of kafka broker
-- minio_config.json, set ip and port of minio service, do not change other params
-- mongodb_config.json, set ip and port of mongodb, do not change other params 
-- recording_parameters.json, set samplerate and number of channels, do not change other params
+- `ais_fetcher_config.json` - generated automatically, do not touch
+- `aiscatcher_config.json` - not relevant in the following steps, ignore it
+- `broker_info.json` - set ip and port of kafka broker
+- `minio_config.json` - set ip and port of minio service, do not change other params
+- `mongodb_config.json` - set ip and port of mongodb, do not change other params 
+- `recording_parameters.json` - set samplerate and number of channels, do not change other params
 
-**DO NOT CHANGE ANY OF THE PORT NUMBERS, ONLY IPs if necessary**
+> **🚨 Important**: DO NOT CHANGE ANY OF THE PORT NUMBERS, ONLY IPs if necessary
+
 For having all services run locally change all **IPs** to either **localhost** or **127.0.0.1**.
-An example with broker_info.json:
-```bash
+
+**Example with `broker_info.json`:**
+```json
 {
   "ip": "localhost",
   "port": "9092"
 }
 ```
-#### Start core Docker services
-After configuring the system, start the necessary Docker services (This is the only part of the system that is Dockerized on the manual setup). Also ensure that you have Docker installed on your system or **Docker Desktop** if you are on Windows or MacOS.
+
+#### 🐳 Start core Docker services
+
+After configuring the system, start the necessary Docker services (This is the only part of the system that is Dockerized on the manual setup). Also ensure that you have **Docker** installed on your system or **Docker Desktop** if you are on Windows or MacOS.
 
 Move into this directory:
 ```bash
 cd app/services/Docker
 ```
+
 Start the compose file:
 ```bash
 docker compose -f docker-compose-core-services.yml up -d
 ```
+
 If the line above doesn't work, try running:
 ```bash
 docker-compose -f docker-compose-core-services.yml up -d
@@ -315,11 +338,12 @@ Or if it doesn't work, with:
 ```bash
 docker-compose -f your-compose-file.yml down
 ```
-#### Running main services
+
+#### 🏃‍♂️ Running main services
+
 After deploying the containers, you can continue with starting the other necessary services for the system. For the rest of the services you will need to open **7** terminals (PowerShell, iterm2, terminal, etc.)
 
-##### Terminal #1:
-Move into:
+##### 🖥️ Terminal #1:
 ```bash
 cd app/services/ProgramsOnRPI
 
@@ -328,8 +352,7 @@ python kafka_orchestrator.py # alt. python3 kafka_orchestrator.py
 ```
 This program will create all of the systems topics, it will also prompt the user with selecting an audio interface to stream from. If the Zoom 44 I/F is plugged in then it's auto-selected since it is deemed as a "part of the system". If not select the capture-interface you desire. The program might crash if you have overstepped the number of channels the device has, or you have selected an unsupported samplerate. After selecting the interface, a producer is created, and it will start streaming audio to Kafka.
 
-##### Terminal #2:
-Move into:
+##### 🖥️ Terminal #2:
 ```bash
 cd app/services
 
@@ -338,8 +361,7 @@ python websocket_server.py # alt. python3 websocket_server.py
 ```
 This will start the websocket server, the "heart" of the system, it will now be awaiting connections and message transfer.
 
-##### Terminal #3
-Move into:
+##### 🖥️ Terminal #3:
 ```bash
 cd app/services
 
@@ -348,8 +370,7 @@ python -m KafkaServices.audio_consumer # alt. python3 -m KafkaServices.audio_con
 ```
 This will consume the audio produced to the Kafka topic.
 
-##### Terminal #4
-Move into:
+##### 🖥️ Terminal #4:
 ```bash
 cd app/services
 
@@ -358,8 +379,7 @@ python -m KafkaServices.ais_api_producer # alt. python3 -m KafkaServices.ais_api
 ```
 This will produce AIS data to the appropriate Kafka topic from the Kystverket API.
 
-##### Terminal #5
-Move into:
+##### 🖥️ Terminal #5:
 ```bash
 cd app/services
 
@@ -368,8 +388,7 @@ python -m KafkaServices.ais_consumer # alt. python3 -m KafkaServices.ais_consume
 ```
 This will consume AIS data produced to the appropriate topic
 
-##### Terminal #6
-Move into:
+##### 🖥️ Terminal #6:
 ```bash
 cd app/services
 
@@ -378,8 +397,7 @@ python -m uvicorn Apis.main:app --reload # alt. python3 -m uvicorn Apis.main:app
 ```
 This will launch a FastAPI with uvicorn, the API is used by the frontend for fetching and downloading audio files from MinIO directly.
 
-##### Terminal #6
-Lastly move into:
+##### 🖥️ Terminal #7:
 ```bash
 cd app/frontend/spectrogram_viewer_gui/src
 
@@ -388,4 +406,12 @@ npm run dev
 ```
 This will start the frontend, open it in a browser.
 
+---
+
+## 🎉 System Ready!
+
 **That's it, all services should be up and running correctly. The system is ready for use. Input parameters for the signal processing and press "Start Monitoring" you should expect N-channels to render in the bottom left, indicating acoustic data-flow.**
+
+---
+
+## 📄 License
