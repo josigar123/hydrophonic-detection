@@ -264,4 +264,54 @@ The system can be started in two ways. The first and most straigh forward is man
 ### Manually launching each service
 Before starting any services it is important to set some configuration, since multiple services will rely upon the data provided in making connections and capturing data (acoustic). Also for capture of AIS-data our system has two methods: antenna + reciever or from Kystverkets API, the following set-up will only setup for the API.
 
-#### 
+#### Configuration
+In the directory:
+```bash
+hydrophonic-detection/app/configs
+```
+lie all the configuration files that must be set **BEFORE** any services are started.
+The following files are present in the directory:
+
+- ais_fetcher_config.json, generated automatically, do not touch
+- aiscatcher_config.json, not relevant in the following steps, ignore it
+- broker_info.json, set ip and port of kafka broker
+- minio_config.json, set ip and port of minio service, do not change other params
+- mongodb_config.json, set ip and port of mongodb, do not change other params 
+- recording_parameters.json, set samplerate and number of channels, do not change other params
+
+**DO NOT CHANGE ANY OF THE PORT NUMBERS, ONLY IPs if necessary**
+For having all services run locally change all **IPs** to either **localhost** or **127.0.0.1**.
+An example with broker_info.json:
+```bash
+{
+  "ip": "localhost",
+  "port": "9092"
+}
+```
+#### Start core Docker services
+After configuring the system, start the necessary Docker services (This is the only part of the system that is Dockerized on the manual setup). Also ensure that you have Docker installed on your system or **Docker Desktop** if you are on Windows or MacOS.
+
+Move into this directory:
+```bash
+cd app/services/Docker
+```
+Start the compose file:
+```bash
+docker compose -f docker-compose-core-services.yml up -d
+```
+If the line above doesn't work, try running:
+```bash
+docker-compose -f docker-compose-core-services.yml up -d
+```
+
+This will pull, build and start multiple containers, detached from the terminal. The very first time launching this might take a couple of minutes, a network connection is necessary.
+
+When shutting the system down, close all containers with:
+```bash
+docker compose -f your-compose-file.yml down
+```
+
+Or if it doesn't work, with:
+```bash
+docker-compose -f your-compose-file.yml down
+```
