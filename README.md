@@ -17,7 +17,7 @@
 - [🌍 Environment](#-environment)
 - [⚙️ Installation](#️-installation)
 - [🚀 Starting the System](#-starting-the-system)
-- [Performance](#-performance)
+- [📈 Performance](#-performance)
 - [📄 License](#-license)
 
 ---
