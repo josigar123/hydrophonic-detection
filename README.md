@@ -23,7 +23,7 @@
 
 ## 🧠 Overview
 
-This project proposes a solution for using passively monitored hydroacoustic data captured by hydrophones for detecting passing marine vessels. The system has been developed by **Joseph K. Gargari**, **Victor L. Dehli**, **Christoffer Aaset**, **Bård Bremnes** and **Henrik B. Eriksen** as part of the Bachelor's project at the **University of South-Eastern Norway (USN)**, spring 2025.
+This project proposes a solution for using passively monitored hydroacoustic data captured by hydrophones for detecting passing marine vessels. The system has been developed by **Joseph K. Gargari**, **Victor L. Dehli**, **Christoffer Aaseth**, **Bård Bremnes** and **Henrik B. Eriksen** as part of the Bachelor's project at the **University of South-Eastern Norway (USN)**, spring 2025.
 
 ### 🤝 Collaboration
 
