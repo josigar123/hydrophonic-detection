@@ -315,3 +315,77 @@ Or if it doesn't work, with:
 ```bash
 docker-compose -f your-compose-file.yml down
 ```
+#### Running main services
+After deploying the containers, you can continue with starting the other necessary services for the system. For the rest of the services you will need to open **7** terminals (PowerShell, iterm2, terminal, etc.)
+
+##### Terminal #1:
+Move into:
+```bash
+cd app/services/ProgramsOnRPI
+
+# Run
+python kafka_orchestrator.py # alt. python3 kafka_orchestrator.py
+```
+This program will create all of the systems topics, it will also prompt the user with selecting an audio interface to stream from. If the Zoom 44 I/F is plugged in then it's auto-selected since it is deemed as a "part of the system". If not select the capture-interface you desire. The program might crash if you have overstepped the number of channels the device has, or you have selected an unsupported samplerate. After selecting the interface, a producer is created, and it will start streaming audio to Kafka.
+
+##### Terminal #2:
+Move into:
+```bash
+cd app/services
+
+# Run
+python websocket_server.py # alt. python3 websocket_server.py
+```
+This will start the websocket server, the "heart" of the system, it will now be awaiting connections and message transfer.
+
+##### Terminal #3
+Move into:
+```bash
+cd app/services
+
+# Run
+python -m KafkaServices.audio_consumer # alt. python3 -m KafkaServices.audio_consumer
+```
+This will consume the audio produced to the Kafka topic.
+
+##### Terminal #4
+Move into:
+```bash
+cd app/services
+
+# Run
+python -m KafkaServices.ais_api_producer # alt. python3 -m KafkaServices.ais_api_producer
+```
+This will produce AIS data to the appropriate Kafka topic from the Kystverket API.
+
+##### Terminal #5
+Move into:
+```bash
+cd app/services
+
+# Run
+python -m KafkaServices.ais_consumer # alt. python3 -m KafkaServices.ais_consumer
+```
+This will consume AIT data produced to the appropriate topic
+
+##### Terminal #6
+Move into:
+```bash
+cd app/services
+
+# Run
+python -m uvicorn Apis.main:app --reload # alt. python3 -m uvicorn Apis.main:app --reload
+```
+This will launch a FastAPI with uvicorn, the API is used by the frontend for fetching and downloading audio files from MinIO directly.
+
+##### Terminal #6
+Lastly move into:
+```bash
+cd app/frontend/spectrogram_viewer_gui/src
+
+# Run
+npm run dev
+```
+This will start the frontend, open it in a browser.
+
+**That's it, all services should be up and running correctly. The system is ready for use. Input parameters for the signal processing and press "Start Monitoring" you should expect N-channels to render in the bottom left, indicating acoustic data-flow.**
