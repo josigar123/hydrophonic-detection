@@ -111,20 +111,26 @@ From numerous practical tests and demonstrations, the results observed gives a *
 
 The system architecture is hardware agnostic, meaning you can use virtually any hardware you wish for audio-capture, but we used the following equipment in execution of tests and demonstration.
 
-The audio interface used in the system is the [**Zoom AMS-44**](https://www.zoom-europe.com/en/audio-interfaces/zoom-ams-44):
-<a href="https://www.zoom-europe.com/en/audio-interfaces/zoom-ams-44">
-  <img src="figs/AMS-44_slant.jpg" alt="Zoom AMS-44" width="300"/>
-</a>
+<p>The audio interface used in the system is the <a href="https://www.zoom-europe.com/en/audio-interfaces/zoom-ams-44"><strong>Zoom AMS-44</strong></a>:</p>
+<p>
+  <a href="https://www.zoom-europe.com/en/audio-interfaces/zoom-ams-44">
+    <img src="figs/AMS-44_slant.jpg" alt="Zoom AMS-44" width="300"/>
+  </a>
+</p>
 
-The hydrophones used were the [**AS-1 Hydrophone**](https://www.aquarianaudio.com/as-1-hydrophone.html) with a length of 24 meters. Four of them were utilized at the most:
-<a href="https://www.aquarianaudio.com/as-1-hydrophone.html">
-  <img src="figs/AS-1updated.png" alt="AS-1 Hydrophone" width="300"/>
-</a>
+<p>The hydrophones used were the <a href="https://www.aquarianaudio.com/as-1-hydrophone.html"><strong>AS-1 Hydrophone</strong></a> with a length of 24 meters. Four of them were utilized at the most:</p>
+<p>
+  <a href="https://www.aquarianaudio.com/as-1-hydrophone.html">
+    <img src="figs/AS-1updated.png" alt="AS-1 Hydrophone" width="300"/>
+  </a>
+</p>
 
-The pre-amplifier used is the [**PA6 Phantom-Powered Hydrophone Preamp**](https://www.aquarianaudio.com/pa6.html)
-<a href="https://www.aquarianaudio.com/pa6.html">
-  <img src="figs/PA6_WR_llqv-2y.jpg" alt="PA6 Preamp" width="300"/>
-</a>
+<p>The pre-amplifier used is the <a href="https://www.aquarianaudio.com/pa6.html"><strong>PA6 Phantom-Powered Hydrophone Preamp</strong></a>:</p>
+<p>
+  <a href="https://www.aquarianaudio.com/pa6.html">
+    <img src="figs/PA6_WR_llqv-2y.jpg" alt="PA6 Preamp" width="300"/>
+  </a>
+</p>
 
 ---
 
