@@ -1,13 +1,6 @@
-version: '3.8'
-
 services:
   broker:
     image: confluentinc/cp-kafka:7.6.1
-    healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server=broker:29092", "--list"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
     hostname: broker
     container_name: broker
     ports:
@@ -29,6 +22,8 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
 
   minio:
@@ -46,7 +41,6 @@ services:
 
   mongodb:
     image: mongo
-    container_name: mongodb
     restart: always
     ports:
       - "27017:27017"
@@ -54,15 +48,28 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
 
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "9002:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_URL: mongodb://root:password@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+
   aiscatcher:
     image: ghcr.io/jvde-github/ais-catcher:edge
-    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - SYS_TIME
     devices:
       - "/dev/bus/usb:/dev/bus/usb"
     ports:
       - "8100:8100"
       - "8110:8110"
-    command: "-v -N 8110 -S 8110 -F"
+    command: "-v -N 8110 -S 8110 -F -f /data/ais_data.nmea"
     volumes:
       - ./data:/data
 
@@ -83,9 +90,9 @@ services:
     volumes:
       - ./data:/map
     environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_ACCESS_KEY_ID=AKIA5CBGTA4PD4DP3UNA
+      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_DEFAULT_REGION=eu-north-1
     command: >
       /bin/sh -c "
       apk add --no-cache aws-cli coreutils &&
@@ -96,45 +103,6 @@ services:
         aws s3 cp s3://hydrophone-audio/vestfold.mbtiles /map/vestfold.mbtiles
       fi"
     restart: "no"
-
-  backend:
-    build:
-      context: ../../ 
-      dockerfile: services/Docker/backend.dockerfile
-    container_name: backend
-    ports:
-      - "8766:8766"
-    volumes:
-      - ../../configs:/app/configs
-    depends_on:
-      broker:
-        condition: service_healthy
-      mongodb:
-        condition: service_started
-      minio:
-        condition: service_started
-
-  frontend:
-    build:
-      context: ../../
-      dockerfile: services/Docker/frontend.dockerfile
-    container_name: frontend
-    ports:
-      - "5173:5173"
-    depends_on:
-      - backend
-
-  audio_file_api:
-    build:
-      context: ../../
-      dockerfile: services/Docker/audio_file_api.dockerfile
-    container_name: audio_file_api
-    ports:
-      - "8000:8000"
-    depends_on:
-      - frontend
-      - minio
-
 
 volumes:
   minio_data:

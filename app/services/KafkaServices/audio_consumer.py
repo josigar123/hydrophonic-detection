@@ -47,7 +47,7 @@ async def main():
     broker_port = broker_info["port"]
     broker_topic = "audio-stream"
 
-    socket_client = WebSocketClient("ws://localhost:8766?client_name=audio_consumer")
+    socket_client = WebSocketClient("ws://backend:8766?client_name=audio_consumer")
 
     while True:
         try:
