@@ -44,7 +44,7 @@ The system uses PortAudio, a cross-platform audio I/O library for real-time audi
 #### On Debian/Ubuntu:
 ```bash
 sudo apt update
-sudo apt install portaudio19-dev python3-pyaudio
+sudo apt install portaudio19-dev
 ```
 
 #### On MacOS:
