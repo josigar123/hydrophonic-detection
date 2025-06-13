@@ -366,7 +366,7 @@ cd app/services
 # Run
 python -m KafkaServices.ais_consumer # alt. python3 -m KafkaServices.ais_consumer
 ```
-This will consume AIT data produced to the appropriate topic
+This will consume AIS data produced to the appropriate topic
 
 ##### Terminal #6
 Move into:
