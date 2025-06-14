@@ -118,7 +118,7 @@ The system architecture is hardware agnostic, meaning you can use virtually any 
   </a>
 </p>
 
-<p>The hydrophones used were the <a href="https://www.aquarianaudio.com/as-1-hydrophone.html"><strong>AS-1 Hydrophone</strong></a> with a length of 24 meters. Four of them were utilized at the most:</p>
+<p>The hydrophones used were the <a href="https://www.aquarianaudio.com/as-1-hydrophone.html"><strong>AS-1 Hydrophone</strong></a> with a length of 25 meters. The project had four hydrophones at its disposal.:</p>
 <p>
   <a href="https://www.aquarianaudio.com/as-1-hydrophone.html">
     <img src="figs/AS-1updated.png" alt="AS-1 Hydrophone" width="300"/>
@@ -416,6 +416,38 @@ For having all services run locally change all **IPs** to either **localhost** o
 #### 🐳 Start core Docker services
 
 After configuring the system, start the necessary Docker services (This is the only part of the system that is Dockerized on the manual setup). Also ensure that you have **Docker** installed on your system or **Docker Desktop** if you are on Windows or MacOS.
+
+> **💡 Note:** Before starting the services make sure that the **Broker** service in *app/services/Docker/docker-compose-core-services.yml* is set to **localhost** or **127.0.0.1** like this (where **PLACEHOLDER** is written):
+
+```bash
+services:
+  broker:
+    image: confluentinc/cp-kafka:7.6.1
+    hostname: broker
+    container_name: broker
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker:29092,PLAINTEXT_HOST://PLACEHOLDER:9092"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+```
 
 Move into this directory:
 ```bash
